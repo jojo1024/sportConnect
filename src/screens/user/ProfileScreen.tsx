@@ -1,33 +1,27 @@
-import React from 'react';
-import { StyleSheet, View, FlatList, Text, Image, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React from 'react';
+import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import ProfileStats from '../../components/profile/ProfileStats';
 import { useAppSelector, useAuthLogout } from '../../store/hooks/hooks';
-import { useNavigation } from '@react-navigation/native';
-import { ScreenNavigationProps } from '../../navigation/types';
 import { selectUser } from '../../store/slices/userSlice';
+import { COLORS } from '../../theme/colors';
 
 const activities = [
     { id: 1, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 2 jours', points: 9 },
     { id: 2, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
-    { id: 3, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
-    { id: 4, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
-    { id: 5, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
+    // { id: 3, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
+    // { id: 4, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
+    // { id: 5, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
 ];
 
 const ProfileScreen: React.FC = () => {
     const { logout } = useAuthLogout();
-    const navigation = useNavigation<ScreenNavigationProps>();
 
     const utilisateur = useAppSelector(selectUser);
 
-    const handleLogout = async () => {
-        await logout();
-        navigation.reset({
-            index: 0,
-            routes: [{ name: 'Welcome' }],
-        });
+    const handleLogout =  () => {
+         logout();
     };
     
     return (
@@ -57,7 +51,7 @@ const ProfileScreen: React.FC = () => {
                     <View style={styles.info}>
                         <Text style={styles.label}>{item.label}</Text>
                         <View style={styles.row}>
-                            <MaterialCommunityIcons name="star-circle" size={16} color="#FF6600" />
+                            <MaterialCommunityIcons name="star-circle" size={16} color={COLORS.primary} />
                             <Text style={styles.points}>+{item.points}</Text>
                             <Text style={styles.date}>{item.date}</Text>
                         </View>
@@ -72,8 +66,8 @@ const ProfileScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-    bg: { flex: 1, backgroundColor: '#F3F7FA' },
-    headerContainer: { backgroundColor: '#F3F7FA', paddingTop: 32, paddingBottom: 8 },
+    bg: { flex: 1, backgroundColor: COLORS.background },
+    headerContainer: { backgroundColor: COLORS.background, paddingTop: 32, paddingBottom: 8 },
     logoutButton: {
         marginTop: 0,
         marginBottom: 0,
@@ -81,7 +75,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
         borderRadius: 8,
         alignItems: 'center',
-        width: '92%',
+        width: '100%',
     },
     logoutText: {
         color: '#222',
@@ -114,7 +108,7 @@ const styles = StyleSheet.create({
     info: { flex: 1 },
     label: { fontSize: 15, color: '#222', marginBottom: 4 },
     row: { flexDirection: 'row', alignItems: 'center' },
-    points: { color: '#FF6600', fontWeight: 'bold', marginLeft: 4, marginRight: 10 },
+    points: { color: COLORS.primary, fontWeight: 'bold', marginLeft: 4, marginRight: 10 },
     date: { color: '#888', fontSize: 13 },
 });
 

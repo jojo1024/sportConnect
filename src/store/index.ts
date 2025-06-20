@@ -9,7 +9,7 @@ import { reduxStorage } from './hooks/mmkvStorage';
 const persistConfig = {
     key: 'root',
     storage: reduxStorage,
-    version: 1,
+    version: 2,
     whitelist: ['user'], // Seulement persister le reducer user
     blacklist: ['app'], // Ne pas persister le reducer app
 };

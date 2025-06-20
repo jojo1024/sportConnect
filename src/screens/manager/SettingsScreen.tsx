@@ -3,10 +3,11 @@ import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAuthLogout } from '../../store/hooks/hooks';
+import { ScreenNavigationProps } from '../../navigation/types';
 
 const SettingsScreen: React.FC = () => {
     const { logout } = useAuthLogout();
-    const navigation = useNavigation();
+    const navigation = useNavigation<ScreenNavigationProps>();
     const [notifications, setNotifications] = React.useState(true);
     const [emailNotifications, setEmailNotifications] = React.useState(true);
     const [darkMode, setDarkMode] = React.useState(false);

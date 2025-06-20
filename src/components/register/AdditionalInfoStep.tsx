@@ -5,7 +5,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomButton from '../CustomButton';
 import { colors } from '../../theme/colors';
 import { PRIMARY_COLOR } from '../../utils/constant';
-import { typography } from '../../theme/typography';
 
 interface AdditionalInfoStepProps {
     formState: any;
@@ -226,7 +225,9 @@ const styles = StyleSheet.create({
         borderColor: PRIMARY_COLOR,
     },
     sexeButtonText: {
-        ...typography.body1,
+        // ...typography.body1,
+        fontSize: 16,
+        fontWeight: 'bold',
         color: colors.text.primary,
     },
     sexeButtonTextActive: {

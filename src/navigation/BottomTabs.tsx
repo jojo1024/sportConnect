@@ -1,34 +1,31 @@
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import React from 'react';
 import { View } from 'react-native';
 
 // Import des écrans
-import { TchinTchinsScreen, NotificationsScreen, ProfileScreen } from '../screens/user';
-import { CreatePartyScreen, TchinTchinsCapoScreen, NotificationsCapoScreen, ProfileCapoScreen } from '../screens/capo';
-import { TerrainsScreen, ReservationsScreen, StatisticsScreen, SettingsScreen } from '../screens/manager';
-import { useTheme } from '@react-navigation/native';
-import { PRIMARY_COLOR } from '../utils/constant';
-import { useSelector } from 'react-redux';
 import NotificationBadge from '../components/NotificationBadge';
+import { CreatePartyScreen, NotificationsCapoScreen, ProfileCapoScreen, TchinTchinsCapoScreen } from '../screens/capo';
+import { ReservationsScreen, SettingsScreen, StatisticsScreen, TerrainsScreen } from '../screens/manager';
+import { NotificationsScreen, ProfileScreen, TchinTchinsScreen } from '../screens/user';
+import { UserRole } from '../store/slices/userSlice';
+import { PRIMARY_COLOR } from '../utils/constant';
 
 const Tab = createBottomTabNavigator();
 
-type UserRole = 'standard' | 'capo' | 'manager';
 
 interface BottomTabsProps {
     userRole: UserRole;
 }
 
-export const BottomTabs: React.FC<BottomTabsProps> = () => {
+export const BottomTabs: React.FC<BottomTabsProps> = ({ userRole }) => {
 
-    const theme = useTheme();
-    const userRole: string = 'standard';
+
     console.log("🚀 ~ userRole:", userRole)
     // const userRole = 'standard';
     const getTabScreens = () => {
         switch (userRole) {
-            case 'standard':
+            case 'lambda':
                 return (
                     <>
                         <Tab.Screen
@@ -109,7 +106,7 @@ export const BottomTabs: React.FC<BottomTabsProps> = () => {
                     </>
                 );
 
-            case 'manager':
+            case 'gerant':
                 return (
                     <>
                         <Tab.Screen

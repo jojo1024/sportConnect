@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { COLORS } from '../../theme/colors';
 
 const EditProfileScreen: React.FC = () => {
     const [name, setName] = useState('Junior N');
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
     row: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#EEE', marginBottom: 12, paddingBottom: 6 },
     input: { flex: 1, marginLeft: 12, fontSize: 16, color: '#222' },
     logoutButton: { marginTop: 24, alignSelf: 'center' },
-    logoutText: { color: '#FF6600', fontWeight: 'bold', fontSize: 16 },
+    logoutText: { color:COLORS.primary, fontWeight: 'bold', fontSize: 16 },
 });
 
 export default EditProfileScreen; 

@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '..';
 
+export type UserRole = 'lambda' | 'capo' | 'gerant';
+
 export interface User {
     utilisateurId: number;
     utilisateurNom: string;
@@ -8,12 +10,13 @@ export interface User {
     utilisateurCommune: string;
     utilisateurDateNaiss: Date;
     utilisateurSexe: 'Homme' | 'Femme';
-    utilisateurRole: 'lambda' | 'capo' | 'gerant';
+    utilisateurRole: UserRole;
     utilisateurAvatar?: string;
 }
 
 interface UserState {
     user: User | null;
+    notificationCount: number
     isAuthenticated: boolean;
     accessToken: string | null;
     refreshToken: string | null;
@@ -23,6 +26,7 @@ interface UserState {
 
 const initialState: UserState = {
     user: null,
+    notificationCount: 0,
     isAuthenticated: false,
     accessToken: null,
     refreshToken: null,
@@ -105,6 +109,9 @@ const userSlice = createSlice({
                 state.user = { ...state.user, ...action.payload };
             }
         },
+        setNotificationCount: (state, action: PayloadAction<number>) => {
+            state.notificationCount = action.payload;
+        }
     },
 });
 
@@ -117,7 +124,8 @@ export const {
     updateTokens,
     clearUser,
     logout,
-    updateUser
+    updateUser,
+    setNotificationCount
 } = userSlice.actions;
 
 export const selectUser = (state: RootState) => state.user.user;
@@ -126,5 +134,6 @@ export const selectAccessToken = (state: RootState) => state.user.accessToken;
 export const selectRefreshToken = (state: RootState) => state.user.refreshToken;
 export const selectIsLoading = (state: RootState) => state.user.isLoading;
 export const selectError = (state: RootState) => state.user.error;
+export const selectNotificationCount = (state: RootState) => state.user.notificationCount;
 
 export default userSlice.reducer; 

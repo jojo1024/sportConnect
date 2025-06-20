@@ -1,13 +1,14 @@
 import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Keyboard, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
 import { ScreenNavigationProps } from '../navigation/types';
 import CustomTextInput from '../components/CustomTextInput';
 import CustomButton from '../components/CustomButton';
 import { useLoginForm } from '../hooks/useLoginForm';
 import { PRIMARY_COLOR } from '../utils/constant';
-import { RootState } from '../store';
+import { useAppSelector } from '../store/hooks/hooks';
+import { selectError, selectIsLoading } from '../store/slices/userSlice';
+import { COLORS } from '../theme/colors';
 
 export default function LoginScreen() {
     const navigation = useNavigation<ScreenNavigationProps>();
@@ -15,8 +16,8 @@ export default function LoginScreen() {
     const [formState, formHandlers] = useLoginForm();
 
     // Récupérer les états du store
-    const isLoading = useSelector((state: RootState) => state.user.isLoading);
-    const error = useSelector((state: RootState) => state.user.error);
+    const isLoading = useAppSelector(selectIsLoading);
+    const error = useAppSelector(selectError);
 
     const handleLogin = async () => {
         Keyboard.dismiss();
@@ -31,34 +32,6 @@ export default function LoginScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.title}>Se connecter</Text>
-            {/* 
-            <View style={styles.roleContainer}>
-                <TouchableOpacity
-                    style={[styles.roleButton, formState.selectedRole === 'standard' && styles.roleButtonSelected]}
-                    onPress={() => formHandlers.setSelectedRole('standard')}
-                >
-                    <Text style={[styles.roleText, formState.selectedRole === 'standard' && styles.roleTextSelected]}>
-                        Utilisateur
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.roleButton, formState.selectedRole === 'capo' && styles.roleButtonSelected]}
-                    onPress={() => formHandlers.setSelectedRole('capo')}
-                >
-                    <Text style={[styles.roleText, formState.selectedRole === 'capo' && styles.roleTextSelected]}>
-                        Capo
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.roleButton, formState.selectedRole === 'manager' && styles.roleButtonSelected]}
-                    onPress={() => formHandlers.setSelectedRole('manager')}
-                >
-                    <Text style={[styles.roleText, formState.selectedRole === 'manager' && styles.roleTextSelected]}>
-                        Gérant
-                    </Text>
-                </TouchableOpacity>
-            </View> */}
-
             <CustomTextInput
                 label="Numéro de téléphone"
                 value={formState.phone}
@@ -92,9 +65,10 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <CustomButton
-                title={isLoading ? "Connexion..." : "Se connecter"}
+                title={"Se connecter"}
                 onPress={handleLogin}
                 disabled={!formHandlers.isFormValid}
+                loading={isLoading}
             />
 
             <View style={styles.signupContainer}>
@@ -121,7 +95,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         justifyContent: 'center',
         paddingHorizontal: 24,
     },
@@ -129,7 +103,7 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: 'bold',
         marginBottom: 32,
-        color: '#222',
+        color: COLORS.text,
     },
     roleContainer: {
         flexDirection: 'row',
@@ -162,7 +136,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     label: {
-        color: '#FF6600',
+        color: COLORS.primary,
         fontWeight: '600',
         marginBottom: 6,
     },
@@ -172,7 +146,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         padding: 8,
         fontSize: 16,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
     },
     inputError: {
         borderColor: 'red',
@@ -191,12 +165,12 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     errorText: {
-        color: '#d32f2f',
+        color: COLORS.danger,
         fontSize: 14,
         textAlign: 'center',
     },
     button: {
-        backgroundColor: PRIMARY_COLOR,
+        backgroundColor: COLORS.primary,
         borderRadius: 25,
         paddingVertical: 14,
         alignItems: 'center',

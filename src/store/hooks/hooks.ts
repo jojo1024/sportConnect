@@ -1,16 +1,19 @@
+import { useEffect } from 'react';
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "..";
-import { useEffect } from 'react';
-import { 
-    setAuthData, 
-    updateTokens, 
-    logout,
-    startLoading,
-    stopLoading,
-    setError
-} from '../slices/userSlice';
-import mmkvStorage from './mmkvStorage';
 import { authService } from '../../services/authService';
+import {
+    logout,
+    selectAccessToken,
+    selectIsAuthenticated,
+    selectRefreshToken,
+    selectUser,
+    setAuthData,
+    updateTokens
+} from '../slices/userSlice';
+import { ScreenNavigationProps } from '../../navigation/types';
+import { useNavigation } from '@react-navigation/native';
+// import mmkvStorage from './mmkvStorage';
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch = () => useDispatch<AppDispatch>();
@@ -19,18 +22,16 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 // Hook pour initialiser l'état d'authentification au démarrage
 export const useAuthInitialization = () => {
     const dispatch = useDispatch();
-    const isAuthenticated = useSelector((state: RootState) => state.user.isAuthenticated);
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
+    const accessToken = useAppSelector(selectAccessToken);
+    const refreshToken = useAppSelector(selectRefreshToken);
+    const userData = useAppSelector(selectUser);
 
     useEffect(() => {
         const initializeAuth = async () => {
             try {
-                // Récupérer les données stockées
-                const storedAccessToken = mmkvStorage.getAccessToken();
-                const storedRefreshToken = mmkvStorage.getRefreshToken();
-                const storedUserData = mmkvStorage.getUserData();
-                const storedIsAuthenticated = mmkvStorage.getIsAuthenticated();
 
-                if (storedIsAuthenticated && storedAccessToken && storedRefreshToken && storedUserData) {
+                if (isAuthenticated && accessToken && refreshToken && userData) {
                     // Vérifier si le token est encore valide
                     try {
                         // Optionnel : vérifier la validité du token avec le backend
@@ -38,19 +39,14 @@ export const useAuthInitialization = () => {
                         
                         // Restaurer l'état d'authentification
                         dispatch(setAuthData({
-                            user: storedUserData,
-                            accessToken: storedAccessToken,
-                            refreshToken: storedRefreshToken
+                            user: userData,
+                            accessToken: accessToken,
+                            refreshToken: refreshToken
                         }));
                     } catch (error) {
                         // Token invalide, essayer de le rafraîchir
                         try {
-                            const newTokens = await authService.refreshToken(storedRefreshToken);
-                            
-                            // Sauvegarder les nouveaux tokens
-                            mmkvStorage.setAccessToken(newTokens.accessToken);
-                            mmkvStorage.setRefreshToken(newTokens.refreshToken);
-                            
+                            const newTokens = await authService.refreshToken(refreshToken);
                             // Mettre à jour le store
                             dispatch(updateTokens(newTokens));
                         } catch (refreshError) {
@@ -78,12 +74,6 @@ export const useAuthLogin = () => {
 
     const login = async (userData: any, tokens: { accessToken: string; refreshToken: string }) => {
         try {
-            // Sauvegarder les données
-            mmkvStorage.setUserData(userData);
-            mmkvStorage.setAccessToken(tokens.accessToken);
-            mmkvStorage.setRefreshToken(tokens.refreshToken);
-            mmkvStorage.setIsAuthenticated(true);
-
             // Mettre à jour le store
             dispatch(setAuthData({
                 user: userData,
@@ -102,19 +92,19 @@ export const useAuthLogin = () => {
 // Hook pour gérer la déconnexion avec nettoyage
 export const useAuthLogout = () => {
     const dispatch = useDispatch();
-
+    const navigation = useNavigation<ScreenNavigationProps>();
     const logoutUser = async () => {
         try {
             // Appeler l'API de déconnexion si nécessaire
-            await authService.logout();
-        } catch (error) {
-            console.log('Erreur lors de la déconnexion:', error);
-        } finally {
-            // Nettoyer le stockage local
-            mmkvStorage.clearAuthData();
-            
+            // await authService.logout(userData?.utilisateurId || 0);
             // Nettoyer le store
             dispatch(logout());
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Welcome' }],
+            });
+        } catch (error) {
+            console.log('Erreur lors de la déconnexion:', error);
         }
     };
 
@@ -124,7 +114,7 @@ export const useAuthLogout = () => {
 // Hook pour gérer le rafraîchissement des tokens
 export const useTokenRefresh = () => {
     const dispatch = useDispatch();
-    const refreshToken = useSelector((state: RootState) => state.user.refreshToken);
+    const refreshToken = useAppSelector(selectRefreshToken);
 
     const refreshTokens = async () => {
         if (!refreshToken) {
@@ -133,11 +123,6 @@ export const useTokenRefresh = () => {
 
         try {
             const newTokens = await authService.refreshToken(refreshToken);
-            
-            // Sauvegarder les nouveaux tokens
-            mmkvStorage.setAccessToken(newTokens.accessToken);
-            mmkvStorage.setRefreshToken(newTokens.refreshToken);
-            
             // Mettre à jour le store
             dispatch(updateTokens(newTokens));
             

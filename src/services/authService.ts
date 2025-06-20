@@ -1,6 +1,5 @@
-import { store } from "../store";
-import { clearUser } from "../store/slices/userSlice";
-import api, { AuthResponse, LoginData, RegisterData } from "./api";
+
+import api from "./api";
 
 export interface User {
     utilisateurId: number;
@@ -89,14 +88,14 @@ export const authService = {
     },
 
     // Déconnexion
-    logout: async (): Promise<void> => {
-        try {
-            await api.post('/auth/logout');
-        } catch (error) {
-            // On ignore les erreurs de logout
-            console.log('Erreur lors du logout:', error);
-        }
-    },
+    // logout: async (utilisateurId: number): Promise<void> => {
+    //     try {
+    //         await api.post(`/auth/logout/${utilisateurId}`);
+    //     } catch (error) {
+    //         // On ignore les erreurs de logout
+    //         console.log('Erreur lors du logout:', error);
+    //     }
+    // },
 
     refreshToken: async (refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> => {
         try {

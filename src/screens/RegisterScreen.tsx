@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, Platform } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { useRegisterForm } from '../hooks/useRegisterForm';
-import { colors } from '../theme/colors';
+import { COLORS, colors } from '../theme/colors';
 import { ScreenNavigationProps } from '../navigation/types';
 import {
     RegisterStepIndicator,
@@ -215,7 +215,7 @@ export default function RegisterScreen() {
                 style={styles.backButton}
                 onPress={() => navigation.goBack()}
             >
-                <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
+                <Ionicons name="arrow-back" size={24} color={COLORS.textLight} />
                 <Text style={styles.backButtonText}>Retour</Text>
             </TouchableOpacity>
 
@@ -251,7 +251,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         justifyContent: 'center',
         padding: 24,
     },
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: 'bold',
         marginBottom: 32,
-        color: '#222',
+        color: COLORS.text,
     },
     scrollContent: {
         flexGrow: 1,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     backButtonText: {
-        color: colors.text.primary,
+        color: COLORS.textLight,
         fontSize: 16,
         marginLeft: 10,
     },

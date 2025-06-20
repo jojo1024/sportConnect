@@ -1,23 +1,21 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { StatusBar } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { useSelector } from "react-redux";
 import LoginScreen from "../screens/LoginScreen";
 import AddTerrainScreen from "../screens/manager/AddTerrainScreen";
 import TerrainsScreen from "../screens/manager/TerrainsScreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
+import { useAppSelector, useAuthInitialization } from "../store/hooks/hooks";
+import { selectIsAuthenticated, selectUser } from "../store/slices/userSlice";
 import { BottomTabs } from "./BottomTabs";
 import { RootStackParamList } from "./types";
-import { StatusBar } from "react-native";
-import { PRIMARY_COLOR } from "../utils/constant";
-import { RootState } from "../store";
-import { useAuthInitialization } from "../store/hooks/hooks";
 
 const RootNavigator = () => {
     const Stack = createNativeStackNavigator<RootStackParamList>();
-    const isAuthenticated = useSelector((state: RootState) => state.user.isAuthenticated);
-    const user = useSelector((state: RootState) => state.user.user);
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
+    const user = useAppSelector(selectUser);
 
     // Initialiser l'authentification
     useAuthInitialization();

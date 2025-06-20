@@ -1,166 +1,29 @@
-import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ViewStyle, TextStyle, ActivityIndicator, RefreshControl } from 'react-native';
-import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { PRIMARY_COLOR } from '../../utils/constant';
+import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { GetIcon, RenderFooter, RetryComponent } from '../../components/UtilsComponent';
 import { useNotification } from '../../hooks/useNotification';
-import { Notification } from '../../services/notificationService';
-
-function getIcon(type: string) {
-    switch (type) {
-        case 'match':
-            return <FontAwesome5 name="futbol" size={24} color="#007b83" />;
-        case 'reminder':
-            return <Ionicons name="alarm-outline" size={24} color="#f5a623" />;
-        case 'payment':
-            return <MaterialIcons name="payment" size={24} color="#4caf50" />;
-        case 'validation':
-            return <MaterialIcons name="check-circle" size={24} color="#007b83" />;
-        case 'cancel':
-            return <MaterialIcons name="cancel" size={24} color="#e74c3c" />;
-        case 'credit':
-            return <FontAwesome5 name="coins" size={22} color="#f5a623" />;
-        case 'info':
-            return <Ionicons name="information-circle-outline" size={24} color="#007b83" />;
-        case 'email':
-            return <MaterialIcons name="email" size={24} color="#4285F4" />;
-        case 'sms':
-            return <MaterialIcons name="sms" size={24} color="#34A853" />;
-        case 'push':
-        default:
-            return <Ionicons name="notifications-outline" size={24} color="#888" />;
-    }
-}
-
-const getNotificationType = (title: string, content: string): string => {
-    const lowerTitle = title.toLowerCase();
-    const lowerContent = content.toLowerCase();
-
-    if (lowerTitle.includes('partie') || lowerTitle.includes('match') || lowerContent.includes('partie') || lowerContent.includes('match')) {
-        return 'match';
-    } else if (lowerTitle.includes('rappel') || lowerContent.includes('commence dans')) {
-        return 'reminder';
-    } else if (lowerTitle.includes('paiement') || lowerContent.includes('paiement') || lowerContent.includes('payé')) {
-        return 'payment';
-    } else if (lowerTitle.includes('validé') || lowerTitle.includes('confirmé') || lowerContent.includes('validé') || lowerContent.includes('confirmé')) {
-        return 'validation';
-    } else if (lowerTitle.includes('annulé') || lowerContent.includes('annulé')) {
-        return 'cancel';
-    } else if (lowerTitle.includes('remboursé') || lowerTitle.includes('crédit') || lowerContent.includes('remboursé') || lowerContent.includes('crédit')) {
-        return 'credit';
-    } else if (lowerTitle.includes('terrain') || lowerContent.includes('terrain')) {
-        return 'info';
-    } else {
-        return 'push';
-    }
-};
-
-const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-
-    if (diffInHours < 1) {
-        return 'À l\'instant';
-    } else if (diffInHours < 24) {
-        return `Il y a ${diffInHours}h`;
-    } else if (diffInHours < 48) {
-        return 'Hier';
-    } else {
-        return date.toLocaleDateString('fr-FR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-    }
-};
-
-type NotificationType = 'match' | 'reminder' | 'payment' | 'validation' | 'cancel' | 'credit' | 'info' | 'email' | 'sms' | 'push';
-
-interface Styles {
-    container: ViewStyle;
-    header: ViewStyle;
-    title: TextStyle;
-    filterButton: ViewStyle;
-    listContent: ViewStyle;
-    notificationItem: ViewStyle;
-    unreadNotificationItem: ViewStyle;
-    iconContainer: ViewStyle;
-    notificationContent: ViewStyle;
-    notificationHeader: ViewStyle;
-    notificationTitle: TextStyle;
-    unreadNotificationTitle: TextStyle;
-    notificationMessage: TextStyle;
-    notificationDate: TextStyle;
-    separator: ViewStyle;
-    matchIcon: ViewStyle;
-    reminderIcon: ViewStyle;
-    paymentIcon: ViewStyle;
-    validationIcon: ViewStyle;
-    cancelIcon: ViewStyle;
-    creditIcon: ViewStyle;
-    infoIcon: ViewStyle;
-    emailIcon: ViewStyle;
-    smsIcon: ViewStyle;
-    pushIcon: ViewStyle;
-    loadingFooter: ViewStyle;
-    loadingText: TextStyle;
-    errorContainer: ViewStyle;
-    errorText: TextStyle;
-    retryText: TextStyle;
-    unreadIndicator: ViewStyle;
-}
+import { COLORS } from '../../theme/colors';
+import { formatNotificationDate } from '../../utils/functions';
+import { Styles } from '../../utils/interface';
 
 const NotificationsScreen: React.FC = () => {
     const {
         notifications,
         isLoading,
         error,
-        hasMoreData,
-        loadMoreData,
         refreshData,
-        markAsRead
+        handleEndReached,
+        handleRefresh,
+        handleNotificationPress,
+        handleMarkAllAsRead
     } = useNotification();
 
-    const renderFooter = () => {
-        if (!isLoading) return null;
-
-        return (
-            <View style={styles.loadingFooter}>
-                <ActivityIndicator size="small" color={PRIMARY_COLOR} />
-                <Text style={styles.loadingText}>Chargement...</Text>
-            </View>
-        );
-    };
-
-    const handleEndReached = () => {
-        if (hasMoreData && !isLoading) {
-            loadMoreData();
-        }
-    };
-
-    const handleRefresh = useCallback(() => {
-        refreshData();
-    }, [refreshData]);
-
-    const handleNotificationPress = useCallback(async (notification: Notification) => {
-        if (!notification.notificationLue) {
-            try {
-                await markAsRead(notification.notificationId);
-            } catch (error) {
-                console.error('Erreur lors du marquage comme lu:', error);
-            }
-        }
-    }, [markAsRead]);
 
     // Afficher l'erreur si elle existe
     if (error) {
         return (
-            <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>Erreur: {error}</Text>
-                <Text style={styles.retryText} onPress={refreshData}>
-                    Réessayer
-                </Text>
-            </View>
+            <RetryComponent onRetry={refreshData} />
         );
     }
 
@@ -168,8 +31,8 @@ const NotificationsScreen: React.FC = () => {
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Notifications</Text>
-                <TouchableOpacity style={styles.filterButton}>
-                    <Ionicons name="filter" size={24} color={PRIMARY_COLOR} />
+                <TouchableOpacity style={styles.filterButton} onPress={handleMarkAllAsRead}>
+                    <Ionicons name="filter" size={24} color={COLORS.primary} />
                 </TouchableOpacity>
             </View>
             <FlatList
@@ -179,11 +42,11 @@ const NotificationsScreen: React.FC = () => {
                     <RefreshControl
                         refreshing={isLoading && notifications.length === 0}
                         onRefresh={handleRefresh}
-                        colors={[PRIMARY_COLOR]}
+                        colors={[COLORS.primary]}
                     />
                 }
                 renderItem={({ item }) => {
-                    const notificationType = getNotificationType(item.notificationTitre, item.notificationContenu);
+                    // const notificationType = getNotificationType(item.notificationTitre, item.notificationContenu);
                     const isUnread = !item.notificationLue;
 
                     return (
@@ -194,8 +57,8 @@ const NotificationsScreen: React.FC = () => {
                             ]}
                             onPress={() => handleNotificationPress(item)}
                         >
-                            <View style={[styles.iconContainer, styles[`${notificationType}Icon` as keyof typeof styles]]}>
-                                {getIcon(notificationType)}
+                            <View style={[styles.iconContainer, styles[`${item.notificationType}Icon` as keyof typeof styles]]}>
+                                {GetIcon(item.notificationType)}
                             </View>
                             <View style={styles.notificationContent}>
                                 <View style={styles.notificationHeader}>
@@ -205,9 +68,9 @@ const NotificationsScreen: React.FC = () => {
                                     ]}>
                                         {item.notificationTitre}
                                     </Text>
-                                    <Text style={styles.notificationDate}>{formatDate(item.notificationDate)}</Text>
+                                    <Text style={styles.notificationDate}>{formatNotificationDate(item.notificationDate)}</Text>
                                 </View>
-                                <Text style={styles.notificationMessage}>{item.notificationContenu}</Text>
+                                <Text style={styles.notificationMessage} numberOfLines={3}>{item.notificationContenu}</Text>
                             </View>
                             {isUnread && <View style={styles.unreadIndicator} />}
                         </TouchableOpacity>
@@ -218,7 +81,7 @@ const NotificationsScreen: React.FC = () => {
                 contentContainerStyle={styles.listContent}
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={0.1}
-                ListFooterComponent={renderFooter}
+                ListFooterComponent={RenderFooter(isLoading)}
             />
             <View style={{ height: 50 }}></View>
         </View>
@@ -228,14 +91,14 @@ const NotificationsScreen: React.FC = () => {
 const styles = StyleSheet.create<Styles>({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.background,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         borderBottomWidth: 1,
         borderBottomColor: '#e9ecef',
         elevation: 2,
@@ -257,7 +120,7 @@ const styles = StyleSheet.create<Styles>({
     },
     notificationItem: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         padding: 16,
         marginBottom: 6,
@@ -271,7 +134,7 @@ const styles = StyleSheet.create<Styles>({
     unreadNotificationItem: {
         backgroundColor: '#f8fbff',
         borderLeftWidth: 4,
-        borderLeftColor: PRIMARY_COLOR,
+        borderLeftColor: COLORS.primary,
     },
     iconContainer: {
         width: 48,
@@ -350,37 +213,9 @@ const styles = StyleSheet.create<Styles>({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: PRIMARY_COLOR,
+        backgroundColor: COLORS.primary,
     },
-    loadingFooter: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 20,
-        paddingHorizontal: 20,
-    },
-    loadingText: {
-        marginLeft: 10,
-        fontSize: 14,
-        color: '#666',
-    },
-    errorContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    errorText: {
-        fontSize: 16,
-        color: '#e74c3c',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    retryText: {
-        fontSize: 16,
-        color: PRIMARY_COLOR,
-        textDecorationLine: 'underline',
-    },
+
 });
 
 export default NotificationsScreen; 

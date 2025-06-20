@@ -1,8 +1,8 @@
 import React from 'react';
-import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { PRIMARY_COLOR, PROJECT_NAME } from '../utils/constant';
-import { useWelcome } from '../hooks/useWelcome';
+import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { name as projectName } from '../../package.json';
+import { useWelcome } from '../hooks/useWelcome';
+import { COLORS } from '../theme/colors';
 
 const WelcomeScreen = () => {
 
@@ -37,7 +37,7 @@ const WelcomeScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: COLORS.white,
         alignItems: 'center',
         justifyContent: 'flex-start',
         paddingTop: 20,
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     logo: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: PRIMARY_COLOR,
+        color: COLORS.primary,
         marginBottom: 10,
         fontFamily: 'sans-serif',
     },
@@ -58,24 +58,24 @@ const styles = StyleSheet.create({
     subtitle: {
         marginHorizontal: 20,
         fontSize: 17,
-        color: '#222',
+        color: COLORS.text,
         textAlign: 'center',
         marginBottom: 32,
     },
     button: {
-        backgroundColor: PRIMARY_COLOR,
+        backgroundColor: COLORS.primary,
         paddingVertical: 14,
         paddingHorizontal: 40,
         borderRadius: 25,
         marginBottom: 12,
     },
     buttonText: {
-        color: 'white',
+        color: COLORS.white,
         fontSize: 16,
         fontWeight: 'bold',
     },
     link: {
-        color: '#222',
+        color: COLORS.text,
         fontSize: 15,
         textAlign: 'center',
         textDecorationLine: 'underline',

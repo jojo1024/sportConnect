@@ -1,3 +1,5 @@
+import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
+
 export const formatDate = (date: Date | null) => {
     if (!date) return '';
     return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -95,3 +97,53 @@ export const sortDatesWithPriority = (dates: string[]): string[] => {
         return dateA.getTime() - dateB.getTime();
     });
 }
+
+export const formatNotificationDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+  
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInSeconds = Math.floor(diffInMs / 1000);
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+  
+    if (diffInSeconds < 0) {
+      return "Dans le futur";
+    }
+  
+    if (diffInSeconds < 10) {
+      return "À l’instant";
+    }
+  
+    if (diffInSeconds < 60) {
+      return `Il y a ${diffInSeconds} seconde${diffInSeconds > 1 ? 's' : ''}`;
+    }
+  
+    if (diffInMinutes < 60) {
+      return `Il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`;
+    }
+  
+    if (diffInHours < 24) {
+      return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
+    }
+  
+    if (diffInDays === 1) {
+      return "Hier";
+    }
+  
+    if (diffInDays < 7) {
+      return `Il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`;
+    }
+  
+    // Date formatée pour les événements plus anciens
+    return date.toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+  

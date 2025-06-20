@@ -51,6 +51,7 @@ api.interceptors.request.use(
     (config) => {
         const state = store.getState();
         const token = state.user.accessToken;
+        console.log("🚀 ~ token:4444444444448", token)
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

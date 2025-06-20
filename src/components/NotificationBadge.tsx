@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux';
 import { notificationService } from '../services/notificationService';
 import { RootState } from '../store';
 import { PRIMARY_COLOR } from '../utils/constant';
+import { selectNotificationCount, selectUser, setNotificationCount } from '../store/slices/userSlice';
+import { useAppDispatch, useAppSelector } from '../store/hooks/hooks';
 
 interface NotificationBadgeProps {
     size?: number;
@@ -14,12 +16,16 @@ const NotificationBadge: React.FC<NotificationBadgeProps> = ({
     size = 18, 
     fontSize = 10 
 }) => {
-    const [unreadCount, setUnreadCount] = useState(0);
-    const user = useSelector((state: RootState) => state.user.user);
+    const dispatch = useAppDispatch();
+    const notificationCount = useAppSelector(selectNotificationCount);
+    console.log("🚀 ~ notificationCount:ssssssssssssss", notificationCount)
+
+    // const [unreadCount, setUnreadCount] = useState(0);
+    const user = useAppSelector(selectUser);
     const utilisateurId = user?.utilisateurId;
     
     // Référence pour éviter les appels multiples
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const loadingRef = useRef(false);
 
     const loadUnreadCount = async () => {
@@ -28,7 +34,8 @@ const NotificationBadge: React.FC<NotificationBadgeProps> = ({
         try {
             loadingRef.current = true;
             const count = await notificationService.getUnreadNotificationsCount(utilisateurId);
-            setUnreadCount(count);
+            // setUnreadCount(count);
+            dispatch(setNotificationCount(count));
         } catch (error) {
             console.error('Erreur lors du chargement du nombre de notifications non lues:', error);
         } finally {
@@ -61,7 +68,7 @@ const NotificationBadge: React.FC<NotificationBadgeProps> = ({
         };
     }, []);
 
-    if (unreadCount === 0) {
+    if (notificationCount === 0) {
         return null;
     }
 
@@ -78,7 +85,7 @@ const NotificationBadge: React.FC<NotificationBadgeProps> = ({
                 styles.badgeText,
                 { fontSize }
             ]}>
-                {unreadCount > 99 ? '99+' : unreadCount.toString()}
+                {notificationCount > 99 ? '99+' : notificationCount.toString()}
             </Text>
         </View>
     );
@@ -86,7 +93,7 @@ const NotificationBadge: React.FC<NotificationBadgeProps> = ({
 
 const styles = StyleSheet.create({
     badge: {
-        backgroundColor: '#FF4444',
+        backgroundColor: PRIMARY_COLOR,
         justifyContent: 'center',
         alignItems: 'center',
         position: 'absolute',

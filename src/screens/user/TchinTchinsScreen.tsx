@@ -1,11 +1,11 @@
-import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, RefreshControl } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { PRIMARY_COLOR } from '../../utils/constant';
+import React, { useCallback } from 'react';
+import { FlatList, Image, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { RenderFooter, RetryComponent } from '../../components/UtilsComponent';
 import { useMatch } from '../../hooks/useMatch';
 import { Match } from '../../services/matchService';
+import { COLORS } from '../../theme/colors';
 import { calculateMatchDuration, extractDate, extractHour, getSectionLabel, getTerrainImages, sortDatesWithPriority, today, tomorrow } from '../../utils/functions';
-
 
 
 const TchinTchinsScreen: React.FC = () => {
@@ -13,81 +13,42 @@ const TchinTchinsScreen: React.FC = () => {
         matches,
         isLoading,
         error,
-        hasMoreData,
-        loadMoreData,
-        refreshData
+        refreshData,
+        allMatchFiltredByDate,
+        groupedMatchsByDate,
+        handleEndReached,
+        handleRefresh
     } = useMatch();
-
-    // Regrouper par date
-    const grouped = matches.reduce((acc, match) => {
-        const date = extractDate(match.matchDateDebut);
-        if (!acc[date]) acc[date] = [];
-        acc[date].push(match);
-        return acc;
-    }, {} as Record<string, Match[]>);
-
-    // S'assurer que "Aujourd'hui" et "Demain" sont toujours présents
-    if (!grouped[today]) grouped[today] = [];
-    if (!grouped[tomorrow]) grouped[tomorrow] = [];
-
-    // Trier les dates avec priorité pour aujourd'hui et demain
-    const dates = sortDatesWithPriority(Object.keys(grouped));
-
-    const renderFooter = () => {
-        if (!isLoading) return null;
-
-        return (
-            <View style={styles.loadingFooter}>
-                <ActivityIndicator size="small" color={PRIMARY_COLOR} />
-                <Text style={styles.loadingText}>Chargement...</Text>
-            </View>
-        );
-    };
-
-    const handleEndReached = () => {
-        if (hasMoreData && !isLoading) {
-            loadMoreData();
-        }
-    };
-
-    const handleRefresh = useCallback(() => {
-        refreshData();
-    }, [refreshData]);
 
     // Afficher l'erreur si elle existe
     if (error) {
         return (
-            <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>Erreur: {error}</Text>
-                <Text style={styles.retryText} onPress={refreshData}>
-                    Réessayer
-                </Text>
-            </View>
+            <RetryComponent onRetry={refreshData} />
         );
     }
 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Tchin-Tchins</Text>
+                <Text style={styles.title}>Ibori</Text>
                 <Text style={styles.subtitle}>{matches.length} matches affichés</Text>
             </View>
             <FlatList
-                data={dates}
+                data={allMatchFiltredByDate}
                 keyExtractor={(date) => date}
                 refreshControl={
                     <RefreshControl
                         refreshing={isLoading && matches.length === 0}
                         onRefresh={handleRefresh}
-                        colors={[PRIMARY_COLOR]}
+                        colors={[COLORS.primary]}
                     />
                 }
                 renderItem={({ item: date }) => (
                     <View style={styles.dateSection}>
                         <Text style={styles.dateTitle}>{getSectionLabel(date)}</Text>
                         <Text style={styles.dateShort}>{new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</Text>
-                        {grouped[date].length > 0 ? (
-                            grouped[date].map((match) => {
+                        {groupedMatchsByDate[date].length > 0 ? (
+                            groupedMatchsByDate[date].map((match) => {
                                 const terrainImages = getTerrainImages(match.terrainImages);
                                 return (
                                     <View key={match.matchId} style={styles.cardWrapper}>
@@ -131,7 +92,7 @@ const TchinTchinsScreen: React.FC = () => {
                 showsVerticalScrollIndicator={false}
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={0.1}
-                ListFooterComponent={renderFooter}
+                ListFooterComponent={RenderFooter(isLoading)}
             />
             <View style={{ height: 30 }}></View>
         </View>
@@ -141,14 +102,14 @@ const TchinTchinsScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.background,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         borderBottomWidth: 1,
         borderBottomColor: '#e9ecef',
         elevation: 2,
@@ -188,7 +149,7 @@ const styles = StyleSheet.create({
     },
     card: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         borderRadius: 22,
         overflow: 'hidden',
         elevation: 4,
@@ -233,7 +194,7 @@ const styles = StyleSheet.create({
     },
     cardHour: {
         fontSize: 14,
-        color: PRIMARY_COLOR,
+        color: COLORS.primary,
         fontWeight: 'bold',
     },
     cardLocation: {
@@ -265,7 +226,7 @@ const styles = StyleSheet.create({
     },
     capo: {
         fontSize: 12,
-        color: PRIMARY_COLOR,
+        color: COLORS.primary,
     },
     playersRow: {
         flexDirection: 'row',
@@ -299,23 +260,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
     },
-    errorContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    errorText: {
-        fontSize: 16,
-        color: '#e74c3c',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    retryText: {
-        fontSize: 16,
-        color: PRIMARY_COLOR,
-        textDecorationLine: 'underline',
-    },
+
 });
 
 export default TchinTchinsScreen; 

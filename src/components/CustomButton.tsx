@@ -1,7 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
 import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
 
 interface CustomButtonProps {
     title?: string;
@@ -10,6 +9,7 @@ interface CustomButtonProps {
     style?: ViewStyle;
     textStyle?: TextStyle;
     children?: React.ReactNode;
+    loading?: boolean;
 }
 
 const CustomButton: React.FC<CustomButtonProps> = ({
@@ -18,7 +18,8 @@ const CustomButton: React.FC<CustomButtonProps> = ({
     disabled = false,
     style,
     textStyle,
-    children
+    children,
+    loading = false
 }) => {
     return (
         <TouchableOpacity
@@ -30,7 +31,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
             disabled={disabled}
             onPress={onPress}
         >
-            {children || <Text style={[styles.buttonText, textStyle]}>{title}</Text>}
+            {loading ? <ActivityIndicator size="small" color={colors.white} /> : children || <Text style={[styles.buttonText, textStyle]}>{title}</Text>}
         </TouchableOpacity>
     );
 };
@@ -47,9 +48,14 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     buttonText: {
-        ...typography.button,
         color: colors.white,
+        fontSize: 16,
+        fontWeight: 'bold',
     },
+    // buttonText: {
+    //     ...typography.button,
+    //     color: colors.white,
+    // },
 });
 
 export default CustomButton; 

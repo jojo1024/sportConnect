@@ -1,206 +1,291 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Notification, notificationService } from '../services/notificationService';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { useAppDispatch, useAppSelector } from '../store/hooks/hooks';
+import {
+  selectNotificationCount,
+  selectUser,
+  setNotificationCount,
+} from '../store/slices/userSlice';
 
+// Interface pour le hook
 interface UseNotificationReturn {
-    notifications: Notification[];
-    isLoading: boolean;
-    error: string | null;
-    hasMoreData: boolean;
-    currentPage: number;
-    unreadCount: number;
-    loadMoreData: () => void;
-    refreshData: () => void;
-    markAsRead: (notificationId: number) => Promise<void>;
-    markAllAsRead: () => Promise<void>;
-    deleteNotification: (notificationId: number) => Promise<void>;
+  notifications: Notification[];
+  isLoading: boolean;
+  error: string | null;
+  hasMoreData: boolean;
+  currentPage: number;
+  notificationCount: number;
+  loadMoreData: () => void;
+  refreshData: () => void;
+  markAsRead: (notificationId: number) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  deleteNotification: (notificationId: number) => Promise<void>;
+  handleEndReached: () => void;
+  handleRefresh: () => void;
+  handleNotificationPress: (notification: Notification) => Promise<void>;
+  handleMarkAllAsRead: () => Promise<void>;
 }
 
 export const useNotification = (): UseNotificationReturn => {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [hasMoreData, setHasMoreData] = useState(true);
-    const [unreadCount, setUnreadCount] = useState(0);
-    
-    const user = useSelector((state: RootState) => state.user.user);
-    const utilisateurId = user?.utilisateurId;
-    
-    // Références pour éviter les appels multiples
-    const loadingRef = useRef(false);
-    const unreadCountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUser);
+  const notificationCount = useAppSelector(selectNotificationCount);
+  const utilisateurId = user?.utilisateurId;
 
-    const ITEMS_PER_PAGE = 10;
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreData, setHasMoreData] = useState(true);
 
-    const loadNotifications = useCallback(async (page: number = 1, append: boolean = false) => {
-        if (!utilisateurId || loadingRef.current) return;
-        
-        try {
-            loadingRef.current = true;
-            setIsLoading(true);
-            setError(null);
-            
-            const newNotifications = await notificationService.getNotificationsWithPagination(utilisateurId, page, ITEMS_PER_PAGE);
-            
-            if (newNotifications.length === 0) {
-                setHasMoreData(false);
-            } else if (newNotifications.length < ITEMS_PER_PAGE) {
-                setHasMoreData(false);
-            }
-            
-            if (append) {
-                setNotifications(prev => [...prev, ...newNotifications]);
-            } else {
-                setNotifications(newNotifications);
-            }
-            
-            setCurrentPage(page);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-            console.error('Erreur lors du chargement des notifications:', err);
-        } finally {
-            setIsLoading(false);
-            loadingRef.current = false;
+  const ITEMS_PER_PAGE = 10;
+
+  // Ref pour éviter les appels simultanés
+  const loadingRef = useRef(false);
+  const unreadCountTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /**
+   * Charge les notifications paginées.
+   * @param page - Numéro de la page.
+   * @param append - Si true, ajoute à la liste existante.
+   */
+  const loadNotifications = useCallback(
+    async (page: number = 1, append: boolean = false) => {
+      if (!utilisateurId || loadingRef.current) return;
+
+      try {
+        loadingRef.current = true;
+        setIsLoading(true);
+        setError(null);
+
+        const newNotifications = await notificationService.getNotificationsWithPagination(
+          utilisateurId,
+          page,
+          ITEMS_PER_PAGE
+        );
+
+        if (newNotifications.length < ITEMS_PER_PAGE) {
+          setHasMoreData(false);
         }
-    }, [utilisateurId]);
 
-    const loadUnreadCount = useCallback(async () => {
-        if (!utilisateurId) return;
-        
-        try {
-            const count = await notificationService.getUnreadNotificationsCount(utilisateurId);
-            setUnreadCount(count);
-        } catch (err) {
-            console.error('Erreur lors du chargement du nombre de notifications non lues:', err);
-        }
-    }, [utilisateurId]);
+        setNotifications(prev =>
+          append ? [...prev, ...newNotifications] : newNotifications
+        );
+        setCurrentPage(page);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+        console.error('Erreur lors du chargement des notifications:', err);
+      } finally {
+        setIsLoading(false);
+        loadingRef.current = false;
+      }
+    },
+    [utilisateurId]
+  );
 
-    const loadMoreData = useCallback(() => {
-        if (!isLoading && hasMoreData && !loadingRef.current) {
-            loadNotifications(currentPage + 1, true);
-        }
-    }, [isLoading, hasMoreData, currentPage, loadNotifications]);
+  /**
+   * Charge le nombre de notifications non lues.
+   */
+  const loadUnreadCount = useCallback(async () => {
+    if (!utilisateurId) return;
 
-    const refreshData = useCallback(() => {
-        setHasMoreData(true);
-        setCurrentPage(1);
-        loadNotifications(1, false);
-        
-        // Charger le compteur après un délai pour éviter les appels simultanés
+    try {
+      const count = await notificationService.getUnreadNotificationsCount(utilisateurId);
+      dispatch(setNotificationCount(count));
+    } catch (err) {
+      console.error('Erreur lors du chargement du compteur de notifications:', err);
+    }
+  }, [utilisateurId]);
+
+  /**
+   * Charge plus de notifications (pagination).
+   */
+  const loadMoreData = useCallback(() => {
+    if (!isLoading && hasMoreData && !loadingRef.current) {
+      loadNotifications(currentPage + 1, true);
+    }
+  }, [isLoading, hasMoreData, currentPage, loadNotifications]);
+
+  /**
+   * Rafraîchit la liste des notifications et recharge le compteur.
+   */
+  const refreshData = useCallback(() => {
+    setHasMoreData(true);
+    setCurrentPage(1);
+    loadNotifications(1, false);
+
+    // Recharger le compteur avec délai pour éviter surcharge
+    if (unreadCountTimeoutRef.current) {
+      clearTimeout(unreadCountTimeoutRef.current);
+    }
+    unreadCountTimeoutRef.current = setTimeout(() => {
+      loadUnreadCount();
+    }, 1000);
+  }, [loadNotifications, loadUnreadCount]);
+
+  /**
+   * Marque une notification comme lue.
+   */
+  const markAsRead = useCallback(
+    async (notificationId: number) => {
+      try {
+        await notificationService.markNotificationAsRead(notificationId);
+
+        setNotifications(prev =>
+          prev.map(notification =>
+            notification.notificationId === notificationId
+              ? { ...notification, notificationLue: true }
+              : notification
+          )
+        );
+
         if (unreadCountTimeoutRef.current) {
-            clearTimeout(unreadCountTimeoutRef.current);
+          clearTimeout(unreadCountTimeoutRef.current);
         }
         unreadCountTimeoutRef.current = setTimeout(() => {
-            loadUnreadCount();
+          loadUnreadCount();
         }, 500);
-    }, [loadNotifications, loadUnreadCount]);
+      } catch (err) {
+        console.error('Erreur lors du marquage comme lu:', err);
+        throw err;
+      }
+    },
+    [loadUnreadCount]
+  );
 
-    const markAsRead = useCallback(async (notificationId: number) => {
+  /**
+   * Marque toutes les notifications comme lues.
+   */
+  const markAllAsRead = useCallback(async () => {
+    if (!utilisateurId) return;
+
+    try {
+      await notificationService.markAllNotificationsAsRead(utilisateurId);
+
+      setNotifications(prev =>
+        prev.map(notification => ({ ...notification, notificationLue: true }))
+      );
+
+      dispatch(setNotificationCount(0));
+    } catch (err) {
+      console.error('Erreur lors du marquage global comme lu:', err);
+      throw err;
+    }
+  }, [utilisateurId]);
+
+  /**
+   * Supprime une notification.
+   */
+  const deleteNotification = useCallback(
+    async (notificationId: number) => {
+      try {
+        await notificationService.deleteNotification(notificationId);
+
+        const toDelete = notifications.find(n => n.notificationId === notificationId);
+        setNotifications(prev =>
+          prev.filter(notification => notification.notificationId !== notificationId)
+        );
+
+        if (toDelete && !toDelete.notificationLue) {
+          dispatch(setNotificationCount(notificationCount - 1));
+        }
+      } catch (err) {
+        console.error('Erreur lors de la suppression de la notification:', err);
+        throw err;
+      }
+    },
+    [notifications, notificationCount]
+  );
+
+  /**
+   * Gère la fin de liste (infinite scroll).
+   */
+  const handleEndReached = () => {
+    if (hasMoreData && !isLoading) {
+      loadMoreData();
+    }
+  };
+
+  /**
+   * Rafraîchit les données manuellement (pull to refresh).
+   */
+  const handleRefresh = useCallback(() => {
+    refreshData();
+  }, [refreshData]);
+
+  /**
+   * Gère le clic sur une notification.
+   */
+  const handleNotificationPress = useCallback(
+    async (notification: Notification) => {
+      if (!notification.notificationLue) {
         try {
-            await notificationService.markNotificationAsRead(notificationId);
-            
-            // Mettre à jour l'état local immédiatement
-            setNotifications(prev => 
-                prev.map(notification => 
-                    notification.notificationId === notificationId 
-                        ? { ...notification, notificationLue: true }
-                        : notification
-                )
-            );
-            
-            // Mettre à jour le compteur après un délai
-            if (unreadCountTimeoutRef.current) {
-                clearTimeout(unreadCountTimeoutRef.current);
-            }
-            unreadCountTimeoutRef.current = setTimeout(() => {
-                loadUnreadCount();
-            }, 1000);
-        } catch (err) {
-            console.error('Erreur lors du marquage comme lu:', err);
-            throw err;
+          await markAsRead(notification.notificationId);
+        } catch (error) {
+          console.error('Erreur lors du marquage comme lu:', error);
         }
-    }, [loadUnreadCount]);
+      }
+    },
+    [markAsRead]
+  );
 
-    const markAllAsRead = useCallback(async () => {
-        if (!utilisateurId) return;
-        
-        try {
-            await notificationService.markAllNotificationsAsRead(utilisateurId);
-            
-            // Mettre à jour l'état local immédiatement
-            setNotifications(prev => 
-                prev.map(notification => ({ ...notification, notificationLue: true }))
-            );
-            
-            // Mettre à jour le compteur
-            setUnreadCount(0);
-        } catch (err) {
-            console.error('Erreur lors du marquage de toutes les notifications comme lues:', err);
-            throw err;
+  /**
+   * Gère le bouton "tout marquer comme lu".
+   */
+  const handleMarkAllAsRead = useCallback(async () => {
+    try {
+      await markAllAsRead();
+    } catch (error) {
+      console.error('Erreur lors du marquage global comme lu:', error);
+    }
+  }, [markAllAsRead]);
+
+  /**
+   * Chargement initial des notifications et du compteur.
+   */
+  useEffect(() => {
+    if (utilisateurId) {
+      loadNotifications(1, false);
+
+      const timer = setTimeout(() => {
+        loadUnreadCount();
+      }, 500);
+
+      return () => {
+        clearTimeout(timer);
+        if (unreadCountTimeoutRef.current) {
+          clearTimeout(unreadCountTimeoutRef.current);
         }
-    }, [utilisateurId]);
+      };
+    }
+  }, [utilisateurId, loadNotifications, loadUnreadCount]);
 
-    const deleteNotification = useCallback(async (notificationId: number) => {
-        try {
-            await notificationService.deleteNotification(notificationId);
-            
-            // Mettre à jour l'état local
-            setNotifications(prev => 
-                prev.filter(notification => notification.notificationId !== notificationId)
-            );
-            
-            // Mettre à jour le compteur si la notification n'était pas lue
-            const deletedNotification = notifications.find(n => n.notificationId === notificationId);
-            if (deletedNotification && !deletedNotification.notificationLue) {
-                setUnreadCount(prev => Math.max(0, prev - 1));
-            }
-        } catch (err) {
-            console.error('Erreur lors de la suppression de la notification:', err);
-            throw err;
-        }
-    }, [notifications]);
-
-    // Charger les données initiales
-    useEffect(() => {
-        if (utilisateurId) {
-            loadNotifications(1, false);
-            
-            // Charger le compteur après un délai pour éviter les appels simultanés
-            const timer = setTimeout(() => {
-                loadUnreadCount();
-            }, 1000);
-            
-            return () => {
-                clearTimeout(timer);
-                if (unreadCountTimeoutRef.current) {
-                    clearTimeout(unreadCountTimeoutRef.current);
-                }
-            };
-        }
-    }, [utilisateurId, loadNotifications, loadUnreadCount]);
-
-    // Nettoyer les timeouts lors du démontage
-    useEffect(() => {
-        return () => {
-            if (unreadCountTimeoutRef.current) {
-                clearTimeout(unreadCountTimeoutRef.current);
-            }
-        };
-    }, []);
-
-    return {
-        notifications,
-        isLoading,
-        error,
-        hasMoreData,
-        currentPage,
-        unreadCount,
-        loadMoreData,
-        refreshData,
-        markAsRead,
-        markAllAsRead,
-        deleteNotification,
+  /**
+   * Nettoyage des timeouts au démontage.
+   */
+  useEffect(() => {
+    return () => {
+      if (unreadCountTimeoutRef.current) {
+        clearTimeout(unreadCountTimeoutRef.current);
+      }
     };
-}; 
+  }, []);
+
+  return {
+    notifications,
+    isLoading,
+    error,
+    hasMoreData,
+    currentPage,
+    notificationCount,
+    loadMoreData,
+    refreshData,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    handleEndReached,
+    handleRefresh,
+    handleNotificationPress,
+    handleMarkAllAsRead,
+  };
+};
