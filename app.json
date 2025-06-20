@@ -1,7 +1,30 @@
 {
   "expo": {
-    "name": "sportConnect",
-    "slug": "sportConnect",
-    "version": "1.0.0"
+    "name": "Ibori",
+    "slug": "Ibori",
+    "version": "1.0.0",
+    "scheme": "Ibori",
+    "orientation": "portrait",
+    "icon": "./assets/images/ibori.jpeg",
+    "userInterfaceStyle": "light",
+    "primaryColor": "#FFA500",
+    "plugins": [
+      [
+        "expo-dev-client",
+        {
+          "launchMode": "most-recent"
+        }
+      ]
+    ],
+    "android": {
+      "package": "com.joelitho.sportConnect",
+      "foregroundImage": "./assets/images/ibori.jpeg",
+      "backgroundColor": "#FFFFFF"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2e55ba75-f69f-4d16-80e7-0b241fdc5155"
+      }
+    }
   }
 }
