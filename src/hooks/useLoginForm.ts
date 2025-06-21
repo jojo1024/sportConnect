@@ -2,19 +2,18 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { ScreenNavigationProps } from '../navigation/types';
-import { startLoading, setError, clearError } from '../store/slices/userSlice';
+import { startLoading, setError, clearError, UserRole } from '../store/slices/userSlice';
 import { authService } from '../services/authService';
 import { RootState } from '../store';
 import { useAuthLogin } from '../store/hooks/hooks';
 
 // Types disponibles pour les rôles utilisateurs
-type Role = 'standard' | 'capo' | 'manager';
 
 // Structure de l'état du formulaire
 interface LoginFormState {
   phone: string;
   password: string;
-  selectedRole: Role;
+  selectedRole: UserRole;
 }
 
 // Structure des fonctions de gestion du formulaire
@@ -22,7 +21,7 @@ interface LoginFormHandlers {
   handlePhoneChange: (text: string) => void;
   handlePasswordChange: (text: string) => void;
   handleLogin: () => Promise<void>;
-  setSelectedRole: (role: Role) => void;
+  setSelectedRole: (role: UserRole) => void;
   isFormValid: boolean;
 }
 
@@ -40,7 +39,7 @@ export const useLoginForm = (): [LoginFormState, LoginFormHandlers] => {
   const [formState, setFormState] = useState<LoginFormState>({
     phone: '',
     password: '',
-    selectedRole: 'standard',
+    selectedRole: 'lambda',
   });
 
   /**
@@ -107,7 +106,7 @@ export const useLoginForm = (): [LoginFormState, LoginFormHandlers] => {
   /**
    * Gère le changement de rôle utilisateur.
    */
-  const setSelectedRole = (role: Role) => {
+  const setSelectedRole = (role: UserRole) => {
     setFormState(prev => ({ ...prev, selectedRole: role }));
   };
 

@@ -25,10 +25,26 @@ export interface Match {
     joueurxMax: number;
 }
 
+export interface CreateMatchData {
+    terrainId: number;
+    matchDateDebut: string;
+    matchDateFin: string;
+    matchDuree: number;
+    matchDescription: string;
+    matchNbreParticipant: number;
+    capoId: number;
+}
+
 export interface MatchResponse {
     success: boolean;
     message: string;
     data: Match[];
+}
+
+export interface SingleMatchResponse {
+    success: boolean;
+    message: string;
+    data: Match;
 }
 
 export const matchService = {
@@ -39,6 +55,12 @@ export const matchService = {
 
     getMatchesWithPagination: async (page: number = 1, limit: number = 10): Promise<Match[]> => {
         const response = await api.get<MatchResponse>(`/matchs/fetchAllPaginated?page=${page}&limit=${limit}`);
+        return response.data.data;
+    },
+
+    // Créer un nouveau match
+    createMatch: async (matchData: CreateMatchData): Promise<Match> => {
+        const response = await api.post<SingleMatchResponse>('/matchs/create', matchData);
         return response.data.data;
     },
 };

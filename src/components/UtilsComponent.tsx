@@ -1,5 +1,5 @@
 import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { COLORS } from '../theme/colors';
 
 export const GetIcon = (type: string) => {
@@ -39,30 +39,45 @@ export const RenderFooter = (isLoading: boolean) => {
     );
 };
 
-export  const RetryComponent = ({ onRetry }: { onRetry: () => void }) => {
+export const RetryComponent = ({ onRetry }: { onRetry: () => void }) => {
     return (
-        <View style={styles.errorContainer}>
-                {/* <Text style={styles.errorText}>Erreur: {error}</Text> */}
-                <Text style={styles.errorText}>Erreur: un problème est survenu</Text>
-                <Text style={styles.retryText} onPress={onRetry}>
-                    Réessayer
+        <View style={styles.retryContainer}>
+            <View style={styles.retryCard}>
+                {/* Icône d'erreur */}
+                <View style={styles.retryIconContainer}>
+                    <Ionicons name="alert-circle-outline" size={24} color={COLORS.danger} />
+                </View>
+
+                {/* Message d'erreur */}
+                <Text style={styles.retryErrorText} numberOfLines={2}>
+                    Erreur: un problème est survenu
                 </Text>
+
+                {/* Bouton de rafraîchissement */}
+                <TouchableOpacity
+                    style={styles.retryRefreshButton}
+                    onPress={onRetry}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="refresh" size={18} color={COLORS.primary} />
+                </TouchableOpacity>
             </View>
+        </View>
     );
 };
 
-    // Composant pour l'état vide
-    export const EmptyState = () => (
-        <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconContainer}>
-                <Ionicons name="notifications-off-outline" size={80} color="#888" />
-            </View>
-            <Text style={styles.emptyTitle}>Pas de notifications</Text>
-            <Text style={styles.emptyMessage}>
-                Revenir plus tard pour avoir des infos sur les invitations de parties, demande d'amis et plus encore
-            </Text>
+// Composant pour l'état vide
+export const EmptyState = () => (
+    <View style={styles.emptyContainer}>
+        <View style={styles.emptyIconContainer}>
+            <Ionicons name="notifications-off-outline" size={80} color="#888" />
         </View>
-    );
+        <Text style={styles.emptyTitle}>Pas de notifications</Text>
+        <Text style={styles.emptyMessage}>
+            Revenir plus tard pour avoir des infos sur les invitations de parties, demande d'amis et plus encore
+        </Text>
+    </View>
+);
 
 const styles = StyleSheet.create({
     loadingFooter: {
@@ -77,22 +92,47 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
     },
-    errorContainer: {
+    retryContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    retryCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FEF2F2',
+        borderWidth: 1,
+        borderColor: '#FECACA',
+        borderRadius: 12,
+        padding: 12,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    retryIconContainer: {
+        marginRight: 8,
+    },
+    retryErrorText: {
         flex: 1,
+        fontSize: 14,
+        color: '#DC2626',
+        fontWeight: '500',
+        lineHeight: 18,
+    },
+    retryRefreshButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#F3F4F6',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
-    },
-    errorText: {
-        fontSize: 16,
-        color: COLORS.danger,
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    retryText: {
-        fontSize: 16,
-        color: COLORS.danger,
-        textDecorationLine: 'underline',
+        marginLeft: 8,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
     },
     emptyContainer: {
         flex: 1,

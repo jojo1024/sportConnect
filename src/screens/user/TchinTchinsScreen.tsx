@@ -6,6 +6,7 @@ import { useMatch } from '../../hooks/useMatch';
 import { COLORS } from '../../theme/colors';
 import { calculateMatchDuration, extractHour, getSectionLabel, getTerrainImages } from '../../utils/functions';
 import { name as projectName, version } from '../../../package.json';
+import CompactErrorCard from '../../components/CompactErrorCard';
 
 
 const TchinTchinsScreen: React.FC = () => {
@@ -34,12 +35,20 @@ const TchinTchinsScreen: React.FC = () => {
                     <Text style={styles.title}>{projectName}</Text>
                     <Text style={styles.subtitle}>{version}</Text>
                 </View>
-                <View style={{backgroundColor: "#f2f3f7", borderRadius: 30}}>
+                <View style={{ backgroundColor: "#f2f3f7", borderRadius: 30 }}>
                     <TouchableOpacity style={styles.searchButton}>
                         <Ionicons name="search" size={18} color={COLORS.black} />
                     </TouchableOpacity>
                 </View>
             </View>
+
+            {/* {error && (
+                <CompactErrorCard
+                    message={error}
+                    onRetry={handleRefresh}
+                />
+            )} */}
+
             <FlatList
                 data={allMatchFiltredByDate}
                 keyExtractor={(date) => date}
@@ -56,12 +65,12 @@ const TchinTchinsScreen: React.FC = () => {
                         <Text style={styles.dateShort}>{new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</Text>
                         {groupedMatchsByDate[date].length > 0 ? (
                             groupedMatchsByDate[date].map((match) => {
-                                const terrainImages = getTerrainImages(match.terrainImages);
+                                // const terrainImages = getTerrainImages(match?.terrainImages || [] as string[]);
                                 return (
                                     <View key={match.matchId} style={styles.cardWrapper}>
                                         <View style={styles.card}>
                                             <Image
-                                                source={{ uri: terrainImages[0] }}
+                                                source={{ uri: match.terrainImages?.[0] }}
                                                 style={styles.image}
                                                 defaultSource={{ uri: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=500' }}
                                             />
