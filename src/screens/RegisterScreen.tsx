@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, Platform } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { useRegisterForm } from '../hooks/useRegisterForm';
-import { COLORS, colors } from '../theme/colors';
+import { COLORS } from '../theme/colors';
 import { ScreenNavigationProps } from '../navigation/types';
 import {
     RegisterStepIndicator,
@@ -35,7 +35,6 @@ export default function RegisterScreen() {
                     formState.nom.trim().length <= 30 &&
                     /^[a-zA-ZÀ-ÿ\s\-']+$/.test(formState.nom.trim()) &&
                     /^[0-9]{10}$/.test(cleanPhone) &&
-                    cleanPhone.startsWith('0') &&
                     !!formState.commune &&
                     !handlers.errors.nom &&
                     !handlers.errors.telephone &&
@@ -215,7 +214,7 @@ export default function RegisterScreen() {
                 style={styles.backButton}
                 onPress={() => navigation.goBack()}
             >
-                <Ionicons name="arrow-back" size={24} color={COLORS.textLight} />
+                <Ionicons name="arrow-back" size={24} color={COLORS.text} />
                 <Text style={styles.backButtonText}>Retour</Text>
             </TouchableOpacity>
 
@@ -270,7 +269,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     backButtonText: {
-        color: COLORS.textLight,
+        color: COLORS.text,
         fontSize: 16,
         marginLeft: 10,
     },

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CustomTextInput from '../CustomTextInput';
 import CustomButton from '../CustomButton';
-import { colors } from '../../theme/colors';
+import { COLORS } from '../../theme/colors';
 
 interface PersonalInfoStepProps {
     formState: any;
@@ -61,7 +61,7 @@ export default function PersonalInfoStep({
                 }}
                 onBlur={() => handlers.validateField('telephone')}
                 error={handlers.errors.telephone}
-                placeholder="Ex: 01 23 45 67 89"
+                placeholder="01 23 45 67 89"
                 keyboardType="phone-pad"
                 maxLength={14}
                 returnKeyType="next"
@@ -77,7 +77,7 @@ export default function PersonalInfoStep({
                     <Text style={styles.inputText}>
                         {formState.commune || 'Sélectionner une commune'}
                     </Text>
-                    <Ionicons name="chevron-down" size={24} color={colors.text.secondary} />
+                    <Ionicons name="chevron-down" size={24} color={COLORS.textLight} />
                 </TouchableOpacity>
                 {!!handlers.errors.commune && <Text style={styles.error}>{handlers.errors.commune}</Text>}
             </View>
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     label: {
-        color: '#FF6600',
+        color: COLORS.primary,
         fontWeight: '600',
         marginBottom: 6,
     },
@@ -116,17 +116,17 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         padding: 8,
         fontSize: 16,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
     },
     inputError: {
         borderColor: 'red',
     },
     inputText: {
-        color: colors.text.primary,
+        color: COLORS.text,
         fontSize: 16,
     },
     error: {
-        color: 'red',
+        color: COLORS.danger,
         fontSize: 13,
         marginTop: 4,
     },

@@ -76,8 +76,6 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
                     
                     if (!/^[0-9]{10}$/.test(cleanPhone)) {
                         errorMessage = 'Le numéro de téléphone doit contenir exactement 10 chiffres';
-                    } else if (!cleanPhone.startsWith('0')) {
-                        errorMessage = 'Le numéro de téléphone doit commencer par 0';
                     }
                 }
                 break;
@@ -247,8 +245,6 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
                 utilisateurRole: 'lambda',
                 utilisateurMotDePasse: formState.motDePasse
             });
-
-            console.log("🚀 ~ handleRegister ~ response:", response);
 
             // Connecter automatiquement l'utilisateur après inscription
             await login(response.user, {

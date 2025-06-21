@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import CustomTextInput from '../CustomTextInput';
 import CustomButton from '../CustomButton';
-import { colors } from '../../theme/colors';
+import { COLORS } from '../../theme/colors';
 
 interface SecurityStepProps {
     formState: any;
@@ -61,7 +61,7 @@ export default function SecurityStep({
                     title="<"
                     onPress={onPrev}
                     style={styles.secondaryButton}
-                    textStyle={{ color: colors.text.secondary }}
+                    textStyle={{ color: COLORS.textLight }}
                 />
                 <CustomButton
                     title="Créer un compte"
@@ -70,7 +70,7 @@ export default function SecurityStep({
                     style={{ flex: 1 }}
                 >
                     {isLoading ? (
-                        <ActivityIndicator color={colors.white} />
+                        <ActivityIndicator color={COLORS.white} />
                     ) : (
                         <Text style={styles.buttonText}>S'inscrire</Text>
                     )}
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     secondaryButton: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         width: 50,
         borderWidth: 1,
         borderColor: '#ccc',
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     buttonText: {
-        color: '#fff',
+        color: COLORS.white,
         fontWeight: 'bold',
         fontSize: 17,
     },

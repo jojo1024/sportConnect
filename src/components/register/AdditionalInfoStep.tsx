@@ -3,8 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomButton from '../CustomButton';
-import { colors } from '../../theme/colors';
-import { PRIMARY_COLOR } from '../../utils/constant';
+import { COLORS } from '../../theme/colors';
 
 interface AdditionalInfoStepProps {
     formState: any;
@@ -47,12 +46,12 @@ export default function AdditionalInfoStep({
                     <Text style={styles.inputText}>
                         {formatDisplayDate(formState.dateNaiss)}
                     </Text>
-                    <Ionicons name="calendar-outline" size={24} color={colors.text.secondary} />
+                    <Ionicons name="calendar-outline" size={24} color={COLORS.textLight} />
                 </TouchableOpacity>
                 {!!handlers.errors.dateNaiss && formState.dateNaiss && <Text style={styles.error}>{handlers.errors.dateNaiss}</Text>}
                 {formState.dateNaiss && !handlers.errors.dateNaiss && (
                     <View style={styles.validIndicator}>
-                        <Ionicons name="checkmark-circle" size={16} color="#00aa00" />
+                        <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
                         <Text style={styles.validText}>
                             {(() => {
                                 try {
@@ -147,7 +146,7 @@ export default function AdditionalInfoStep({
                     title="<"
                     onPress={onPrev}
                     style={styles.secondaryButton}
-                    textStyle={{ color: colors.text.secondary }}
+                    textStyle={{ color: COLORS.textLight }}
                 />
                 <CustomButton
                     title="Suivant"
@@ -171,7 +170,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     label: {
-        color: '#FF6600',
+        color: COLORS.primary,
         fontWeight: '600',
         marginBottom: 6,
     },
@@ -190,7 +189,7 @@ const styles = StyleSheet.create({
         borderColor: 'red',
     },
     inputText: {
-        color: colors.text.primary,
+        color: COLORS.textLight,
         fontSize: 16,
     },
     error: {
@@ -204,7 +203,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     validText: {
-        color: colors.text.primary,
+        color: COLORS.textLight,
         fontSize: 14,
         marginLeft: 4,
     },
@@ -221,17 +220,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     sexeButtonActive: {
-        backgroundColor: PRIMARY_COLOR,
-        borderColor: PRIMARY_COLOR,
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
     },
     sexeButtonText: {
         // ...typography.body1,
         fontSize: 16,
         fontWeight: 'bold',
-        color: colors.text.primary,
+        color: COLORS.textLight,
     },
     sexeButtonTextActive: {
-        color: colors.white,
+        color: COLORS.white,
     },
     buttonContainer: {
         flexDirection: 'row',
@@ -261,14 +260,14 @@ const styles = StyleSheet.create({
         marginLeft: 10,
     },
     datePickerButtonConfirm: {
-        backgroundColor: PRIMARY_COLOR,
+        backgroundColor: COLORS.primary,
         borderRadius: 5,
     },
     datePickerButtonText: {
-        color: colors.text.secondary,
+        color: COLORS.textLight,
         fontSize: 16,
     },
     datePickerButtonTextConfirm: {
-        color: colors.white,
+        color: COLORS.white,
     },
 }); 

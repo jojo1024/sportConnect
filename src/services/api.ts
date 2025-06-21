@@ -36,7 +36,7 @@ export interface LoginData {
 }
 
 // Configuration de l'API
-const API_URL = 'http://192.168.100.4:50006/v1'; // Pour l'émulateur Android
+const API_URL = 'http://192.168.100.8:50006/v1'; // Pour l'émulateur Android
 
 // Création de l'instance axios
 const api = axios.create({

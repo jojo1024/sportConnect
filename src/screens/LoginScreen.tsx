@@ -5,7 +5,6 @@ import { ScreenNavigationProps } from '../navigation/types';
 import CustomTextInput from '../components/CustomTextInput';
 import CustomButton from '../components/CustomButton';
 import { useLoginForm } from '../hooks/useLoginForm';
-import { PRIMARY_COLOR } from '../utils/constant';
 import { useAppSelector } from '../store/hooks/hooks';
 import { selectError, selectIsLoading } from '../store/slices/userSlice';
 import { COLORS } from '../theme/colors';
@@ -35,10 +34,18 @@ export default function LoginScreen() {
             <CustomTextInput
                 label="Numéro de téléphone"
                 value={formState.phone}
-                onChangeText={formHandlers.handlePhoneChange}
-                placeholder="0612345678"
+                onChangeText={(text) => {
+                    const cleanText = text.replace(/[^0-9]/g, '');
+                    let formattedText = cleanText;
+                    if (cleanText.length > 0) {
+                        formattedText = cleanText.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+                    }
+                    formHandlers.handlePhoneChange(formattedText);
+                }}
+                placeholder="06 12 34 56 78"
                 keyboardType="phone-pad"
                 returnKeyType="next"
+                maxLength={14}
                 onSubmitEditing={() => passwordInputRef.current?.focus()}
             />
 
@@ -121,8 +128,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     roleButtonSelected: {
-        backgroundColor: PRIMARY_COLOR,
-        borderColor: PRIMARY_COLOR,
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
     },
     roleText: {
         color: '#666',
@@ -158,7 +165,7 @@ const styles = StyleSheet.create({
     },
     errorContainer: {
         backgroundColor: '#ffebee',
-        borderColor: '#f44336',
+        borderColor: COLORS.danger,
         borderWidth: 1,
         borderRadius: 8,
         padding: 12,

@@ -13,7 +13,8 @@ import {
     View
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import { PRIMARY_COLOR, WINDOW_HEIGHT } from '../../utils/constant';
+import { COLORS } from '../../theme/colors';
+import { SIZES } from '../../theme/typography';
 
 // Données de test pour les terrains
 const MOCK_FIELDS = [
@@ -96,7 +97,7 @@ const CreatePartyScreen: React.FC = () => {
                     style={styles.addButton}
                     // onPress={() => navigation.navigate('AddTerrain')}
                 >
-                    <Ionicons name="save" size={16} color={PRIMARY_COLOR} />
+                    <Ionicons name="save" size={16} color={COLORS.primary} />
                     <Text style={styles.addButtonText}>Créer</Text>
                 </TouchableOpacity>
             </View>
@@ -106,7 +107,7 @@ const CreatePartyScreen: React.FC = () => {
                     {/* Sélection du terrain */}
                     <View style={styles.card}>
                         <View style={styles.cardHeader}>
-                            <Ionicons name="location" size={24} color="#ff6600" />
+                            <Ionicons name="location" size={24} color={COLORS.primary} />
                             <Text style={styles.cardTitle}>Terrain</Text>
                         </View>
                         <TouchableOpacity
@@ -123,7 +124,7 @@ const CreatePartyScreen: React.FC = () => {
                     {/* Date et heure */}
                     <View style={styles.card}>
                         <View style={styles.cardHeader}>
-                            <Ionicons name="calendar" size={24} color="#ff6600" />
+                            <Ionicons name="calendar" size={24} color={COLORS.primary} />
                             <Text style={styles.cardTitle}>Date et heure</Text>
                         </View>
                         <View style={styles.dateTimeContainer}>
@@ -131,7 +132,7 @@ const CreatePartyScreen: React.FC = () => {
                                 style={styles.dateTimeButton}
                                 onPress={() => setShowDatePicker(true)}
                             >
-                                <Ionicons name="calendar-outline" size={20} color="#ff6600" />
+                                <Ionicons name="calendar-outline" size={20} color={COLORS.primary} />
                                 <Text style={styles.dateTimeText}>
                                     {formatDate(date)}
                                 </Text>
@@ -140,7 +141,7 @@ const CreatePartyScreen: React.FC = () => {
                                 style={styles.dateTimeButton}
                                 onPress={() => setShowTimePicker(true)}
                             >
-                                <Ionicons name="time-outline" size={20} color="#ff6600" />
+                                <Ionicons name="time-outline" size={20} color={COLORS.primary} />
                                 <Text style={styles.dateTimeText}>
                                     {formatTime(date)}
                                 </Text>
@@ -151,7 +152,7 @@ const CreatePartyScreen: React.FC = () => {
                     {/* Durée */}
                     <View style={styles.card}>
                         <View style={styles.cardHeader}>
-                            <Ionicons name="hourglass" size={24} color="#ff6600" />
+                            <Ionicons name="hourglass" size={24} color={COLORS.primary} />
                             <Text style={styles.cardTitle}>Durée</Text>
                         </View>
                         <ScrollView
@@ -184,7 +185,7 @@ const CreatePartyScreen: React.FC = () => {
                     {/* Format de jeu */}
                     <View style={styles.card}>
                         <View style={styles.cardHeader}>
-                            <Ionicons name="people" size={24} color="#ff6600" />
+                            <Ionicons name="people" size={24} color={COLORS.primary} />
                             <Text style={styles.cardTitle}>Format de jeu</Text>
                         </View>
                         <View style={styles.formatContainer}>
@@ -213,7 +214,7 @@ const CreatePartyScreen: React.FC = () => {
                     {/* Description */}
                     <View style={styles.card}>
                         <View style={styles.cardHeader}>
-                            <Ionicons name="chatbubble" size={24} color="#ff6600" />
+                            <Ionicons name="chatbubble" size={24} color={COLORS.primary} />
                             <Text style={styles.cardTitle}>Message aux participants</Text>
                         </View>
                         <TextInput
@@ -235,7 +236,7 @@ const CreatePartyScreen: React.FC = () => {
                 ref={bottomSheetRef}
                 closeOnDragDown={true}
                 closeOnPressMask={true}
-                height={WINDOW_HEIGHT - 200}
+                height={SIZES.height - 200}
                 customStyles={{
                     wrapper: {
                         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -417,8 +418,8 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     durationButtonSelected: {
-        backgroundColor: '#ff6600',
-        borderColor: '#ff6600',
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
     },
     durationButtonText: {
         fontSize: 14,
@@ -445,8 +446,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     formatButtonSelected: {
-        backgroundColor: '#ff6600',
-        borderColor: '#ff6600',
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
     },
     formatButtonText: {
         fontSize: 16,
@@ -511,11 +512,12 @@ const styles = StyleSheet.create({
         borderColor: 'transparent',
     },
     fieldCardSelected: {
-        borderColor: '#ff6600',
+        borderColor: COLORS.primary,
     },
     fieldImage: {
         width: 100,
         height: 100,
+        borderRadius: 10,
     },
     fieldInfo: {
         flex: 1,
@@ -541,7 +543,7 @@ const styles = StyleSheet.create({
     },
     fieldPrice: {
         fontSize: 12,
-        color: PRIMARY_COLOR,
+        color: COLORS.primary,
         fontWeight: '600',
     },
     fieldHeader: {
@@ -554,7 +556,7 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: '#ff6600',
+        backgroundColor: COLORS.primary,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -572,10 +574,10 @@ const styles = StyleSheet.create({
         borderRadius: 40,
         // elevation: 2,
         borderWidth: 1,
-        borderColor: PRIMARY_COLOR,
+        borderColor: COLORS.primary,
     },
     addButtonText: {
-        color: PRIMARY_COLOR,
+        color: COLORS.primary,
         fontWeight: '600',
         marginLeft: 8,
         fontSize: 12,

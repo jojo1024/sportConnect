@@ -9,7 +9,7 @@ import { CreatePartyScreen, NotificationsCapoScreen, ProfileCapoScreen, TchinTch
 import { ReservationsScreen, SettingsScreen, StatisticsScreen, TerrainsScreen } from '../screens/manager';
 import { NotificationsScreen, ProfileScreen, TchinTchinsScreen } from '../screens/user';
 import { UserRole } from '../store/slices/userSlice';
-import { PRIMARY_COLOR } from '../utils/constant';
+import { COLORS } from '../theme/colors';
 
 const Tab = createBottomTabNavigator();
 
@@ -153,7 +153,7 @@ export const BottomTabs: React.FC<BottomTabsProps> = ({ userRole }) => {
     return (
         <Tab.Navigator
             screenOptions={{
-                tabBarActiveTintColor: PRIMARY_COLOR,
+                tabBarActiveTintColor: COLORS.primary,
                 tabBarInactiveTintColor: 'gray',
                 tabBarStyle: {
                     height: 55,

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TextInputProps, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { PRIMARY_COLOR } from '../utils/constant';
+import { COLORS } from '../theme/colors';
 
 interface CustomTextInputProps extends TextInputProps {
     label?: string;
@@ -43,7 +43,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
                     style={styles.input}
                     placeholderTextColor="#ccc"
                     secureTextEntry={shouldHideText}
-                    selectionColor={PRIMARY_COLOR}
+                    selectionColor={COLORS.primary}
                     editable={isEditable}
                     ref={refInput}
                     keyboardType={keyboardType}
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     label: {
-        color: '#FF6600',
+        color: COLORS.primary,
         fontWeight: '500',
         marginBottom: 6,
     },
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#eee',
         borderRadius: 8,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
     },
     input: {
         flex: 1,

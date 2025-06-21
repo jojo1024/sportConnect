@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { GetIcon, RenderFooter, RetryComponent } from '../../components/UtilsComponent';
+import { EmptyState, GetIcon, RenderFooter, RetryComponent } from '../../components/UtilsComponent';
 import { useNotification } from '../../hooks/useNotification';
 import { COLORS } from '../../theme/colors';
 import { formatNotificationDate } from '../../utils/functions';
@@ -18,6 +18,7 @@ const NotificationsScreen: React.FC = () => {
         handleNotificationPress,
         handleMarkAllAsRead
     } = useNotification();
+
 
 
     // Afficher l'erreur si elle existe
@@ -78,10 +79,14 @@ const NotificationsScreen: React.FC = () => {
                 }}
                 ItemSeparatorComponent={() => <View style={styles.separator} />}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={[
+                    styles.listContent,
+                    notifications.length === 0 && { flex: 1, justifyContent: 'center' }
+                ]}
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={0.1}
                 ListFooterComponent={RenderFooter(isLoading)}
+                ListEmptyComponent={!isLoading ? <EmptyState /> : null}
             />
             <View style={{ height: 50 }}></View>
         </View>
@@ -118,6 +123,11 @@ const styles = StyleSheet.create<Styles>({
     listContent: {
         padding: 16,
     },
+    emptyListContent: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+
     notificationItem: {
         flexDirection: 'row',
         backgroundColor: COLORS.white,

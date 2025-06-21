@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useRef } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { notificationService } from '../services/notificationService';
-import { RootState } from '../store';
-import { PRIMARY_COLOR } from '../utils/constant';
-import { selectNotificationCount, selectUser, setNotificationCount } from '../store/slices/userSlice';
 import { useAppDispatch, useAppSelector } from '../store/hooks/hooks';
+import { selectNotificationCount, selectUser, setNotificationCount } from '../store/slices/userSlice';
+import { COLORS } from '../theme/colors';
 
 interface NotificationBadgeProps {
     size?: number;
@@ -18,9 +16,7 @@ const NotificationBadge: React.FC<NotificationBadgeProps> = ({
 }) => {
     const dispatch = useAppDispatch();
     const notificationCount = useAppSelector(selectNotificationCount);
-    console.log("🚀 ~ notificationCount:ssssssssssssss", notificationCount)
 
-    // const [unreadCount, setUnreadCount] = useState(0);
     const user = useAppSelector(selectUser);
     const utilisateurId = user?.utilisateurId;
     
@@ -93,7 +89,7 @@ const NotificationBadge: React.FC<NotificationBadgeProps> = ({
 
 const styles = StyleSheet.create({
     badge: {
-        backgroundColor: PRIMARY_COLOR,
+        backgroundColor: COLORS.primary,
         justifyContent: 'center',
         alignItems: 'center',
         position: 'absolute',
@@ -103,10 +99,10 @@ const styles = StyleSheet.create({
         minHeight: 18,
         borderRadius: 9,
         borderWidth: 2,
-        borderColor: '#fff',
+        borderColor: COLORS.white,
     },
     badgeText: {
-        color: '#fff',
+        color: COLORS.white,
         fontWeight: 'bold',
         textAlign: 'center',
     },

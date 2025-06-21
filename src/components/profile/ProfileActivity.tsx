@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, FlatList, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { COLORS } from '../../theme/colors';
 
 interface Activity {
     id: number;
@@ -44,7 +45,7 @@ const styles = StyleSheet.create({
     info: { flex: 1 },
     label: { fontSize: 15, color: '#222', marginBottom: 4 },
     row: { flexDirection: 'row', alignItems: 'center' },
-    points: { color: '#FF6600', fontWeight: 'bold', marginLeft: 4, marginRight: 10 },
+    points: { color: COLORS.primary, fontWeight: 'bold', marginLeft: 4, marginRight: 10 },
     date: { color: '#888', fontSize: 13 },
 });
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome5, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../../theme/colors';
 
 interface ProfileStatsProps {
     games: number;
@@ -11,17 +12,17 @@ interface ProfileStatsProps {
 const ProfileStats: React.FC<ProfileStatsProps> = ({ games, fields, hours }) => (
     <View style={styles.container}>
         <View style={styles.statItem}>
-            <FontAwesome5 name="futbol" size={24} color="#FF6600" />
+                <FontAwesome5 name="futbol" size={24} color={COLORS.primary} />
             <Text style={styles.statNumber}>{games}</Text>
             <Text style={styles.statLabel}>Parties</Text>
         </View>
         <View style={styles.statItem}>
-            <MaterialCommunityIcons name="soccer-field" size={24} color="#FF6600" />
+            <MaterialCommunityIcons name="soccer-field" size={24} color={COLORS.primary} />
             <Text style={styles.statNumber}>{fields}</Text>
             <Text style={styles.statLabel}>Terrains</Text>
         </View>
         <View style={styles.statItem}>
-            <Ionicons name="time-outline" size={24} color="#FF6600" />
+            <Ionicons name="time-outline" size={24} color={COLORS.primary} />
             <Text style={styles.statNumber}>{hours}</Text>
             <Text style={styles.statLabel}>Heures</Text>
         </View>
@@ -32,7 +33,7 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         marginHorizontal: 16,
         paddingVertical: 13,
         borderRadius: 16,

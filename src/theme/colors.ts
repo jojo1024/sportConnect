@@ -1,15 +1,4 @@
-export const colors = {
-    primary: '#FF6600',
-    background: '#FFFFFF',
-    surface: '#F5F5F5',
-    text: {
-        primary: '#000000',
-        secondary: '#666666',
-    },
-    border: '#E0E0E0',
-    error: '#FF3B30',
-    white: '#FFFFFF',
-}; 
+
 
 export const COLORS = {
 	primary: '#FF6600',
@@ -45,5 +34,6 @@ export const COLORS = {
 	redLight: "rgba(248,92,111,.2)",
 	themePrimary: "#1630C2",
 	themeSecondary: "#FF74B9",
-	disabledColor: '#d3d3d3'
+	disabledColor: '#d3d3d3',
+    black: "#000000",
 }

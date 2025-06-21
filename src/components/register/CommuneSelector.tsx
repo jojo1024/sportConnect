@@ -2,9 +2,9 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import { colors } from '../../theme/colors';
-import { PRIMARY_COLOR, WINDOW_HEIGHT } from '../../utils/constant';
 import { COMMUNES_ABIDJAN } from '../../utils/constant';
+import { COLORS } from '../../theme/colors';
+import { SIZES } from '../../theme/typography';
 
 interface CommuneSelectorProps {
     bottomSheetRef: React.RefObject<RBSheet | null>;
@@ -32,7 +32,7 @@ export default function CommuneSelector({
             ref={bottomSheetRef}
             closeOnDragDown={true}
             closeOnPressMask={true}
-            height={WINDOW_HEIGHT - 200}
+            height={SIZES.height - 200}
             customStyles={{
                 wrapper: {
                     backgroundColor: "rgba(0,0,0,0.5)"
@@ -49,13 +49,14 @@ export default function CommuneSelector({
                 <View style={styles.searchContainer}>
                     <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
                     <TextInput
+                        selectionColor={COLORS.primary}
                         style={styles.searchInput}
                         placeholder="Rechercher une commune..."
                         value={searchCommune}
                         onChangeText={setSearchCommune}
                     />
                 </View>
-                <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: WINDOW_HEIGHT - 400 }}>
+                <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: SIZES.height - 400 }}>
                     {filteredCommunes.map((communeName) => (
                         <TouchableOpacity
                             key={communeName}
@@ -68,7 +69,7 @@ export default function CommuneSelector({
                         >
                             <Text style={styles.communeItemText}>{communeName}</Text>
                             {formState.commune === communeName && (
-                                <Ionicons name="checkmark-circle" size={24} color={PRIMARY_COLOR} />
+                                <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
                             )}
                         </TouchableOpacity>
                     ))}

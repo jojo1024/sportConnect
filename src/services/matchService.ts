@@ -5,7 +5,6 @@ export interface Match {
     matchDateDebut: string;
     matchDateFin: string;
     matchDuree: number;
-    matchFormat: string;
     matchDescription: string;
     matchNbreParticipant: number;
     matchStatus: 'enAttente' | 'confirme' | 'annule' | 'termine';

@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors } from '../../theme/colors';
-import { PRIMARY_COLOR } from '../../utils/constant';
+import { COLORS } from '../../theme/colors';
 
 interface RegisterStepIndicatorProps {
     currentStep: number;
@@ -74,7 +73,7 @@ export default function RegisterStepIndicator({ currentStep, validateStep }: Reg
 
 const styles = StyleSheet.create({
     stepInfo: {
-        color: colors.text.secondary,
+        color: COLORS.textLight,
         fontSize: 14,
         marginBottom: 20,
     },
@@ -95,12 +94,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     stepCircleActive: {
-        borderColor: PRIMARY_COLOR,
-        backgroundColor: PRIMARY_COLOR,
+        borderColor: COLORS.primary,
+        backgroundColor: COLORS.primary,
     },
     stepCircleComplete: {
-        borderColor: PRIMARY_COLOR,
-        backgroundColor: PRIMARY_COLOR,
+        borderColor: COLORS.primary,
+        backgroundColor: COLORS.primary,
     },
     stepNumber: {
         fontSize: 18,
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
     stepNumberComplete: {
-        color: colors.white,
+        color: COLORS.white,
     },
     stepLine: {
         width: 60,
@@ -119,6 +118,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#ccc',
     },
     stepLineActive: {
-        backgroundColor: PRIMARY_COLOR,
+        backgroundColor: COLORS.primary,
     },
 }); 

@@ -1,11 +1,11 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useCallback } from 'react';
-import { FlatList, Image, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import React from 'react';
+import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { RenderFooter, RetryComponent } from '../../components/UtilsComponent';
 import { useMatch } from '../../hooks/useMatch';
-import { Match } from '../../services/matchService';
 import { COLORS } from '../../theme/colors';
-import { calculateMatchDuration, extractDate, extractHour, getSectionLabel, getTerrainImages, sortDatesWithPriority, today, tomorrow } from '../../utils/functions';
+import { calculateMatchDuration, extractHour, getSectionLabel, getTerrainImages } from '../../utils/functions';
+import { name as projectName, version } from '../../../package.json';
 
 
 const TchinTchinsScreen: React.FC = () => {
@@ -30,8 +30,15 @@ const TchinTchinsScreen: React.FC = () => {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Ibori</Text>
-                <Text style={styles.subtitle}>{matches.length} matches affichés</Text>
+                <View style={styles.headerTitle}>
+                    <Text style={styles.title}>{projectName}</Text>
+                    <Text style={styles.subtitle}>{version}</Text>
+                </View>
+                <View style={{backgroundColor: "#f2f3f7", borderRadius: 30}}>
+                    <TouchableOpacity style={styles.searchButton}>
+                        <Ionicons name="search" size={18} color={COLORS.black} />
+                    </TouchableOpacity>
+                </View>
             </View>
             <FlatList
                 data={allMatchFiltredByDate}
@@ -67,7 +74,6 @@ const TchinTchinsScreen: React.FC = () => {
                                                 </View>
                                                 <Text style={styles.cardLocation}>{match.terrainLocalisation}</Text>
                                                 <View style={styles.cardFieldRow}>
-                                                    {/* <Text style={styles.cardField}>{match.matchFormat || 'Match standard'}</Text> */}
                                                     <Text style={styles.cardFormat}>Temps de jeu: {calculateMatchDuration(match.matchDateDebut, match.matchDateFin)}</Text>
                                                 </View>
                                                 <View style={styles.cardFooter}>
@@ -119,15 +125,20 @@ const styles = StyleSheet.create({
         shadowRadius: 3,
         marginBottom: 15,
     },
+    headerTitle: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     title: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#1a1a1a',
+        color: COLORS.primary,
     },
     subtitle: {
-        fontSize: 12,
+        fontSize: 8,
         color: '#666',
         fontStyle: 'italic',
+        paddingTop: 10,
     },
     dateSection: {
         marginBottom: 32,
@@ -260,7 +271,9 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
     },
-
+    searchButton: {
+        padding: 10,
+    },
 });
 
 export default TchinTchinsScreen; 

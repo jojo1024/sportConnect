@@ -1,6 +1,5 @@
 import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { PRIMARY_COLOR } from '../utils/constant';
 import { COLORS } from '../theme/colors';
 
 export const GetIcon = (type: string) => {
@@ -34,7 +33,7 @@ export const RenderFooter = (isLoading: boolean) => {
 
     return (
         <View style={styles.loadingFooter}>
-            <ActivityIndicator size="small" color={PRIMARY_COLOR} />
+            <ActivityIndicator size="small" color={COLORS.primary} />
             <Text style={styles.loadingText}>Chargement...</Text>
         </View>
     );
@@ -51,6 +50,19 @@ export  const RetryComponent = ({ onRetry }: { onRetry: () => void }) => {
             </View>
     );
 };
+
+    // Composant pour l'état vide
+    export const EmptyState = () => (
+        <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconContainer}>
+                <Ionicons name="notifications-off-outline" size={80} color="#888" />
+            </View>
+            <Text style={styles.emptyTitle}>Pas de notifications</Text>
+            <Text style={styles.emptyMessage}>
+                Revenir plus tard pour avoir des infos sur les invitations de parties, demande d'amis et plus encore
+            </Text>
+        </View>
+    );
 
 const styles = StyleSheet.create({
     loadingFooter: {
@@ -81,5 +93,27 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: COLORS.danger,
         textDecorationLine: 'underline',
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 15,
+    },
+    emptyIconContainer: {
+        marginBottom: 24,
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: '500',
+        color: '#1a1a1a',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    emptyMessage: {
+        fontSize: 16,
+        color: COLORS.textLight,
+        textAlign: 'center',
+        // lineHeight: 24,
     },
 });
