@@ -11,6 +11,7 @@ import {
     Linking
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { PRIMARY_COLOR } from '../../utils/constant';
 import { Terrain } from '../../services/terrainService';
@@ -80,6 +81,19 @@ const TerrainDetailsScreen: React.FC = () => {
     const handleEdit = () => {
         // TODO: Naviguer vers l'écran d'édition
         Alert.alert('Fonctionnalité', 'Édition du terrain à implémenter');
+    };
+
+    const handleCopyContact = async () => {
+        if (terrain.terrainContact) {
+            try {
+                await Clipboard.setStringAsync(terrain.terrainContact);
+                Alert.alert('Succès', 'Contact copié dans le presse-papiers');
+            } catch (error) {
+                Alert.alert('Erreur', 'Impossible de copier le contact');
+            }
+        } else {
+            Alert.alert('Erreur', 'Aucun contact disponible');
+        }
     };
 
     const handleDelete = () => {
@@ -186,7 +200,12 @@ const TerrainDetailsScreen: React.FC = () => {
 
                 {/* Informations principales */}
                 <View style={styles.mainInfo}>
-                    <Text style={styles.terrainName}>{terrain.terrainNom}</Text>
+                    <View style={styles.titleRow}>
+                        <Text style={styles.terrainName}>{terrain.terrainNom}</Text>
+                        <TouchableOpacity style={styles.editIconButton} onPress={handleEdit}>
+                            <Ionicons name="create-outline" size={24} color={PRIMARY_COLOR} />
+                        </TouchableOpacity>
+                    </View>
                     <View style={styles.locationContainer}>
                         <Ionicons name="location" size={20} color={PRIMARY_COLOR} />
                         <Text style={styles.locationText}>{terrain.terrainLocalisation}</Text>
@@ -195,10 +214,7 @@ const TerrainDetailsScreen: React.FC = () => {
 
                 {/* Actions rapides */}
                 <View style={styles.actionButtons}>
-                    {/* <TouchableOpacity style={styles.actionButton} onPress={handleCall}>
-                        <Ionicons name="call" size={20} color="#fff" />
-                        <Text style={styles.actionButtonText}>Appeler</Text>
-                    </TouchableOpacity> */}
+                $
 
                     <TouchableOpacity style={styles.actionButton} onPress={handleReservations}>
                         <FontAwesome5 name="calendar-alt" size={18} color="#fff" />
@@ -245,6 +261,9 @@ const TerrainDetailsScreen: React.FC = () => {
                                     <Text style={styles.detailLabel}>Contact</Text>
                                     <Text style={styles.detailValue}>{terrain.terrainContact}</Text>
                                 </View>
+                                <TouchableOpacity style={styles.copyButton} onPress={handleCopyContact}>
+                                    <Ionicons name="copy-outline" size={20} color={PRIMARY_COLOR} />
+                                </TouchableOpacity>
                             </View>
                         )}
                     </View>
@@ -260,22 +279,6 @@ const TerrainDetailsScreen: React.FC = () => {
                     </View>
                 )}
 
-
-                {/* Actions de gestion */}
-                <View style={styles.managementSection}>
-                    <Text style={styles.sectionTitle}>Gestion du terrain</Text>
-                    <View style={styles.managementButtons}>
-                        <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-                            <Ionicons name="create-outline" size={20} color="#fff" />
-                            <Text style={styles.editButtonText}>Modifier</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-                            <Ionicons name="trash-outline" size={20} color="#fff" />
-                            <Text style={styles.deleteButtonText}>Supprimer</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
 
                 <View style={{ height: 100 }} />
             </ScrollView>
@@ -347,11 +350,17 @@ const styles = StyleSheet.create({
         padding: 20,
         marginBottom: 16,
     },
+    titleRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
     terrainName: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#1a1a1a',
-        marginBottom: 8,
+        flex: 1,
     },
     locationContainer: {
         flexDirection: 'row',
@@ -462,35 +471,11 @@ const styles = StyleSheet.create({
     },
     managementButtons: {
         flexDirection: 'row',
-        gap: 12,
-    },
-    editButton: {
-        flex: 1,
-        backgroundColor: PRIMARY_COLOR,
-        flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 12,
-        borderRadius: 8,
     },
-    editButtonText: {
-        color: '#fff',
-        fontWeight: '600',
-        marginLeft: 6,
-    },
-    deleteButton: {
-        flex: 1,
-        backgroundColor: '#dc3545',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        borderRadius: 8,
-    },
-    deleteButtonText: {
-        color: '#fff',
-        fontWeight: '600',
-        marginLeft: 6,
+    copyButton: {
+        padding: 8,
+        marginLeft: 8,
     },
     prevButton: {
         position: 'absolute',
@@ -509,6 +494,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         zIndex: 10,
         right: 10,
+    },
+    editIconButton: {
+        padding: 8,
     },
 });
 
