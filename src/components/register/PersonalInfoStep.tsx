@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CustomTextInput from '../CustomTextInput';
 import CustomButton from '../CustomButton';
+import PhoneInput from '../PhoneInput';
 import { COLORS } from '../../theme/colors';
 
 interface PersonalInfoStepProps {
@@ -26,7 +27,7 @@ export default function PersonalInfoStep({
     return (
         <>
             {/* <Text style={styles.stepTitle}>Informations personnelles</Text> */}
-            
+
             <CustomTextInput
                 label="Nom d'utilisateur"
                 value={formState.nom}
@@ -47,23 +48,15 @@ export default function PersonalInfoStep({
                 onSubmitEditing={() => telephoneRef.current?.focus()}
             />
 
-            <CustomTextInput
+            <PhoneInput
                 label="Numéro de téléphone"
                 value={formState.telephone}
                 onChangeText={(text) => {
-                    const cleanText = text.replace(/[^0-9]/g, '');
-                    let formattedText = cleanText;
-                    if (cleanText.length > 0) {
-                        formattedText = cleanText.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
-                    }
-                    handlers.handleTelephoneChange(formattedText);
+                    handlers.handleTelephoneChange(text);
                     setGlobalError('');
                 }}
-                onBlur={() => handlers.validateField('telephone')}
                 error={handlers.errors.telephone}
                 placeholder="01 23 45 67 89"
-                keyboardType="phone-pad"
-                maxLength={14}
                 returnKeyType="next"
                 refInput={telephoneRef}
             />

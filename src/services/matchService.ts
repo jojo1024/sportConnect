@@ -23,6 +23,7 @@ export interface Match {
     terrainStatut: 'enAttente' | 'valide' | 'refuse';
     nbreJoueursInscrits: number;
     joueurxMax: number;
+    matchPrixParJoueur: number;
 }
 
 export interface CreateMatchData {
@@ -47,20 +48,157 @@ export interface SingleMatchResponse {
     data: Match;
 }
 
+export interface CreateMatchResponse {
+    success: boolean;
+    message: string;
+    data: Match;
+}
+
+export interface MatchParticipant {
+    participantId: number;
+    utilisateurNom: string;
+    utilisateurTelephone?: string;
+    utilisateurCommune?: string;
+    utilisateurPhoto?: string;
+}
+
+export interface MatchParticipantsResponse {
+    success: boolean;
+    message: string;
+    data: MatchParticipant[];
+}
+
 export const matchService = {
     getMatches: async (): Promise<Match[]> => {
-        const response = await api.get<MatchResponse>('/matchs/fetchAll');
-        return response.data.data;
+        try {
+            const response = await api.get<MatchResponse>('/matchs/fetchAll');
+            return response.data.data;
+        } catch (error) {
+            console.error('Erreur lors de la récupération des matchs:', error);
+            throw error;
+        }
     },
 
     getMatchesWithPagination: async (page: number = 1, limit: number = 10): Promise<Match[]> => {
-        const response = await api.get<MatchResponse>(`/matchs/fetchAllPaginated?page=${page}&limit=${limit}`);
-        return response.data.data;
+        try {
+            const response = await api.get<MatchResponse>(`/matchs/fetchAllPaginated?page=${page}&limit=${limit}`);
+            return response.data.data;
+        } catch (error) {
+            console.error('Erreur lors de la récupération des matchs paginés:', error);
+            throw error;
+        }
     },
 
     // Créer un nouveau match
     createMatch: async (matchData: CreateMatchData): Promise<Match> => {
-        const response = await api.post<SingleMatchResponse>('/matchs/create', matchData);
-        return response.data.data;
+        try {
+            console.log('🚀 ~ Envoi des données de création de match:', matchData);
+            const response = await api.post<CreateMatchResponse>('/matchs/create', matchData);
+            console.log('🚀 ~ Réponse de création de match:', response.data);
+            return response.data.data;
+        } catch (error: any) {
+            console.error('Erreur lors de la création du match:', error);
+            
+            // Gestion spécifique des erreurs de disponibilité de terrain
+            if (error?.response?.status === 400) {
+                const errorMessage = error?.response?.data?.message || 'Erreur lors de la création du match';
+                throw new Error(errorMessage);
+            }
+            
+            throw error;
+        }
+    },
+
+    // Participer à un match
+    participateInMatch: async (matchId: number): Promise<any> => {
+        try {
+            console.log("🚀 ~ participateInMatch: ~ matchId:", matchId)
+            const response = await api.post('/matchs/participate', { 
+                matchId
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Erreur lors de la participation au match:', error);
+           
+            throw error;
+        }
+    },
+
+    // Se retirer d'un match
+    withdrawFromMatch: async (matchId: number, participantId: number): Promise<any> => {
+        try {
+            const response = await api.post('/matchs/withdraw', { matchId, lambdaId: participantId });
+            return response.data;
+        } catch (error) {
+            console.error('Erreur lors du retrait du match:', error);
+            throw error;
+        }
+    },
+
+    // Confirmer un match (pour les gérants)
+    confirmMatch: async (matchId: number, gerantId: number): Promise<any> => {
+        try {
+            const response = await api.post('/matchs/confirm', { matchId, gerantId });
+            return response.data;
+        } catch (error) {
+            console.error('Erreur lors de la confirmation du match:', error);
+            throw error;
+        }
+    },
+
+    // Annuler un match
+    cancelMatch: async (matchId: number, raison?: string): Promise<any> => {
+        try {
+            const response = await api.post('/matchs/cancel', { matchId, raison });
+            return response.data;
+        } catch (error) {
+            console.error('Erreur lors de l\'annulation du match:', error);
+            throw error;
+        }
+    },
+
+    // Finaliser un match
+    finalizeMatch: async (matchId: number): Promise<any> => {
+        try {
+            const response = await api.post('/matchs/finalize', { matchId });
+            return response.data;
+        } catch (error) {
+            console.error('Erreur lors de la finalisation du match:', error);
+            throw error;
+        }
+    },
+
+    // Rechercher des matchs
+    searchMatches: async (filters: any): Promise<Match[]> => {
+        try {
+            const response = await api.get<MatchResponse>('/matchs/search', { params: filters });
+            return response.data.data;
+        } catch (error) {
+            console.error('Erreur lors de la recherche de matchs:', error);
+            throw error;
+        }
+    },
+
+    // Vérifier la disponibilité d'un terrain
+    checkTerrainAvailability: async (terrainId: number, dateDebut: string, dateFin: string): Promise<any> => {
+        try {
+            const response = await api.get(`/matchs/check-availability`, {
+                params: { terrainId, dateDebut, dateFin }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Erreur lors de la vérification de disponibilité:', error);
+            throw error;
+        }
+    },
+
+    fetchMatchParticipants: async (matchId: number): Promise<MatchParticipant[]> => {
+        try {
+            const response = await api.get<MatchParticipantsResponse>(`/matchs/fetchMatchParticipants?matchId=${matchId}`);
+            return response.data.data;
+        } catch (error) {
+            console.error('Erreur lors de la récupération des participants:', error);
+            throw error;
+        }
     },
 };

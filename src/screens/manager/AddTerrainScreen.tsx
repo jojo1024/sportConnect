@@ -1,492 +1,544 @@
-import React, { useState } from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useState, useRef } from 'react';
 import {
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
     View,
     Text,
-    StyleSheet,
-    TextInput,
     TouchableOpacity,
-    ScrollView,
     Image,
+    ActivityIndicator,
     Platform,
     KeyboardAvoidingView,
-    ActivityIndicator,
-    Alert,
+    FlatList,
+    TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { useNavigation } from '@react-navigation/native';
+import { Header, Card } from '../../components/addTerrain';
+import { useAddTerrain } from '../../hooks/useAddTerrain';
+import { COLORS } from '../../theme/colors';
+import CustomTextInput from '../../components/CustomTextInput';
+import PhoneInput from '../../components/PhoneInput';
+import CompactErrorCard from '../../components/CompactErrorCard';
+import SuccessCard from '../../components/SuccessCard';
 
-interface LocationResult {
-    display_name: string;
-    lat: string;
-    lon: string;
+// Composant pour la saisie de localisation
+interface LocationInputProps {
+    value: string;
+    onChangeText: (text: string) => void;
+    error?: string;
+    refInput: React.RefObject<TextInput | null>;
+    onSubmitEditing: () => void;
 }
 
-interface LocationSearchProps {
-    onLocationSelect: (location: LocationResult) => void;
-    initialValue?: string;
+const LocationInput: React.FC<LocationInputProps> = ({ value, onChangeText, error, refInput, onSubmitEditing }) => (
+    <CustomTextInput
+        label="Localisation"
+        value={value}
+        onChangeText={onChangeText}
+        placeholder="Ex: Cocody cité mermoz"
+        error={error}
+        returnKeyType="next"
+        refInput={refInput}
+        onSubmitEditing={onSubmitEditing}
+    />
+);
+
+// Composant pour la sélection d'images multiples
+interface ImageSelectorProps {
+    onImageSelect: () => Promise<void>;
+    onImageRemove: (index: number) => void;
+    selectedImages: string[];
+    error?: string;
 }
 
-const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect, initialValue = '' }) => {
-    const [searchQuery, setSearchQuery] = useState(initialValue);
-    const [searchResults, setSearchResults] = useState<LocationResult[]>([]);
-    const [isSearching, setIsSearching] = useState(false);
-
-    const searchLocation = async (query: string) => {
-        if (query.length < 3) {
-            setSearchResults([]);
-            return;
-        }
-
-        setIsSearching(true);
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=fr&limit=5`
-            );
-            const data = await response.json();
-            setSearchResults(data);
-        } catch (error) {
-            console.error('Erreur lors de la recherche:', error);
-            Alert.alert('Erreur', 'Impossible de rechercher la localisation');
-        } finally {
-            setIsSearching(false);
-        }
-    };
-
-    const handleLocationSelect = (location: LocationResult) => {
-        setSearchQuery(location.display_name);
-        setSearchResults([]);
-        onLocationSelect(location);
-    };
-
-    return (
-        <View style={styles.locationContainer}>
-            <TextInput
-                style={styles.input}
-                value={searchQuery}
-                onChangeText={(text) => {
-                    setSearchQuery(text);
-                    searchLocation(text);
-                }}
-                placeholder="Rechercher une adresse"
-            />
-            {isSearching && (
-                <ActivityIndicator style={styles.searchIndicator} color="#007AFF" />
-            )}
-            {searchResults.length > 0 && (
-                <View style={styles.searchResults}>
-                    {searchResults.map((result, index) => (
-                        <TouchableOpacity
-                            key={index}
-                            style={styles.searchResultItem}
-                            onPress={() => handleLocationSelect(result)}
-                        >
-                            <Ionicons name="location" size={16} color="#666" />
-                            <Text style={styles.searchResultText}>
-                                {result.display_name}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
+const ImageSelector: React.FC<ImageSelectorProps> = ({ onImageSelect, onImageRemove, selectedImages, error }) => (
+    <View style={styles.imageSelectorContainer}>
+        <FlatList
+            data={selectedImages}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={({ item, index }) => (
+                <View style={styles.imageItem}>
+                    <Image source={{ uri: item }} style={styles.selectedImage} />
+                    <TouchableOpacity
+                        style={styles.removeImageButton}
+                        onPress={() => onImageRemove(index)}
+                    >
+                        <Ionicons name="close-circle" size={24} color="#fff" />
+                    </TouchableOpacity>
                 </View>
             )}
-        </View>
-    );
-};
-
-const AddTerrainScreen: React.FC = () => {
-    const [formData, setFormData] = useState({
-        name: '',
-        location: '',
-        pricePerHour: '',
-        startTime: new Date(),
-        endTime: new Date(),
-    });
-    const [image, setImage] = useState<string | null>(null);
-    const [showStartTimePicker, setShowStartTimePicker] = useState(false);
-    const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-    const [errors, setErrors] = useState<Record<string, string>>({});
-
-    const validateForm = () => {
-        const newErrors: Record<string, string> = {};
-
-        if (!formData.name.trim()) {
-            newErrors.name = 'Le nom du terrain est requis';
-        }
-        if (!formData.location.trim()) {
-            newErrors.location = 'La localisation est requise';
-        }
-        if (!formData.pricePerHour.trim()) {
-            newErrors.pricePerHour = 'Le prix par heure est requis';
-        } else if (isNaN(Number(formData.pricePerHour))) {
-            newErrors.pricePerHour = 'Le prix doit être un nombre valide';
-        }
-        if (!image) {
-            newErrors.image = 'Une photo de couverture est requise';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleLocationSelect = (location: LocationResult) => {
-        setFormData({ ...formData, location: location.display_name });
-    };
-
-    const pickImage = async () => {
-        try {
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [16, 9],
-                quality: 1,
-            });
-
-            if (!result.canceled && result.assets && result.assets.length > 0) {
-                setImage(result.assets[0].uri);
-                setErrors(prev => ({ ...prev, image: '' }));
+            ListFooterComponent={
+                selectedImages.length < 5 ? (
+                    <TouchableOpacity
+                        style={[styles.addImageButton, error && styles.addImageButtonError]}
+                        onPress={onImageSelect}
+                        activeOpacity={0.8}
+                    >
+                        <Ionicons name="add" size={32} color={COLORS.primary} />
+                        <Text style={styles.addImageText}>Ajouter</Text>
+                    </TouchableOpacity>
+                ) : null
             }
-        } catch (error) {
-            console.error('Erreur lors de la sélection de l\'image:', error);
-            Alert.alert('Erreur', 'Impossible de sélectionner l\'image');
-        }
+        />
+        {selectedImages.length === 0 && (
+            <TouchableOpacity
+                style={[styles.imageSelector, error && styles.imageSelectorError]}
+                onPress={onImageSelect}
+                activeOpacity={0.8}
+            >
+                <View style={styles.imageSelectorContent}>
+                    <View style={styles.imageSelectorIcon}>
+                        <Ionicons name="camera" size={32} color="#fff" />
+                    </View>
+                    <Text style={styles.imageSelectorText}>Sélectionner des photos (max 5)</Text>
+                </View>
+            </TouchableOpacity>
+        )}
+        {error && <Text style={styles.errorText}>{error}</Text>}
+    </View>
+);
+
+// Composant pour la sélection d'heure
+interface TimeSelectorProps {
+    label: string;
+    time: string;
+    onPress: () => void;
+}
+
+const TimeSelector: React.FC<TimeSelectorProps> = ({ label, time, onPress }) => (
+    <TouchableOpacity style={styles.timeSelector} onPress={onPress}>
+        <Text style={styles.timeSelectorLabel}>{label}</Text>
+        <Text style={styles.timeSelectorValue}>{time}</Text>
+        <Ionicons name="time" size={20} color={COLORS.primary} />
+    </TouchableOpacity>
+);
+
+// Composant principal
+const AddTerrainScreen: React.FC = () => {
+    const navigation = useNavigation();
+
+    // Refs pour la navigation entre les champs
+    const nomRef = useRef<TextInput>(null);
+    const localisationRef = useRef<TextInput>(null);
+    const descriptionRef = useRef<TextInput>(null);
+    const contactRef = useRef<TextInput>(null);
+    const prixRef = useRef<TextInput>(null);
+
+    const {
+        formData,
+        errors,
+        isSubmitting,
+        showStartTimePicker,
+        showEndTimePicker,
+        successMessage,
+        errorMessage,
+        setTerrainNom,
+        setTerrainLocalisation,
+        setTerrainDescription,
+        setTerrainContact,
+        setTerrainPrixParHeure,
+        setShowStartTimePicker,
+        setShowEndTimePicker,
+        handleStartTimeChange,
+        handleEndTimeChange,
+        pickImage,
+        removeImage,
+        handleSubmit,
+        isFormReady,
+        clearSuccessMessage,
+        clearErrorMessage,
+    } = useAddTerrain();
+
+    const handleBack = () => {
+        navigation.goBack();
     };
 
-    const handleSubmit = () => {
-        if (validateForm()) {
-            // TODO: Implémenter la logique de soumission
-            console.log('Form data:', formData);
+    const handleRetry = () => {
+        clearErrorMessage();
+        // Optionnel : relancer la soumission
+        if (isFormReady) {
+            handleSubmit();
         }
-    };
-
-    const formatTime = (date: Date) => {
-        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     };
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.container}
-        >
-            <View style={styles.header}>
-                <Text style={styles.title}>Ajouter un Terrain</Text>
-                <TouchableOpacity
-                    style={[styles.submitButton, Object.keys(errors).length > 0 && styles.submitButtonDisabled]}
-                    onPress={handleSubmit}
-                    disabled={Object.keys(errors).length > 0}
-                >
-                    <Text style={styles.submitButtonText}>Ajouter</Text>
-                </TouchableOpacity>
-            </View>
+        <SafeAreaView style={styles.safeArea}>
+            <Header
+                onSave={handleSubmit}
+                onBack={handleBack}
+                isSubmitting={isSubmitting}
+                isFormReady={isFormReady}
+            />
 
-            <ScrollView style={styles.scrollView}>
-                <View style={styles.formContainer}>
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Nom du terrain</Text>
-                        <TextInput
-                            style={[styles.input, errors.name && styles.inputError]}
-                            value={formData.name}
-                            onChangeText={(text) => {
-                                setFormData({ ...formData, name: text });
-                                setErrors(prev => ({ ...prev, name: '' }));
-                            }}
-                            placeholder="Ex: Terrain de Foot Central"
-                        />
-                        {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
-                    </View>
+            {/* Affichage des messages de succès et d'erreur */}
+            {successMessage && (
+                <SuccessCard
+                    message={successMessage}
+                    onClose={clearSuccessMessage}
+                />
+            )}
 
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Localisation</Text>
-                        <LocationSearch onLocationSelect={handleLocationSelect} initialValue={formData.location} />
-                        {errors.location && <Text style={styles.errorText}>{errors.location}</Text>}
-                    </View>
+            {errorMessage && (
+                <CompactErrorCard
+                    message={errorMessage}
+                    onRetry={handleRetry}
+                />
+            )}
 
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Prix par heure (€)</Text>
-                        <TextInput
-                            style={[styles.input, errors.pricePerHour && styles.inputError]}
-                            value={formData.pricePerHour}
-                            onChangeText={(text) => {
-                                setFormData({ ...formData, pricePerHour: text });
-                                setErrors(prev => ({ ...prev, pricePerHour: '' }));
-                            }}
-                            keyboardType="numeric"
-                            placeholder="Ex: 80"
-                        />
-                        {errors.pricePerHour && <Text style={styles.errorText}>{errors.pricePerHour}</Text>}
-                    </View>
-
-                    <View style={styles.timeContainer}>
-                        <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                            <Text style={styles.label}>Heure d'ouverture</Text>
-                            <TouchableOpacity
-                                style={styles.timeInput}
-                                onPress={() => setShowStartTimePicker(true)}
-                            >
-                                <Text>{formatTime(formData.startTime)}</Text>
-                            </TouchableOpacity>
-                            {showStartTimePicker && (
-                                <DateTimePicker
-                                    value={formData.startTime}
-                                    mode="time"
-                                    is24Hour={true}
-                                    display="default"
-                                    onChange={(event, selectedDate) => {
-                                        setShowStartTimePicker(false);
-                                        if (selectedDate) {
-                                            setFormData({ ...formData, startTime: selectedDate });
-                                        }
-                                    }}
-                                />
-                            )}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.keyboardAvoidingView}
+            >
+                <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+                    <View style={styles.formContainer}>
+                        {/* Informations générales */}
+                        <View style={styles.infoSection}>
+                            <Text style={styles.infoTitle}>Informations du terrain</Text>
+                            <Text style={styles.infoText}>
+                                Ajoutez un nouveau terrain sportif pour permettre aux utilisateurs de réserver des créneaux.
+                            </Text>
                         </View>
-                        <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                            <Text style={styles.label}>Heure de fermeture</Text>
-                            <TouchableOpacity
-                                style={styles.timeInput}
-                                onPress={() => setShowEndTimePicker(true)}
-                            >
-                                <Text>{formatTime(formData.endTime)}</Text>
-                            </TouchableOpacity>
-                            {showEndTimePicker && (
-                                <DateTimePicker
-                                    value={formData.endTime}
-                                    mode="time"
-                                    is24Hour={true}
-                                    display="default"
-                                    onChange={(event, selectedDate) => {
-                                        setShowEndTimePicker(false);
-                                        if (selectedDate) {
-                                            setFormData({ ...formData, endTime: selectedDate });
-                                        }
-                                    }}
-                                />
-                            )}
-                        </View>
-                    </View>
 
-                    <View style={styles.imageSection}>
-                        <Text style={styles.coverLabel}>Photo de couverture</Text>
-                        <TouchableOpacity
-                            style={[styles.coverUploadContainer, errors.image && styles.inputError]}
-                            onPress={pickImage}
-                            activeOpacity={0.8}
-                        >
-                            <View style={styles.coverUploadContent}>
-                                <View style={styles.roundButton}>
-                                    <Ionicons name="camera" size={32} color="#fff" />
-                                </View>
-                                <Text style={styles.coverUploadText}>Sélectionner une photo</Text>
+                        <Card icon="business" title="Informations générales">
+                            <CustomTextInput
+                                label="Nom du terrain"
+                                value={formData.terrainNom}
+                                onChangeText={setTerrainNom}
+                                placeholder="Ex: Terrain de Foot Central"
+                                error={errors.terrainNom}
+                                returnKeyType="next"
+                                refInput={nomRef}
+                                onSubmitEditing={() => localisationRef.current?.focus()}
+                            />
+
+                            <LocationInput
+                                value={formData.terrainLocalisation}
+                                onChangeText={setTerrainLocalisation}
+                                error={errors.terrainLocalisation}
+                                refInput={localisationRef}
+                                onSubmitEditing={() => contactRef.current?.focus()}
+                            />
+
+                            <PhoneInput
+                                label="Numero"
+                                value={formData.terrainContact}
+                                onChangeText={setTerrainContact}
+                                error={errors.terrainContact}
+                                returnKeyType="next"
+                                refInput={contactRef}
+                                onSubmitEditing={() => descriptionRef.current?.focus()}
+                            />
+
+                            <CustomTextInput
+                                label="Description (optionnel)"
+                                value={formData.terrainDescription}
+                                onChangeText={setTerrainDescription}
+                                placeholder="Décrivez votre terrain..."
+                                multiline
+                                numberOfLines={3}
+                                style={styles.textArea}
+                                returnKeyType="next"
+                                refInput={descriptionRef}
+                                onSubmitEditing={() => prixRef.current?.focus()}
+                            />
+
+
+                        </Card>
+
+                        <Card icon="cash" title="Tarification">
+                            <CustomTextInput
+                                label="Prix par heure (FCFA)"
+                                value={formData.terrainPrixParHeure}
+                                onChangeText={setTerrainPrixParHeure}
+                                placeholder="Ex: 15000"
+                                keyboardType="numeric"
+                                // returnKeyType="done"
+                                error={errors.terrainPrixParHeure}
+                                refInput={prixRef}
+                            />
+                        </Card>
+
+                        <Card icon="time" title="Horaires d'ouverture">
+                            <View style={styles.timeContainer}>
+                                <TimeSelector
+                                    label="Heure d'ouverture"
+                                    time={formData.terrainHoraires.ouverture}
+                                    onPress={() => setShowStartTimePicker(true)}
+                                />
+                                <TimeSelector
+                                    label="Heure de fermeture"
+                                    time={formData.terrainHoraires.fermeture}
+                                    onPress={() => setShowEndTimePicker(true)}
+                                />
                             </View>
-                            {image && (
-                                <Image source={{ uri: image }} style={styles.coverImagePreview} />
-                            )}
-                        </TouchableOpacity>
-                        {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
+                        </Card>
+
+                        <Card icon="image" title="Photos du terrain">
+                            <ImageSelector
+                                onImageSelect={pickImage}
+                                onImageRemove={removeImage}
+                                selectedImages={formData.terrainImages}
+                                error={errors.terrainImages}
+                            />
+                        </Card>
+
+                        {/* Résumé du terrain */}
+                        {isFormReady && (
+                            <View style={styles.summarySection}>
+                                <Text style={styles.summaryTitle}>Résumé de votre terrain</Text>
+                                <View style={styles.summaryCard}>
+                                    <View style={styles.summaryRow}>
+                                        <Text style={styles.summaryLabel}>Nom:</Text>
+                                        <Text style={styles.summaryValue}>{formData.terrainNom}</Text>
+                                    </View>
+                                    <View style={styles.summaryRow}>
+                                        <Text style={styles.summaryLabel}>Localisation:</Text>
+                                        <Text style={styles.summaryValue} numberOfLines={2}>
+                                            {formData.terrainLocalisation}
+                                        </Text>
+                                    </View>
+                                    <View style={styles.summaryRow}>
+                                        <Text style={styles.summaryLabel}>Contact:</Text>
+                                        <Text style={styles.summaryValue}>{formData.terrainContact}</Text>
+                                    </View>
+                                    <View style={styles.summaryRow}>
+                                        <Text style={styles.summaryLabel}>Prix:</Text>
+                                        <Text style={styles.summaryValue}>{formData.terrainPrixParHeure} FCFA/heure</Text>
+                                    </View>
+                                    <View style={styles.summaryRow}>
+                                        <Text style={styles.summaryLabel}>Horaires:</Text>
+                                        <Text style={styles.summaryValue}>
+                                            {formData.terrainHoraires.ouverture} - {formData.terrainHoraires.fermeture}
+                                        </Text>
+                                    </View>
+                                    <View style={styles.summaryRow}>
+                                        <Text style={styles.summaryLabel}>Photos:</Text>
+                                        <Text style={styles.summaryValue}>
+                                            {formData.terrainImages.length} photo(s)
+                                        </Text>
+                                    </View>
+                                    {formData.terrainDescription && (
+                                        <View style={styles.summaryRow}>
+                                            <Text style={styles.summaryLabel}>Description:</Text>
+                                            <Text style={styles.summaryValue} numberOfLines={2}>
+                                                {formData.terrainDescription}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </View>
+                            </View>
+                        )}
                     </View>
-                </View>
-            </ScrollView>
-        </KeyboardAvoidingView>
+                    <View style={{ height: 60 }} />
+                </ScrollView>
+            </KeyboardAvoidingView>
+
+            {/* Date/Time Pickers */}
+            {showStartTimePicker && (
+                <DateTimePicker
+                    value={new Date(`2000-01-01T${formData.terrainHoraires.ouverture}`)}
+                    mode="time"
+                    is24Hour={true}
+                    display="default"
+                    onChange={handleStartTimeChange}
+                />
+            )}
+
+            {showEndTimePicker && (
+                <DateTimePicker
+                    value={new Date(`2000-01-01T${formData.terrainHoraires.fermeture}`)}
+                    mode="time"
+                    is24Hour={true}
+                    display="default"
+                    onChange={handleEndTimeChange}
+                />
+            )}
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
+    safeArea: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#f5f7fa',
     },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e9ecef',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+    keyboardAvoidingView: {
+        flex: 1,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#1a1a1a',
-        letterSpacing: 0.5,
-    },
-    scrollView: {
+    container: {
         flex: 1,
     },
     formContainer: {
-        padding: 20,
+        padding: 16,
+        gap: 16,
     },
-    inputGroup: {
-        marginBottom: 24,
-    },
-    label: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#2c3e50',
-        marginBottom: 10,
-        letterSpacing: 0.3,
-    },
-    input: {
-        backgroundColor: '#fff',
+    infoSection: {
+        backgroundColor: COLORS.white,
         padding: 16,
         borderRadius: 12,
-        fontSize: 16,
-        borderWidth: 1,
-        borderColor: '#e9ecef',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        marginBottom: 8,
     },
-    inputError: {
-        borderColor: '#dc3545',
-        borderWidth: 2,
+    infoTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: COLORS.primary,
+        marginBottom: 4,
+    },
+    infoText: {
+        fontSize: 14,
+        color: '#666',
+        lineHeight: 20,
+    },
+    inputGroup: {
+        marginBottom: 16,
+    },
+    inputLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 8,
+    },
+    textArea: {
+        height: 80,
+        textAlignVertical: 'top',
     },
     errorText: {
         color: '#dc3545',
         fontSize: 12,
-        marginTop: 6,
+        marginTop: 4,
         fontWeight: '500',
     },
-    timeInput: {
-        backgroundColor: '#fff',
-        padding: 16,
-        borderRadius: 12,
+    timeContainer: {
+        gap: 12,
+    },
+    timeSelector: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#f8f9fa',
+        padding: 12,
+        borderRadius: 8,
         borderWidth: 1,
         borderColor: '#e9ecef',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
     },
-    timeContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 24,
+    timeSelectorLabel: {
+        fontSize: 14,
+        color: '#666',
     },
-    imageSection: {
-        marginTop: 10,
-    },
-    coverLabel: {
-        color: '#2c3e50',
-        fontSize: 15,
+    timeSelectorValue: {
+        fontSize: 16,
         fontWeight: '600',
-        marginBottom: 10,
-        letterSpacing: 0.3,
+        color: '#333',
     },
-    coverUploadContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
+    imageSelectorContainer: {
+        marginBottom: 8,
+    },
+    imageSelector: {
+        backgroundColor: '#f8f9fa',
+        borderRadius: 12,
+        marginTop: 10,
         borderWidth: 2,
         borderColor: '#e9ecef',
         borderStyle: 'dashed',
-        height: 180,
+        height: 120,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 10,
         overflow: 'hidden',
-        position: 'relative',
     },
-    coverUploadContent: {
+    imageSelectorError: {
+        borderColor: '#dc3545',
+    },
+    imageSelectorContent: {
+        alignItems: 'center',
+    },
+    imageSelectorIcon: {
+        backgroundColor: COLORS.primary,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 2,
+        marginBottom: 8,
     },
-    roundButton: {
-        backgroundColor: '#FF6600',
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 12,
-        elevation: 4,
-        shadowColor: '#FF6600',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-    },
-    coverUploadText: {
-        color: '#6c757d',
-        fontSize: 15,
-        fontWeight: '500',
-        letterSpacing: 0.3,
-    },
-    coverImagePreview: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        borderRadius: 16,
-        zIndex: 1,
-    },
-    submitButton: {
-        backgroundColor: '#FF6600',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 12,
-        shadowColor: '#FF6600',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 4,
-    },
-    submitButtonDisabled: {
-        backgroundColor: '#ccc',
-        shadowOpacity: 0,
-        elevation: 0,
-    },
-    submitButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-        letterSpacing: 0.5,
-    },
-    locationContainer: {
-        position: 'relative',
-    },
-    searchIndicator: {
-        position: 'absolute',
-        right: 16,
-        top: 16,
-    },
-    searchResults: {
-        position: 'absolute',
-        top: '100%',
-        left: 0,
-        right: 0,
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        marginTop: 8,
-        borderWidth: 1,
-        borderColor: '#e9ecef',
-        zIndex: 1000,
-        maxHeight: 200,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    searchResultItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e9ecef',
-    },
-    searchResultText: {
-        marginLeft: 12,
+    imageSelectorText: {
+        color: '#666',
         fontSize: 14,
-        color: '#2c3e50',
         fontWeight: '500',
+    },
+    imageItem: {
+        marginRight: 12,
+        position: 'relative',
+    },
+    selectedImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 8,
+    },
+    removeImageButton: {
+        position: 'absolute',
+        top: -8,
+        right: -8,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        borderRadius: 12,
+    },
+    addImageButton: {
+        width: 80,
+        height: 80,
+        borderRadius: 8,
+        borderWidth: 2,
+        borderColor: COLORS.primary,
+        borderStyle: 'dashed',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f8f9fa',
+    },
+    addImageButtonError: {
+        borderColor: '#dc3545',
+    },
+    addImageText: {
+        fontSize: 12,
+        color: COLORS.primary,
+        marginTop: 4,
+    },
+    summarySection: {
+        marginTop: 8,
+    },
+    summaryTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 12,
+    },
+    summaryCard: {
+        backgroundColor: COLORS.white,
+        padding: 16,
+        borderRadius: 12,
+        borderLeftWidth: 4,
+        borderLeftColor: COLORS.primary,
+    },
+    summaryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 8,
+    },
+    summaryLabel: {
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
+        flex: 1,
+    },
+    summaryValue: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '600',
+        flex: 2,
+        textAlign: 'right',
     },
 });
 

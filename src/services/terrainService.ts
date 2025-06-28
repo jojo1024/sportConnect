@@ -10,6 +10,18 @@ export interface Terrain {
     terrainHoraires: any;
     terrainImages: string[];
     terrainStatus: number;
+    terrainDisponibilite: "confirme" | "en_attente";
+}
+
+export interface CreateTerrainData {
+    terrainNom: string;
+    terrainLocalisation: string;
+    terrainDescription?: string;
+    terrainContact?: string;
+    terrainPrixParHeure: number;
+    terrainHoraires: any;
+    terrainImages: string[];
+    gerantId: number;
 }
 
 export interface TerrainResponse {
@@ -25,9 +37,21 @@ export interface SingleTerrainResponse {
 }
 
 export const terrainService = {
+    // Créer un nouveau terrain
+    createTerrain: async (terrainData: CreateTerrainData): Promise<Terrain> => {
+        const response = await api.post<SingleTerrainResponse>('/terrains/create', terrainData);
+        return response.data.data;
+    },
+
     // Récupérer tous les terrains disponibles
-    getAllTerrains: async (): Promise<Terrain[]> => {
-        const response = await api.get<TerrainResponse>('/terrains/fetchAll');
+    getAllTerrains: async (terrainDisponibilite: "confirme" | "en_attente"): Promise<Terrain[]> => {
+        const response = await api.get<TerrainResponse>(`/terrains/fetchAll/${terrainDisponibilite}`);
+        return response.data.data;
+    },
+
+    // Récupérer les terrains d'un manager spécifique
+    getManagerTerrains: async (managerId: number): Promise<Terrain[]> => {
+        const response = await api.get<TerrainResponse>('/terrains/my-terrains');
         return response.data.data;
     },
 

@@ -3,6 +3,7 @@ import React from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import ProfileStats from '../../components/profile/ProfileStats';
+import CreditBalance from '../../components/profile/CreditBalance';
 import { useAppSelector, useAuthLogout } from '../../store/hooks/hooks';
 import { selectUser } from '../../store/slices/userSlice';
 import { COLORS } from '../../theme/colors';
@@ -20,10 +21,12 @@ const ProfileScreen: React.FC = () => {
 
     const utilisateur = useAppSelector(selectUser);
 
-    const handleLogout =  () => {
-         logout();
+    const handleLogout = () => {
+        logout();
     };
-    
+
+
+
     return (
         <FlatList
             style={styles.bg}

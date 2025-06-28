@@ -1,6 +1,10 @@
 import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { COLORS } from '../theme/colors';
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { selectAccessToken, selectRefreshToken, selectUser } from '../store/slices/userSlice';
 
 export const GetIcon = (type: string) => {
     switch (type) {
@@ -79,6 +83,33 @@ export const EmptyState = () => (
     </View>
 );
 
+interface DebugTokenProps {
+    visible?: boolean;
+}
+
+export const DebugTokenInfo: React.FC<DebugTokenProps> = ({ visible = false }) => {
+    const accessToken = useSelector(selectAccessToken);
+    const refreshToken = useSelector(selectRefreshToken);
+    const user = useSelector(selectUser);
+
+    if (!visible) return null;
+
+    return (
+        <View style={styles.debugContainer}>
+            <Text style={styles.debugTitle}>🔍 Debug Tokens</Text>
+            <Text style={styles.debugText}>
+                User: {user ? `${user.utilisateurNom} (${user.utilisateurRole})` : 'Non connecté'}
+            </Text>
+            <Text style={styles.debugText}>
+                Access Token: {accessToken ? `${accessToken.substring(0, 20)}...` : 'Non défini'}
+            </Text>
+            <Text style={styles.debugText}>
+                Refresh Token: {refreshToken ? `${refreshToken.substring(0, 20)}...` : 'Non défini'}
+            </Text>
+        </View>
+    );
+};
+
 const styles = StyleSheet.create({
     loadingFooter: {
         flexDirection: 'row',
@@ -155,5 +186,25 @@ const styles = StyleSheet.create({
         color: COLORS.textLight,
         textAlign: 'center',
         // lineHeight: 24,
+    },
+    debugContainer: {
+        position: 'absolute',
+        top: 50,
+        right: 10,
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        padding: 10,
+        borderRadius: 8,
+        maxWidth: 300,
+        zIndex: 9999,
+    },
+    debugTitle: {
+        color: '#fff',
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    debugText: {
+        color: '#fff',
+        fontSize: 12,
+        marginBottom: 2,
     },
 });

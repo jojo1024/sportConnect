@@ -1,31 +1,30 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import {
+    Modal,
     View,
     Text,
     TouchableOpacity,
     StyleSheet,
+    ScrollView,
     Dimensions,
-    Modal,
-    Animated,
-    StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-export interface CustomAlertProps {
+interface CustomAlertProps {
     visible: boolean;
     title: string;
     message: string;
     type?: 'success' | 'error' | 'warning' | 'info';
-    onConfirm?: () => void;
-    onCancel?: () => void;
     confirmText?: string;
     cancelText?: string;
     showCancel?: boolean;
     autoClose?: boolean;
     autoCloseDelay?: number;
+    onConfirm?: () => void;
+    onCancel?: () => void;
 }
 
 const CustomAlert: React.FC<CustomAlertProps> = ({
@@ -33,155 +32,101 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
     title,
     message,
     type = 'info',
-    onConfirm,
-    onCancel,
     confirmText = 'OK',
     cancelText = 'Annuler',
     showCancel = false,
-    autoClose = false,
-    autoCloseDelay = 3000,
+    onConfirm,
+    onCancel,
 }) => {
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const scaleAnim = useRef(new Animated.Value(0.8)).current;
-    const slideAnim = useRef(new Animated.Value(-50)).current;
+ 
 
-    useEffect(() => {
-        if (visible) {
-            // Animation d'entrée
-            Animated.parallel([
-                Animated.timing(fadeAnim, {
-                    toValue: 1,
-                    duration: 300,
-                    useNativeDriver: true,
-                }),
-                Animated.spring(scaleAnim, {
-                    toValue: 1,
-                    tension: 100,
-                    friction: 8,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(slideAnim, {
-                    toValue: 0,
-                    duration: 300,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-
-            // Auto-close si activé
-            if (autoClose) {
-                const timer = setTimeout(() => {
-                    onConfirm?.();
-                }, autoCloseDelay);
-                return () => clearTimeout(timer);
-            }
-        } else {
-            // Animation de sortie
-            Animated.parallel([
-                Animated.timing(fadeAnim, {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(scaleAnim, {
-                    toValue: 0.8,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(slideAnim, {
-                    toValue: -50,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-        }
-    }, [visible, fadeAnim, scaleAnim, slideAnim, autoClose, autoCloseDelay, onConfirm]);
-
-    const getTypeConfig = () => {
+    const getIconName = () => {
         switch (type) {
             case 'success':
-                return {
-                    icon: 'checkmark-circle',
-                    color: '#10B981',
-                    bgColor: '#ECFDF5',
-                    borderColor: '#D1FAE5',
-                };
+                return 'checkmark-circle';
             case 'error':
-                return {
-                    icon: 'close-circle',
-                    color: '#EF4444',
-                    bgColor: '#FEF2F2',
-                    borderColor: '#FECACA',
-                };
+                return 'alert-circle';
             case 'warning':
-                return {
-                    icon: 'warning',
-                    color: '#F59E0B',
-                    bgColor: '#FFFBEB',
-                    borderColor: '#FED7AA',
-                };
-            case 'info':
+                return 'warning';
             default:
-                return {
-                    icon: 'information-circle',
-                    color: '#3B82F6',
-                    bgColor: '#EFF6FF',
-                    borderColor: '#BFDBFE',
-                };
+                return 'information-circle';
         }
     };
 
-    const typeConfig = getTypeConfig();
+    const getIconColor = () => {
+        switch (type) {
+            case 'success':
+                return '#10B981';
+            case 'error':
+                return '#EF4444';
+            case 'warning':
+                return '#F59E0B';
+            default:
+                return COLORS.primary;
+        }
+    };
 
-    if (!visible) return null;
+    const getBackgroundColor = () => {
+        switch (type) {
+            case 'success':
+                return '#F0FDF4';
+            case 'error':
+                return '#FEF2F2';
+            case 'warning':
+                return '#FFFBEB';
+            default:
+                return '#F0F9FF';
+        }
+    };
+
+    const getBorderColor = () => {
+        switch (type) {
+            case 'success':
+                return '#BBF7D0';
+            case 'error':
+                return '#FECACA';
+            case 'warning':
+                return '#FED7AA';
+            default:
+                return '#BFDBFE';
+        }
+    };
 
     return (
         <Modal
-            transparent
             visible={visible}
-            animationType="none"
+            transparent
+            animationType="fade"
             statusBarTranslucent
         >
-            <StatusBar backgroundColor="rgba(0, 0, 0, 0.5)" barStyle="light-content" />
-
-            <Animated.View
-                style={[
-                    styles.overlay,
-                    { opacity: fadeAnim }
-                ]}
-            >
-                <TouchableOpacity
-                    style={styles.overlayTouchable}
-                    activeOpacity={1}
-                    onPress={onCancel}
-                />
-
-                <Animated.View
-                    style={[
-                        styles.alertContainer,
-                        {
-                            backgroundColor: typeConfig.bgColor,
-                            borderColor: typeConfig.borderColor,
-                            transform: [
-                                { scale: scaleAnim },
-                                { translateY: slideAnim }
-                            ]
-                        }
-                    ]}
-                >
+            <View style={styles.overlay}>
+                <View style={[
+                    styles.alertContainer,
+                    {
+                        backgroundColor: getBackgroundColor(),
+                        borderColor: getBorderColor(),
+                    }
+                ]}>
                     {/* Icône */}
-                    <View style={[styles.iconContainer, { backgroundColor: typeConfig.color }]}>
+                    <View style={styles.iconContainer}>
                         <Ionicons
-                            name={typeConfig.icon as any}
-                            size={32}
-                            color="white"
+                            name={getIconName()}
+                            size={48}
+                            color={getIconColor()}
                         />
                     </View>
 
-                    {/* Contenu */}
-                    <View style={styles.content}>
-                        <Text style={styles.title}>{title}</Text>
+                    {/* Titre */}
+                    <Text style={styles.title}>{title}</Text>
+
+                    {/* Message avec scroll si nécessaire */}
+                    <ScrollView 
+                        style={styles.messageContainer}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={styles.messageContent}
+                    >
                         <Text style={styles.message}>{message}</Text>
-                    </View>
+                    </ScrollView>
 
                     {/* Boutons */}
                     <View style={styles.buttonContainer}>
@@ -189,26 +134,26 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                             <TouchableOpacity
                                 style={[styles.button, styles.cancelButton]}
                                 onPress={onCancel}
-                                activeOpacity={0.8}
+                                activeOpacity={0.7}
                             >
                                 <Text style={styles.cancelButtonText}>{cancelText}</Text>
                             </TouchableOpacity>
                         )}
-
                         <TouchableOpacity
                             style={[
                                 styles.button,
                                 styles.confirmButton,
-                                { backgroundColor: typeConfig.color }
+                                { backgroundColor: getIconColor() },
+                                showCancel && styles.confirmButtonWithCancel
                             ]}
                             onPress={onConfirm}
-                            activeOpacity={0.8}
+                            activeOpacity={0.7}
                         >
                             <Text style={styles.confirmButtonText}>{confirmText}</Text>
                         </TouchableOpacity>
                     </View>
-                </Animated.View>
-            </Animated.View>
+                </View>
+            </View>
         </Modal>
     );
 };
@@ -221,100 +166,79 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 20,
     },
-    overlayTouchable: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-    },
     alertContainer: {
         width: width - 40,
         maxWidth: 400,
-        backgroundColor: 'white',
-        borderRadius: 20,
+        backgroundColor: '#fff',
+        borderRadius: 16,
         padding: 24,
         borderWidth: 1,
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
-            height: 10,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 20,
-        elevation: 10,
-    },
-    iconContainer: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        alignSelf: 'center',
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
             height: 4,
         },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.25,
         shadowRadius: 8,
-        elevation: 5,
+        elevation: 8,
     },
-    content: {
+    iconContainer: {
         alignItems: 'center',
-        marginBottom: 24,
+        marginBottom: 16,
     },
     title: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#1F2937',
         textAlign: 'center',
-        marginBottom: 8,
-        lineHeight: 28,
+        marginBottom: 12,
+        color: '#1F2937',
+    },
+    messageContainer: {
+        maxHeight: 200,
+        marginBottom: 20,
+    },
+    messageContent: {
+        flexGrow: 1,
     },
     message: {
         fontSize: 16,
-        color: '#6B7280',
+        lineHeight: 22,
         textAlign: 'center',
-        lineHeight: 24,
+        color: '#4B5563',
     },
     buttonContainer: {
         flexDirection: 'row',
+        justifyContent: 'center',
         gap: 12,
     },
     button: {
         flex: 1,
-        height: 48,
-        borderRadius: 12,
-        justifyContent: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 8,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        minWidth: 100,
     },
     cancelButton: {
         backgroundColor: '#F3F4F6',
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: '#D1D5DB',
     },
     confirmButton: {
         backgroundColor: COLORS.primary,
     },
+    confirmButtonWithCancel: {
+        flex: 1,
+    },
     cancelButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#6B7280',
+        color: '#374151',
     },
     confirmButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: 'white',
+        color: '#fff',
     },
 });
 

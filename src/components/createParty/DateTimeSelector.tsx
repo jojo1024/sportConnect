@@ -17,18 +17,37 @@ export const DateTimeSelector: React.FC<DateTimeSelectorProps> = ({
     onTimePress,
     formatDate,
     formatTime
-}) => (
-    <View style={styles.dateTimeContainer}>
-        <TouchableOpacity style={styles.dateTimeButton} onPress={onDatePress}>
-            <Ionicons name="calendar-outline" size={20} color={COLORS.primary} />
-            <Text style={styles.dateTimeText}>{formatDate(date)}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.dateTimeButton} onPress={onTimePress}>
-            <Ionicons name="time-outline" size={20} color={COLORS.primary} />
-            <Text style={styles.dateTimeText}>{formatTime(date)}</Text>
-        </TouchableOpacity>
-    </View>
-);
+}) => {
+    const isDefaultDate = date.getDate() === new Date().getDate() &&
+        date.getMonth() === new Date().getMonth() &&
+        date.getFullYear() === new Date().getFullYear();
+
+    const isDefaultTime = date.getHours() === new Date().getHours() &&
+        date.getMinutes() === new Date().getMinutes();
+
+    return (
+        <View style={styles.dateTimeContainer}>
+            <TouchableOpacity style={styles.dateTimeButton} onPress={onDatePress}>
+                <Ionicons name="calendar-outline" size={18} color={COLORS.primary} />
+                <View style={styles.dateTimeTextContainer}>
+                    <Text style={styles.dateTimeLabel}>Date</Text>
+                    <Text style={[styles.dateTimeText, isDefaultDate && styles.defaultText]} numberOfLines={1}>
+                        {formatDate(date)}
+                    </Text>
+                </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dateTimeButton} onPress={onTimePress}>
+                <Ionicons name="time-outline" size={18} color={COLORS.primary} />
+                <View style={styles.dateTimeTextContainer}>
+                    <Text style={styles.dateTimeLabel}>Heure</Text>
+                    <Text style={[styles.dateTimeText, isDefaultTime && styles.defaultText]} numberOfLines={1}>
+                        {formatTime(date)}
+                    </Text>
+                </View>
+            </TouchableOpacity>
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
     dateTimeContainer: {
@@ -39,16 +58,30 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
         backgroundColor: '#f8f9fa',
-        padding: 16,
+        padding: 12,
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#e9ecef',
+        minHeight: 56,
+    },
+    dateTimeTextContainer: {
+        flex: 1,
+        marginLeft: 8,
+    },
+    dateTimeLabel: {
+        fontSize: 11,
+        color: '#666',
+        marginBottom: 2,
+        fontWeight: '500',
     },
     dateTimeText: {
-        fontSize: 16,
-        color: '#495057',
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '600',
+    },
+    defaultText: {
+        color: '#999',
+        fontStyle: 'italic',
     },
 }); 

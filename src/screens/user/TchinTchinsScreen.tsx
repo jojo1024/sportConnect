@@ -1,15 +1,22 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { RenderFooter, RetryComponent } from '../../components/UtilsComponent';
+import NewMatchesNotification from '../../components/NewMatchesNotification';
 import { useMatch } from '../../hooks/useMatch';
 import { COLORS } from '../../theme/colors';
 import { calculateMatchDuration, extractHour, getSectionLabel, getTerrainImages } from '../../utils/functions';
 import { name as projectName, version } from '../../../package.json';
-import CompactErrorCard from '../../components/CompactErrorCard';
+import { creditService } from '../../services/creditService';
 
+interface TchinTchinsScreenProps {
+    navigation: any;
+}
 
-const TchinTchinsScreen: React.FC = () => {
+const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => {
+    const [solde, setSolde] = useState<number>(0);
+    const [loadingSolde, setLoadingSolde] = useState<boolean>(true);
+
     const {
         matches,
         isLoading,
@@ -18,8 +25,43 @@ const TchinTchinsScreen: React.FC = () => {
         allMatchFiltredByDate,
         groupedMatchsByDate,
         handleEndReached,
-        handleRefresh
+        handleRefresh,
+        newMatchesCount,
+        showNewMatchesNotification,
+        hideNewMatchesNotification,
+        newMatchesIds,
+        markMatchAsSeen
     } = useMatch();
+
+    // Charger le solde de crédit
+    useEffect(() => {
+        loadSolde();
+    }, []);
+
+    const loadSolde = async () => {
+        try {
+            setLoadingSolde(true);
+            const userSolde = await creditService.getUserSolde();
+            setSolde(userSolde);
+        } catch (err) {
+            console.error('Erreur lors du chargement du solde:', err);
+            setSolde(0);
+        } finally {
+            setLoadingSolde(false);
+        }
+    };
+
+    const handleMatchPress = (match: any) => {
+        // Marquer le match comme vu si c'est un nouveau match
+        if (newMatchesIds.has(match.matchId)) {
+            markMatchAsSeen(match.matchId);
+        }
+        navigation.navigate('MatchDetails', { match });
+    };
+
+    const handleCreditPress = () => {
+        return null
+    };
 
     // Afficher l'erreur si elle existe
     if (error) {
@@ -30,13 +72,33 @@ const TchinTchinsScreen: React.FC = () => {
 
     return (
         <View style={styles.container}>
+            {/* Notification des nouveaux matchs */}
+            <NewMatchesNotification
+                isVisible={showNewMatchesNotification}
+                newMatchesCount={newMatchesCount}
+                onHide={hideNewMatchesNotification}
+            />
+
             <View style={styles.header}>
                 <View style={styles.headerTitle}>
                     <Text style={styles.title}>{projectName}</Text>
                     <Text style={styles.subtitle}>{version}</Text>
                 </View>
-                <View style={{ backgroundColor: "#f2f3f7", borderRadius: 30 }}>
-                    <TouchableOpacity style={styles.searchButton}>
+                <View style={styles.headerActions}>
+                    {/* Carte de crédit compacte */}
+                    <TouchableOpacity
+                        style={styles.creditCard}
+                        onPress={handleCreditPress}
+                        activeOpacity={0.7}
+                    >
+                        <MaterialCommunityIcons name="credit-card" size={16} color={COLORS.primary} />
+                        <Text style={styles.creditAmount}>
+                            {loadingSolde ? '...' : `${solde.toFixed(0)} F`}
+                        </Text>
+                    </TouchableOpacity>
+
+                    {/* Bouton de recherche */}
+                    <TouchableOpacity style={styles.searchButton} activeOpacity={0.7}>
                         <Ionicons name="search" size={18} color={COLORS.black} />
                     </TouchableOpacity>
                 </View>
@@ -65,10 +127,23 @@ const TchinTchinsScreen: React.FC = () => {
                         <Text style={styles.dateShort}>{new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</Text>
                         {groupedMatchsByDate[date].length > 0 ? (
                             groupedMatchsByDate[date].map((match) => {
+                                const isNewMatch = newMatchesIds.has(match.matchId);
                                 // const terrainImages = getTerrainImages(match?.terrainImages || [] as string[]);
                                 return (
-                                    <View key={match.matchId} style={styles.cardWrapper}>
+                                    <TouchableOpacity
+                                        key={match.matchId}
+                                        style={styles.cardWrapper}
+                                        onPress={() => handleMatchPress(match)}
+                                        activeOpacity={0.7}
+                                    >
                                         <View style={styles.card}>
+                                            {/* Indicateur de nouveau match - seulement le petit point orange */}
+                                            {isNewMatch && (
+                                                <View style={styles.newMatchIndicator}>
+                                                    <View style={styles.newMatchDot} />
+                                                </View>
+                                            )}
+
                                             <Image
                                                 source={{ uri: match.terrainImages?.[0] }}
                                                 style={styles.image}
@@ -93,8 +168,12 @@ const TchinTchinsScreen: React.FC = () => {
                                                     </View>
                                                 </View>
                                             </View>
+                                            {/* Indicateur de clic */}
+                                            <View style={styles.clickIndicator}>
+                                                <Ionicons name="chevron-forward" size={20} color="#ccc" />
+                                            </View>
                                         </View>
-                                    </View>
+                                    </TouchableOpacity>
                                 );
                             })
                         ) : (
@@ -178,6 +257,21 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.10,
         shadowRadius: 6,
         minHeight: 110,
+        position: 'relative',
+    },
+    newMatchIndicator: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        zIndex: 10,
+    },
+    newMatchDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: COLORS.primary,
+        borderWidth: 2,
+        borderColor: COLORS.white,
     },
     image: {
         width: 100,
@@ -256,6 +350,14 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#888',
     },
+    clickIndicator: {
+        position: 'absolute',
+        right: 15,
+        top: '50%',
+        transform: [{ translateY: -10 }],
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     emptyState: {
         alignItems: 'center',
         backgroundColor: '#f8f9fa',
@@ -281,7 +383,35 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     searchButton: {
-        padding: 10,
+        width: 36,
+        height: 36,
+        backgroundColor: '#f8f9fa',
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    creditCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f8f9fa',
+        borderRadius: 20,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+        gap: 6,
+    },
+    creditAmount: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: COLORS.primary,
     },
 });
 

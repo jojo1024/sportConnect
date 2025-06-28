@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -21,6 +21,7 @@ const CompactErrorCard: React.FC<CompactErrorCardProps> = ({
     style
 }) => {
     const scaleAnim = React.useRef(new Animated.Value(1)).current;
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const handleRetry = () => {
         // Animation de pression
@@ -40,6 +41,13 @@ const CompactErrorCard: React.FC<CompactErrorCardProps> = ({
         onRetry();
     };
 
+    const toggleExpanded = () => {
+        setIsExpanded(!isExpanded);
+    };
+
+    // Vérifier si le message est long (plus de 100 caractères)
+    const isLongMessage = message.length > 100;
+
     return (
         <View style={[styles.container, style]}>
             <Animated.View
@@ -58,9 +66,32 @@ const CompactErrorCard: React.FC<CompactErrorCardProps> = ({
                 </View>
 
                 {/* Message d'erreur */}
-                <Text style={styles.errorText} numberOfLines={2}>
-                    {message}
-                </Text>
+                <View style={styles.messageContainer}>
+                    <Text
+                        style={styles.errorText}
+                        numberOfLines={isExpanded ? undefined : 2}
+                    >
+                        {message}
+                    </Text>
+
+                    {/* Bouton pour développer/réduire si le message est long */}
+                    {isLongMessage && (
+                        <TouchableOpacity
+                            style={styles.expandButton}
+                            onPress={toggleExpanded}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={styles.expandText}>
+                                {isExpanded ? 'Voir moins' : 'Voir plus'}
+                            </Text>
+                            <Ionicons
+                                name={isExpanded ? "chevron-up" : "chevron-down"}
+                                size={14}
+                                color={COLORS.primary}
+                            />
+                        </TouchableOpacity>
+                    )}
+                </View>
 
                 {/* Bouton de rafraîchissement */}
                 <TouchableOpacity
@@ -86,7 +117,7 @@ const styles = StyleSheet.create({
     },
     card: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         backgroundColor: '#FEF2F2',
         borderWidth: 1,
         borderColor: '#FECACA',
@@ -103,13 +134,28 @@ const styles = StyleSheet.create({
     },
     iconContainer: {
         marginRight: 8,
+        marginTop: 2,
+    },
+    messageContainer: {
+        flex: 1,
     },
     errorText: {
-        flex: 1,
         fontSize: 14,
         color: '#DC2626',
         fontWeight: '500',
         lineHeight: 18,
+    },
+    expandButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 4,
+        paddingVertical: 2,
+    },
+    expandText: {
+        fontSize: 12,
+        color: COLORS.primary,
+        fontWeight: '500',
+        marginRight: 4,
     },
     refreshButton: {
         width: 32,

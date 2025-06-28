@@ -12,6 +12,11 @@ const persistConfig = {
     version: 2,
     whitelist: ['user'], // Seulement persister le reducer user
     blacklist: ['app'], // Ne pas persister le reducer app
+    // Configuration pour éviter les problèmes de persistance
+    serialize: true,
+    deserialize: true,
+    // Timeout pour éviter les blocages
+    timeout: 10000,
 };
 
 const rootReducer = combineReducers({

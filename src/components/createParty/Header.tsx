@@ -6,22 +6,29 @@ import { COLORS } from '../../theme/colors';
 interface HeaderProps {
     onCreate: () => void;
     isSubmitting: boolean;
+    isFormReady?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onCreate, isSubmitting }) => (
+export const Header: React.FC<HeaderProps> = ({ onCreate, isSubmitting, isFormReady = false }) => (
     <View style={styles.header}>
         <Text style={styles.title}>Créer une partie</Text>
         <TouchableOpacity
-            style={[styles.addButton, isSubmitting && styles.addButtonDisabled]}
+            style={[
+                styles.addButton, 
+                (isSubmitting || !isFormReady) && styles.addButtonDisabled
+            ]}
             onPress={onCreate}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !isFormReady}
         >
             <Ionicons
                 name="save"
                 size={16}
-                color={isSubmitting ? '#ccc' : COLORS.primary}
+                color={(isSubmitting || !isFormReady) ? '#ccc' : COLORS.primary}
             />
-            <Text style={[styles.addButtonText, isSubmitting && styles.addButtonTextDisabled]}>
+            <Text style={[
+                styles.addButtonText, 
+                (isSubmitting || !isFormReady) && styles.addButtonTextDisabled
+            ]}>
                 {isSubmitting ? 'Création...' : 'Créer'}
             </Text>
         </TouchableOpacity>

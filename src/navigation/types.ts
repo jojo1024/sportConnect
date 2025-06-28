@@ -1,5 +1,7 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
+import { Match } from '../services/matchService';
+import { Terrain } from '../services/terrainService';
 
 export type RootStackParamList = {
     Welcome: undefined;
@@ -8,6 +10,15 @@ export type RootStackParamList = {
     MainTabs: undefined;
     Terrains: undefined;
     AddTerrain: undefined;
+    TerrainDetails: {
+        terrain: Terrain;
+    };
+    MatchDetails: {
+        match: Match;
+    };
+    MatchSummary: {
+        match: any;
+    };
 }
 
 export interface INavigationProps {

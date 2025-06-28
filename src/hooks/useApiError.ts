@@ -1,36 +1,103 @@
 import { useCallback } from 'react';
+import { useDispatch } from 'react-redux';
+import { clearUser } from '../store/slices/userSlice';
 import { ApiError, ErrorType } from '../services/api';
 
 /**
  * Hook utilitaire pour gérer les erreurs API de manière cohérente
  */
 export const useApiError = () => {
+    const dispatch = useDispatch();
+
     /**
      * Gère une erreur API et retourne un message approprié
      */
-    const handleApiError = useCallback((error: any): string => {
-        if (error?.type === ErrorType.SESSION_EXPIRED) {
-            return 'Session expirée. Veuillez vous reconnecter.';
+    const handleApiError = useCallback((error: ApiError | any) => {
+        console.log('🚀 ~ handleApiError ~ error:', error);
+
+        // Si c'est une erreur d'API typée
+        if (error && typeof error === 'object' && 'type' in error) {
+            const apiError = error as ApiError;
+            
+            switch (apiError.type) {
+                case ErrorType.SESSION_EXPIRED:
+                    // Seulement déconnecter si c'est vraiment une erreur de session
+                    console.log('🚀 ~ Session expirée, déconnexion...');
+                    dispatch(clearUser());
+                    return {
+                        shouldLogout: true,
+                        message: 'Votre session a expiré. Veuillez vous reconnecter.'
+                    };
+                
+                case ErrorType.UNAUTHORIZED:
+                    // Ne pas déconnecter automatiquement pour les erreurs 401
+                    // Laisser l'intercepteur API gérer le refresh
+                    return {
+                        shouldLogout: false,
+                        message: apiError.message || 'Erreur d\'authentification'
+                    };
+                
+                case ErrorType.FORBIDDEN:
+                    // Ne pas déconnecter pour les erreurs 403
+                    return {
+                        shouldLogout: false,
+                        message: 'Accès non autorisé'
+                    };
+                
+                case ErrorType.NETWORK:
+                    return {
+                        shouldLogout: false,
+                        message: 'Erreur de connexion. Vérifiez votre connexion internet.'
+                    };
+                
+                case ErrorType.TIMEOUT:
+                    return {
+                        shouldLogout: false,
+                        message: 'Délai d\'attente dépassé. Veuillez réessayer.'
+                    };
+                
+                case ErrorType.VALIDATION:
+                    return {
+                        shouldLogout: false,
+                        message: apiError.message || 'Données invalides'
+                    };
+                
+                case ErrorType.SERVER:
+                    return {
+                        shouldLogout: false,
+                        message: 'Erreur serveur. Veuillez réessayer plus tard.'
+                    };
+                
+                default:
+                    return {
+                        shouldLogout: false,
+                        message: apiError.message || 'Une erreur inattendue est survenue.'
+                    };
+            }
         }
-        
-        if (error?.type === ErrorType.NETWORK) {
-            return 'Erreur de connexion. Vérifiez votre connexion internet.';
+
+        // Si c'est une erreur standard
+        if (error?.response?.status === 401) {
+            // Ne pas déconnecter automatiquement, laisser l'intercepteur gérer
+            return {
+                shouldLogout: false,
+                message: 'Erreur d\'authentification'
+            };
         }
-        
-        if (error?.type === ErrorType.TIMEOUT) {
-            return 'Délai d\'attente dépassé. Veuillez réessayer.';
+
+        if (error?.response?.status === 403) {
+            return {
+                shouldLogout: false,
+                message: 'Accès non autorisé'
+            };
         }
-        
-        if (error?.type === ErrorType.VALIDATION) {
-            return error.message || 'Données invalides';
-        }
-        
-        if (error?.type === ErrorType.SERVER) {
-            return 'Erreur serveur. Veuillez réessayer plus tard.';
-        }
-        
-        return error?.message || 'Une erreur inattendue est survenue.';
-    }, []);
+
+        // Erreur par défaut
+        return {
+            shouldLogout: false,
+            message: error?.message || 'Une erreur inattendue est survenue.'
+        };
+    }, [dispatch]);
 
     /**
      * Vérifie si une erreur est de type spécifique

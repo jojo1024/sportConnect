@@ -30,35 +30,31 @@ export const useAuthInitialization = () => {
     useEffect(() => {
         const initializeAuth = async () => {
             try {
-
+                // Si on a déjà des données d'authentification dans le store
                 if (isAuthenticated && accessToken && refreshToken && userData) {
-                    // Vérifier si le token est encore valide
-                    try {
-                        // Optionnel : vérifier la validité du token avec le backend
-                        // await authService.verifyToken(storedAccessToken);
-                        
-                        // Restaurer l'état d'authentification
-                        dispatch(setAuthData({
-                            user: userData,
-                            accessToken: accessToken,
-                            refreshToken: refreshToken
-                        }));
-                    } catch (error) {
-                        // Token invalide, essayer de le rafraîchir
-                        try {
-                            const newTokens = await authService.refreshToken(refreshToken);
-                            // Mettre à jour le store
-                            dispatch(updateTokens(newTokens));
-                        } catch (refreshError) {
-                            // Impossible de rafraîchir, déconnecter l'utilisateur
-                            console.log('Token invalide et impossible de rafraîchir:', refreshError);
-                            await handleLogout();
-                        }
-                    }
+                    console.log('🚀 ~ Authentification déjà présente dans le store');
+                    return; // Ne rien faire, l'authentification est déjà valide
                 }
+
+                // Si on n'a pas de données d'authentification, ne pas essayer de les restaurer
+                if (!accessToken || !refreshToken || !userData) {
+                    console.log('🚀 ~ Aucune donnée d\'authentification à restaurer');
+                    return;
+                }
+
+                // Restaurer l'état d'authentification sans vérification immédiate
+                // La validation se fera automatiquement lors de la prochaine requête API
+                dispatch(setAuthData({
+                    user: userData,
+                    accessToken: accessToken,
+                    refreshToken: refreshToken
+                }));
+                console.log('🚀 ~ Authentification restaurée avec succès');
+                
             } catch (error) {
-                console.log('Erreur lors de l\'initialisation de l\'authentification:', error);
-                await handleLogout();
+                console.log('🚀 ~ Erreur lors de l\'initialisation de l\'authentification:', error);
+                // Ne pas déconnecter automatiquement en cas d'erreur d'initialisation
+                // L'utilisateur pourra toujours essayer d'utiliser l'app
             }
         };
 
@@ -93,18 +89,30 @@ export const useAuthLogin = () => {
 export const useAuthLogout = () => {
     const dispatch = useDispatch();
     const navigation = useNavigation<ScreenNavigationProps>();
+    
     const logoutUser = async () => {
         try {
+            console.log('🚀 ~ Déconnexion explicite de l\'utilisateur');
+            
             // Appeler l'API de déconnexion si nécessaire
             // await authService.logout(userData?.utilisateurId || 0);
+            
             // Nettoyer le store
             dispatch(logout());
+            
+            // Rediriger vers l'écran de bienvenue
             navigation.reset({
                 index: 0,
                 routes: [{ name: 'Welcome' }],
             });
         } catch (error) {
-            console.log('Erreur lors de la déconnexion:', error);
+            console.log('🚀 ~ Erreur lors de la déconnexion:', error);
+            // Même en cas d'erreur, nettoyer le store local
+            dispatch(logout());
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Welcome' }],
+            });
         }
     };
 
@@ -128,12 +136,7 @@ export const useTokenRefresh = () => {
             
             return newTokens;
         } catch (error) {
-            console.log('Erreur lors du rafraîchissement des tokens:', error);
-            
-            // En cas d'échec, déconnecter l'utilisateur
-            const { logout } = useAuthLogout();
-            await logout();
-            
+            console.log('🚀 ~ Erreur lors du rafraîchissement des tokens:', error);
             throw error;
         }
     };
@@ -141,8 +144,37 @@ export const useTokenRefresh = () => {
     return { refreshTokens };
 };
 
-// Hook pour gérer la déconnexion automatique
-export const handleLogout = async () => {
-    const { logout } = useAuthLogout();
-    await logout();
+// Hook pour vérifier la validité du token
+export const useTokenValidation = () => {
+    const dispatch = useDispatch();
+    const accessToken = useAppSelector(selectAccessToken);
+    const refreshToken = useAppSelector(selectRefreshToken);
+
+    const validateToken = async (): Promise<boolean> => {
+        if (!accessToken || !refreshToken) {
+            console.log('🚀 ~ Aucun token disponible pour validation');
+            return false;
+        }
+
+        try {
+            // Optionnel : vérifier la validité du token avec le backend
+            // await authService.verifyToken(accessToken);
+            console.log('🚀 ~ Token valide');
+            return true;
+        } catch (error) {
+            console.log('🚀 ~ Token invalide, tentative de rafraîchissement:', error);
+            
+            try {
+                const newTokens = await authService.refreshToken(refreshToken);
+                dispatch(updateTokens(newTokens));
+                console.log('🚀 ~ Token rafraîchi avec succès');
+                return true;
+            } catch (refreshError) {
+                console.log('🚀 ~ Impossible de rafraîchir le token:', refreshError);
+                return false;
+            }
+        }
+    };
+
+    return { validateToken };
 };

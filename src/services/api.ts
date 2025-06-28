@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { store } from '../store';
 import { updateTokens, clearUser } from '../store/slices/userSlice';
+import { TOKEN_CONFIG, tokenUtils } from '../utils/tokenConfig';
 
 // Types pour l'API
 interface User {
@@ -112,7 +113,8 @@ const analyzeError = (error: any): ApiError => {
 };
 
 // Configuration de l'API
-const API_URL = 'http://192.168.100.4:50006/v1'; // Pour l'émulateur Android
+// const API_URL = 'https://ibori.wookami.com/v1';
+const API_URL =  'http://192.168.100.4:50015/v1' // Pour l'émulateur Android
 
 // Création de l'instance axios
 const api = axios.create({
@@ -128,8 +130,18 @@ api.interceptors.request.use(
     (config) => {
         const state = store.getState();
         const token = state.user.accessToken;
-        console.log("🚀 ~ token:4444444444448", token)
+        
+        if (TOKEN_CONFIG.DEBUG.LOG_TOKEN_REFRESH) {
+            console.log("🚀 ~ Request interceptor ~ token:", token ? "Présent" : "Absent");
+        }
+        
         if (token) {
+            // Vérifier si le token est proche de l'expiration
+            if (TOKEN_CONFIG.AUTO_REFRESH.ENABLED && tokenUtils.isTokenExpiringSoon(token)) {
+                console.log('🚀 ~ Token proche de l\'expiration, refresh préventif...');
+                // Le refresh se fera automatiquement lors de la réponse 401
+            }
+            
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
@@ -154,26 +166,73 @@ api.interceptors.response.use(
                 const refreshToken = state.user.refreshToken;
                 
                 if (!refreshToken) {
-                    // Pas de refresh token, déconnexion
-                    store.dispatch(clearUser());
+                    console.log('🚀 ~ Pas de refresh token disponible');
+                    // Ne pas déconnecter automatiquement selon la configuration
+                    if (TOKEN_CONFIG.ERROR_HANDLING.AUTO_LOGOUT_ON_REFRESH_FAIL) {
+                        store.dispatch(clearUser());
+                    }
                     throw new Error('No refresh token');
                 }
 
+                if (TOKEN_CONFIG.DEBUG.LOG_TOKEN_REFRESH) {
+                    console.log('🚀 ~ Tentative de rafraîchissement du token...');
+                    console.log('🚀 ~ Refresh token utilisé:', refreshToken.substring(0, 20) + '...');
+                }
+                
                 const response = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
-                const { accessToken } = response.data;
+                
+                if (TOKEN_CONFIG.DEBUG.LOG_TOKEN_REFRESH) {
+                    console.log('🚀 ~ Réponse du refresh:', response.data);
+                }
+                
+                // Vérifier le format de réponse du backend
+                if (response.data.status === 'error') {
+                    throw new Error(response.data.message || 'Erreur de rafraîchissement');
+                }
+                
+                // Le backend utilise successResponse qui renvoie { status: 'success', data: { accessToken, refreshToken } }
+                const { accessToken, refreshToken: newRefreshToken } = response.data.data;
 
-                // Mise à jour du store
-                store.dispatch(updateTokens({ accessToken, refreshToken }));
+                if (!accessToken) {
+                    throw new Error('Access token manquant dans la réponse');
+                }
+
+                if (TOKEN_CONFIG.DEBUG.LOG_TOKEN_REFRESH) {
+                    console.log('🚀 ~ Nouveau access token reçu:', accessToken.substring(0, 20) + '...');
+                    console.log('🚀 ~ Nouveau refresh token reçu:', newRefreshToken ? newRefreshToken.substring(0, 20) + '...' : 'Même token');
+                }
+
+                // Mise à jour du store avec les nouveaux tokens
+                store.dispatch(updateTokens({ 
+                    accessToken, 
+                    refreshToken: newRefreshToken || refreshToken 
+                }));
+                
+                // Mettre à jour le header de la requête originale
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
-                return api(originalRequest);
-            } catch (refreshError) {
-                // Si le refresh token est invalide, on déconnecte l'utilisateur
-                console.log('Refresh token invalide, déconnexion...');
-                store.dispatch(clearUser());
+                if (TOKEN_CONFIG.DEBUG.LOG_TOKEN_REFRESH) {
+                    console.log('🚀 ~ Token rafraîchi avec succès, retry de la requête originale');
+                }
                 
-                // Note: L'alerte de session expirée sera gérée par le composant qui utilise l'API
-                // car nous ne pouvons pas importer directement le CustomAlert ici
+                return api(originalRequest);
+            } catch (refreshError: any) {
+                if (TOKEN_CONFIG.DEBUG.LOG_AUTH_ERRORS) {
+                    console.log('🚀 ~ Échec du rafraîchissement du token:', refreshError);
+                    console.log('🚀 ~ Détails de l\'erreur:', {
+                        message: refreshError.message,
+                        response: refreshError.response?.data,
+                        status: refreshError.response?.status
+                    });
+                }
+                
+                // Seulement déconnecter si c'est vraiment un problème d'authentification
+                // ET que la configuration l'autorise
+                if (TOKEN_CONFIG.ERROR_HANDLING.AUTO_LOGOUT_ON_REFRESH_FAIL && 
+                    (refreshError?.response?.status === 401 || refreshError?.response?.status === 403)) {
+                    console.log('🚀 ~ Refresh token invalide, déconnexion...');
+                    store.dispatch(clearUser());
+                }
                 
                 return Promise.reject(error);
             }
@@ -182,9 +241,6 @@ api.interceptors.response.use(
         // Analyser l'erreur pour la gestion globale
         const apiError = analyzeError(error);
         
-        // Note: L'affichage des alertes sera géré par les composants qui utilisent l'API
-        // car nous ne pouvons pas importer directement le CustomAlert ici
-
         // Pour les autres erreurs, on les laisse passer avec l'analyse
         return Promise.reject(apiError);
     }

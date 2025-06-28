@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { CustomAlertProps } from '../components/CustomAlert';
 
 export interface AlertConfig {
     title: string;

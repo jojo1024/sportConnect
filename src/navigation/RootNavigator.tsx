@@ -5,8 +5,11 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import LoginScreen from "../screens/LoginScreen";
 import AddTerrainScreen from "../screens/manager/AddTerrainScreen";
 import TerrainsScreen from "../screens/manager/TerrainsScreen";
+import TerrainDetailsScreen from "../screens/manager/TerrainDetailsScreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
+import MatchDetailsScreen from "../screens/user/MatchDetailsScreen";
+import MatchSummaryScreen from "../screens/user/MatchSummaryScreen";
 import { useAppSelector, useAuthInitialization } from "../store/hooks/hooks";
 import { selectIsAuthenticated, selectUser } from "../store/slices/userSlice";
 import { BottomTabs } from "./BottomTabs";
@@ -43,6 +46,9 @@ const RootNavigator = () => {
                             </Stack.Screen>
                             <Stack.Screen name="Terrains" component={TerrainsScreen} />
                             <Stack.Screen name="AddTerrain" component={AddTerrainScreen} />
+                            <Stack.Screen name="TerrainDetails" component={TerrainDetailsScreen} />
+                            <Stack.Screen name="MatchDetails" component={MatchDetailsScreen} />
+                            <Stack.Screen name="MatchSummary" component={MatchSummaryScreen} />
                         </>
                     )}
                 </Stack.Navigator>

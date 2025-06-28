@@ -16,15 +16,18 @@
         }
       ]
     ],
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
     "android": {
       "package": "com.joelitho.sportConnect",
       "foregroundImage": "./assets/images/ibori.jpeg",
       "backgroundColor": "#FFFFFF"
     },
     "extra": {
-      "eas": {
-        "projectId": "2e55ba75-f69f-4d16-80e7-0b241fdc5155"
-      }
+      "projectId": "2e55ba75-f69f-4d16-80e7-0b241fdc5155"
     }
   }
 }

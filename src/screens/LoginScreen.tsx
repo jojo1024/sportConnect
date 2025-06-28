@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { ScreenNavigationProps } from '../navigation/types';
 import CustomTextInput from '../components/CustomTextInput';
 import CustomButton from '../components/CustomButton';
+import PhoneInput from '../components/PhoneInput';
 import { useLoginForm } from '../hooks/useLoginForm';
 import { useAppSelector } from '../store/hooks/hooks';
 import { selectError, selectIsLoading } from '../store/slices/userSlice';
@@ -31,21 +32,14 @@ export default function LoginScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.title}>Se connecter</Text>
-            <CustomTextInput
+            <PhoneInput
                 label="Numéro de téléphone"
                 value={formState.phone}
                 onChangeText={(text) => {
-                    const cleanText = text.replace(/[^0-9]/g, '');
-                    let formattedText = cleanText;
-                    if (cleanText.length > 0) {
-                        formattedText = cleanText.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
-                    }
-                    formHandlers.handlePhoneChange(formattedText);
+                    formHandlers.handlePhoneChange(text);
                 }}
                 placeholder="06 12 34 56 78"
-                keyboardType="phone-pad"
                 returnKeyType="next"
-                maxLength={14}
                 onSubmitEditing={() => passwordInputRef.current?.focus()}
             />
 

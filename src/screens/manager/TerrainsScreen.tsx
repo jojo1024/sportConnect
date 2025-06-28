@@ -1,12 +1,17 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, RefreshControl } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { PRIMARY_COLOR } from '../../utils/constant';
+import { useTerrain } from '../../hooks/useTerrain';
+import { RenderFooter, RetryComponent } from '../../components/UtilsComponent';
+import { Terrain } from '../../services/terrainService';
+import { name as projectName, version } from '../../../package.json';
+import { ScreenNavigationProps } from '../../navigation/types';
 
 const { width } = Dimensions.get('window');
 
-interface Terrain {
+interface TerrainCard {
     id: string;
     name: string;
     location: string;
@@ -15,89 +20,120 @@ interface Terrain {
     reservations: number;
     pricePerHour: number;
     status: string;
+    terrainDisponibilite: "confirme" | "en_attente";
 }
 
 const TerrainsScreen: React.FC = () => {
-    const navigation = useNavigation();
-    const terrains: Terrain[] = [
-        {
-            id: '1',
-            name: 'Terrain de Foot Central',
-            location: '123 Rue du Sport, Paris',
-            image: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0',
-            timeSlot: '09:00 - 22:00',
-            reservations: 12,
-            pricePerHour: 15000,
-            status: 'Disponible',
-        },
-        {
-            id: '2',
-            name: 'Terrain de Basket Premium',
-            location: '456 Avenue des Sports, Paris',
-            image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55',
-            timeSlot: '08:00 - 23:00',
-            reservations: 8,
-            pricePerHour: 25000,
-            status: 'Occupé',
-        },
-        {
-            id: '3',
-            name: 'Complexe Sportif Étoile',
-            location: '789 Boulevard des Champions, Paris',
-            image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55',
-            timeSlot: '07:00 - 00:00',
-            reservations: 15,
-            pricePerHour: 18000,
-            status: 'Disponible',
-        },
-        {
-            id: '4',
-            name: 'Terrain de Tennis Royal',
-            location: '321 Rue des Athlètes, Paris',
-            image: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0',
-            timeSlot: '10:00 - 21:00',
-            reservations: 5,
-            pricePerHour: 26000,
-            status: 'Disponible',
-        },
-    ];
+    const navigation = useNavigation<ScreenNavigationProps>();
+
+    const {
+        terrains,
+        isLoading,
+        error,
+        refreshData,
+        handleEndReached,
+        handleRefresh,
+    } = useTerrain();
+
+    const getStatusText = (status: "confirme" | "en_attente") => {
+        switch (status) {
+            case "en_attente":
+                return 'En attente';
+            case "confirme":
+                return 'Validé';
+            default:
+                return 'Inconnu';
+        }
+    };
+
+    const getStatusColor = (status: "confirme" | "en_attente") => {
+        switch (status) {
+            case "en_attente":
+                return '#FFA500'; // Orange pour en attente
+            case "confirme":
+                return '#4CAF50'; // Vert pour validé
+            default:
+                return '#999';
+        }
+    };
+
+    const getTerrainImage = (images: string[] | null) => {
+        if (images && images.length > 0) {
+            return images[0];
+        }
+        return 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0';
+    };
+
+    const formatHoraires = (horaires: any) => {
+        if (!horaires) return 'Horaires non définis';
+
+        try {
+            const parsed = typeof horaires === 'string' ? JSON.parse(horaires) : horaires;
+            if (parsed.ouverture && parsed.fermeture) {
+                return `${parsed.ouverture} - ${parsed.fermeture}`;
+            }
+        } catch (e) {
+            console.error('Erreur parsing horaires:', e);
+        }
+
+        return 'Horaires non définis';
+    };
+
+    const handleTerrainPress = (terrain: Terrain) => {
+        navigation.navigate('TerrainDetails', { terrain });
+    };
+
+    const handleAddTerrain = () => {
+        navigation.navigate('AddTerrain');
+    };
+
+    // Afficher l'erreur si elle existe
+    if (error) {
+        return (
+            <RetryComponent onRetry={refreshData} />
+        );
+    }
 
     const renderTerrainCard = ({ item }: { item: Terrain }) => (
-        <TouchableOpacity style={styles.terrainCard}>
+        <TouchableOpacity
+            style={styles.terrainCard}
+            onPress={() => handleTerrainPress(item)}
+            activeOpacity={0.7}
+        >
             <View style={styles.imageContainer}>
                 <Image
-                    source={{ uri: item.image }}
+                    source={{ uri: getTerrainImage(item.terrainImages) }}
                     style={styles.terrainImage}
                 />
-                <View style={styles.statusBadge}>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.terrainDisponibilite) }]}>
                     <Text style={[
                         styles.statusText,
-                        { color: item.status === 'Disponible' ? '#fff' : '#fff' }
+                        { color: '#fff' }
                     ]}>
-                        {item.status}
+                        {getStatusText(item.terrainDisponibilite)}
                     </Text>
                 </View>
             </View>
             <View style={styles.terrainInfo}>
-                <Text style={styles.terrainName}>{item.name}</Text>
+                <Text style={styles.terrainName}>{item.terrainNom}</Text>
                 <View style={styles.locationContainer}>
                     <Ionicons name="location" size={16} color="#666" />
-                    <Text style={styles.terrainLocation}>{item.location}</Text>
+                    <Text style={styles.terrainLocation}>{item.terrainLocalisation}</Text>
                 </View>
                 <View style={styles.detailsContainer}>
                     <View style={styles.detailRow}>
                         <View style={styles.detailItem}>
                             <Ionicons name="time-outline" size={16} color="#666" />
-                            <Text style={styles.detailValue}>{item.timeSlot}</Text>
+                            <Text style={styles.detailValue}>{formatHoraires(item.terrainHoraires)}</Text>
                         </View>
                         <View style={styles.detailItem}>
                             <Ionicons name="people-outline" size={16} color="#666" />
-                            <Text style={styles.detailValue}>{item.reservations} réservations</Text>
+                            <Text style={styles.detailValue}>0 réservations</Text>
                         </View>
                     </View>
                     <View style={styles.priceContainer}>
                         <Ionicons name="cash-outline" size={16} color="#666" />
-                        <Text style={styles.priceText}>{item.pricePerHour} XOF/heure</Text>
+                        <Text style={styles.priceText}>{item.terrainPrixParHeure} XOF/heure</Text>
                     </View>
                 </View>
             </View>
@@ -110,7 +146,7 @@ const TerrainsScreen: React.FC = () => {
                 <Text style={styles.title}>Mes terrains</Text>
                 <TouchableOpacity
                     style={styles.addButton}
-                    // onPress={() => navigation.navigate('AddTerrain')}
+                    onPress={handleAddTerrain}
                 >
                     <Ionicons name="add-circle" size={16} color={PRIMARY_COLOR} />
                     <Text style={styles.addButtonText}>Ajouter</Text>
@@ -119,10 +155,32 @@ const TerrainsScreen: React.FC = () => {
 
             <FlatList
                 data={terrains}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item.terrainId.toString()}
                 renderItem={renderTerrainCard}
                 contentContainerStyle={styles.listContainer}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoading && terrains.length === 0}
+                        onRefresh={handleRefresh}
+                        colors={[PRIMARY_COLOR]}
+                    />
+                }
+                onEndReached={handleEndReached}
+                onEndReachedThreshold={0.1}
+                ListFooterComponent={RenderFooter(isLoading)}
+                ListEmptyComponent={
+                    !isLoading ? (
+                        <View style={styles.emptyState}>
+                            <Ionicons name="football" size={64} color="#ccc" />
+                            <Text style={styles.emptyTitle}>Aucun terrain</Text>
+                            <Text style={styles.emptyText}>Vous n'avez pas encore ajouté de terrains</Text>
+                            <TouchableOpacity style={styles.emptyButton} onPress={handleAddTerrain}>
+                                <Text style={styles.emptyButtonText}>Ajouter un terrain</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ) : null
+                }
             />
             <View style={{ height: 50 }}></View>
         </View>
@@ -160,7 +218,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 6,
         borderRadius: 40,
-        // elevation: 2,
         borderWidth: 1,
         borderColor: PRIMARY_COLOR,
     },
@@ -256,6 +313,36 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#1a1a1a',
         marginLeft: 6,
+    },
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 60,
+        paddingHorizontal: 20,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#666',
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    emptyText: {
+        fontSize: 14,
+        color: '#999',
+        textAlign: 'center',
+        marginBottom: 24,
+    },
+    emptyButton: {
+        backgroundColor: PRIMARY_COLOR,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 25,
+    },
+    emptyButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
     },
 });
 

@@ -51,13 +51,27 @@ const validateForm = (formData: CreatePartyFormData): CreatePartyValidation => {
         errors.push('Veuillez sélectionner une date');
     } else {
         const now = new Date();
-        if (formData.date <= now) {
+        const selectedDate = new Date(formData.date);
+        
+        // Vérifier que la date est dans le futur
+        if (selectedDate <= now) {
             errors.push('La date doit être dans le futur');
+        }
+        
+        // Vérifier que la date n'est pas trop éloignée (max 3 mois)
+        const threeMonthsFromNow = new Date();
+        threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+        if (selectedDate > threeMonthsFromNow) {
+            errors.push('La date ne peut pas être plus de 3 mois dans le futur');
         }
     }
 
     if (formData.duration < 1) {
         errors.push('La durée doit être d\'au moins 1 heure');
+    }
+
+    if (formData.duration > 24) {
+        errors.push('La durée ne peut pas dépasser 24 heures');
     }
 
     if (formData.numberOfParticipants < PARTICIPANTS_LIMITS.MIN || 
@@ -99,6 +113,10 @@ export const useCreateParty = () => {
     const [terrains, setTerrains] = useState<Terrain[]>([]);
     const [error, setError] = useState<string | null>(null);
 
+    // State pour le modal de succès
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [createdMatch, setCreatedMatch] = useState<any>(null);
+
     // Computed values
     const filteredFields = terrains.filter(terrain =>
         terrain.terrainNom.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -107,7 +125,7 @@ export const useCreateParty = () => {
         id: terrain.terrainId.toString(),
         name: terrain.terrainNom,
         location: terrain.terrainLocalisation,
-        schedule: terrain.terrainHoraires ,
+        schedule: terrain.terrainHoraires,
         pricePerHour: terrain.terrainPrixParHeure,
         image: terrain.terrainImages?.[0] || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=500',
     }));
@@ -121,11 +139,11 @@ export const useCreateParty = () => {
         try {
             setIsLoadingTerrains(true);
             setError(null);
-            const terrainsData = await terrainService.getAllTerrains();
+            const terrainsData = await terrainService.getAllTerrains("confirme");
             setTerrains(terrainsData);
         } catch (err: any) {
-            const errorMessage = handleApiError(err);
-            setError(errorMessage);
+            const errorResult = handleApiError(err);
+            setError(errorResult.message);
             console.error('Erreur lors du chargement des terrains:', err);
         } finally {
             setIsLoadingTerrains(false);
@@ -205,40 +223,37 @@ export const useCreateParty = () => {
         setSearchQuery(query);
     }, []);
 
+    // Formater les dates au format attendu par MySQL (YYYY-MM-DD HH:MM:SS)
+    const formatDateForMySQL = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    };
+
     // Submit handler
     const handleSubmit = useCallback(async () => {
         if (!validation.isValid) {
-            showWarning(
-                'Erreur de validation',
-                validation.errors.join('\n')
-            );
+            showError('Erreur de validation', 'Veuillez corriger les erreurs dans le formulaire');
             return;
         }
 
-        setIsSubmitting(true);
         try {
-            // Récupérer l'ID de l'utilisateur connecté depuis le store
-            const state = store.getState();
-            const userId = state.user.user?.utilisateurId;
-            
-            if (!userId) {
-                throw new Error('Utilisateur non connecté');
+            setIsSubmitting(true);
+            setError(null);
+
+            const user = store.getState().user.user;
+            if (!user) {
+                showError('Erreur d\'authentification', 'Utilisateur non connecté');
+                return;
             }
 
-            // Calculer la date de fin
+            // Calculer les dates de début et fin
             const dateDebut = new Date(formData.date);
             const dateFin = new Date(dateDebut.getTime() + formData.duration * 60 * 60 * 1000);
-
-            // Formater les dates au format attendu par MySQL (YYYY-MM-DD HH:MM:SS)
-            const formatDateForMySQL = (date: Date) => {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                const seconds = String(date.getSeconds()).padStart(2, '0');
-                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-            };
 
             // Préparer les données pour l'API
             const matchData: CreateMatchData = {
@@ -248,7 +263,7 @@ export const useCreateParty = () => {
                 matchDuree: formData.duration,
                 matchDescription: formData.description,
                 matchNbreParticipant: formData.numberOfParticipants,
-                capoId: userId,
+                capoId: user.utilisateurId,
             };
 
             console.log('🚀 ~ Données envoyées au backend:', matchData);
@@ -256,10 +271,9 @@ export const useCreateParty = () => {
             // Appel API pour créer le match
             const createdMatch = await matchService.createMatch(matchData);
             
-            showSuccess(
-                'Partie créée !',
-                `Votre partie a été créée avec succès !\nCode: ${createdMatch.codeMatch}`
-            );
+            // Sauvegarder les détails du match créé pour le modal
+            setCreatedMatch(createdMatch);
+            setShowSuccessModal(true);
 
             // Reset du formulaire après succès
             setFormData({
@@ -271,22 +285,22 @@ export const useCreateParty = () => {
                 description: '',
             });
 
-        } catch (error: any) {
-            console.error('Erreur lors de la création de la partie:', error);
+        } catch (err: any) {
+            console.error('Erreur lors de la création du match:', err);
             
-            // La gestion globale des erreurs s'occupe déjà d'afficher les alertes
-            // On peut juste gérer les cas spécifiques ici si nécessaire
-            if (error?.type === ErrorType.VALIDATION) {
-                // Erreur de validation déjà gérée globalement
-                return;
+            // Gestion spécifique des erreurs de disponibilité de terrain
+            if (err?.response?.status === 400) {
+                const errorMessage = err?.response?.data?.message || 'Erreur lors de la création du match';
+                console.log('🚀 ~ Message d\'erreur de terrain:', errorMessage);
+                setError(errorMessage);
+            } else {
+                const errorResult = handleApiError(err);
+                setError(errorResult.message);
             }
-            
-            // Pour les autres erreurs, elles sont déjà gérées globalement
-            // Pas besoin de faire quoi que ce soit ici
         } finally {
             setIsSubmitting(false);
         }
-    }, [formData, validation, showSuccess, showWarning]);
+    }, [validation.isValid, formData, showError, handleApiError]);
 
     // Reset handler
     const resetForm = useCallback(() => {
@@ -322,6 +336,12 @@ export const useCreateParty = () => {
     const isMinParticipantsReached = formData.numberOfParticipants <= PARTICIPANTS_LIMITS.MIN;
     const isMaxParticipantsReached = formData.numberOfParticipants >= PARTICIPANTS_LIMITS.MAX;
 
+    // Modal handlers
+    const closeSuccessModal = useCallback(() => {
+        setShowSuccessModal(false);
+        setCreatedMatch(null);
+    }, []);
+
     return {
         // State
         formData,
@@ -331,6 +351,8 @@ export const useCreateParty = () => {
         isSubmitting,
         isLoadingTerrains,
         error,
+        showSuccessModal,
+        createdMatch,
         
         // Computed values
         filteredFields,
@@ -370,5 +392,8 @@ export const useCreateParty = () => {
         // Data loading
         loadTerrains,
         retryLoadTerrains,
+        
+        // Modal handlers
+        closeSuccessModal,
     };
 }; 

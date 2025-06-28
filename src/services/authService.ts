@@ -1,4 +1,3 @@
-
 import api from "./api";
 
 export interface User {
@@ -99,6 +98,7 @@ export const authService = {
 
     refreshToken: async (refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> => {
         try {
+            console.log('🚀 ~ Tentative de rafraîchissement du token...');
             const response = await api.post<ApiResponse<{ accessToken: string; refreshToken: string }>>('/auth/refresh', { refreshToken });
             
             if (response.data.status === 'error') {
@@ -109,11 +109,19 @@ export const authService = {
                 throw new Error('Réponse invalide du serveur');
             }
             
+            console.log('🚀 ~ Token rafraîchi avec succès');
             return response.data.data;
         } catch (error: any) {
+            console.log('🚀 ~ Erreur lors du rafraîchissement du token:', error);
+            
             if (error.response?.data?.message) {
                 throw new Error(error.response.data.message);
             }
+            
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                throw new Error('Session expirée. Veuillez vous reconnecter.');
+            }
+            
             throw new Error('Erreur de rafraîchissement du token');
         }
     }

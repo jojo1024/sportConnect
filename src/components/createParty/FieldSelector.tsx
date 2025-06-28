@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { COLORS } from '../../theme/colors';
 
 interface FieldSelectorProps {
     selectedField: string;
@@ -9,10 +10,18 @@ interface FieldSelectorProps {
 
 export const FieldSelector: React.FC<FieldSelectorProps> = ({ selectedField, onPress }) => (
     <TouchableOpacity style={styles.fieldSelector} onPress={onPress}>
-        <Text style={styles.fieldSelectorText}>
-            {selectedField || 'Sélectionner un terrain'}
-        </Text>
-        <Ionicons name="chevron-down" size={24} color="#666" />
+        {selectedField ? (
+            <View style={styles.selectedFieldContainer}>
+                <Ionicons name="location" size={20} color={COLORS.primary} />
+                <Text style={styles.selectedFieldText}>{selectedField}</Text>
+            </View>
+        ) : (
+            <View style={styles.placeholderContainer}>
+                <Ionicons name="location-outline" size={20} color="#999" />
+                <Text style={styles.placeholderText}>Sélectionner un terrain</Text>
+            </View>
+        )}
+        <Ionicons name="chevron-down" size={24} color={selectedField ? COLORS.primary : "#999"} />
     </TouchableOpacity>
 );
 
@@ -26,9 +35,28 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#e9ecef',
+        minHeight: 56,
     },
-    fieldSelectorText: {
+    selectedFieldContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        gap: 8,
+    },
+    selectedFieldText: {
         fontSize: 16,
-        color: '#495057',
+        color: '#333',
+        fontWeight: '500',
+    },
+    placeholderContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        gap: 8,
+    },
+    placeholderText: {
+        fontSize: 16,
+        color: '#999',
+        fontStyle: 'italic',
     },
 }); 

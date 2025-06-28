@@ -1,36 +1,58 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
+# ==========================================================
+# 📦 Node / npm / Yarn
+# ==========================================================
 node_modules/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
 
-# Expo
+# ==========================================================
+# 🏗️ Build / dist outputs (Expo / React Native)
+# ==========================================================
 .expo/
 dist/
 web-build/
+
+# React Native iOS / Android build folders
+ios/build/
+android/app/build/
+
+# Expo config type declaration
 expo-env.d.ts
 
-# Native
-*.orig.*
+# ==========================================================
+# 📱 Native signing / credentials
+# ==========================================================
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+*.orig.*
 
-# Metro
+# ==========================================================
+# ⚡ Metro bundler
+# ==========================================================
 .metro-health-check*
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
+# ==========================================================
+# 🛠️ macOS
+# ==========================================================
 .DS_Store
+
+# ==========================================================
+# 🔐 Certificates / Keys
+# ==========================================================
 *.pem
 
-# local env files
-.env*.local
+# ==========================================================
+# 🌿 Environment variables
+# ==========================================================
+.env
+.env.*
+!.env.example
 
-# typescript
+# ==========================================================
+# 🧩 TypeScript
+# ==========================================================
 *.tsbuildinfo
