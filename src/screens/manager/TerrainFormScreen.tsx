@@ -15,14 +15,16 @@ import {
     TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Header, Card } from '../../components/addTerrain';
-import { useAddTerrain } from '../../hooks/useAddTerrain';
+import { useTerrainForm } from '../../hooks/useTerrainForm';
 import { COLORS } from '../../theme/colors';
 import CustomTextInput from '../../components/CustomTextInput';
 import PhoneInput from '../../components/PhoneInput';
 import CompactErrorCard from '../../components/CompactErrorCard';
 import SuccessCard from '../../components/SuccessCard';
+import { ScreenNavigationProps, ScreenRouteProps } from '../../navigation/types';
+import { BASE_URL_IMAGES } from '../../services/api';
 
 // Composant pour la saisie de localisation
 interface LocationInputProps {
@@ -61,18 +63,7 @@ const ImageSelector: React.FC<ImageSelectorProps> = ({ onImageSelect, onImageRem
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={(_, index) => index.toString()}
-            renderItem={({ item, index }) => (
-                <View style={styles.imageItem}>
-                    <Image source={{ uri: item }} style={styles.selectedImage} />
-                    <TouchableOpacity
-                        style={styles.removeImageButton}
-                        onPress={() => onImageRemove(index)}
-                    >
-                        <Ionicons name="close-circle" size={24} color="#fff" />
-                    </TouchableOpacity>
-                </View>
-            )}
-            ListFooterComponent={
+            ListHeaderComponent={
                 selectedImages.length < 5 ? (
                     <TouchableOpacity
                         style={[styles.addImageButton, error && styles.addImageButtonError]}
@@ -84,6 +75,17 @@ const ImageSelector: React.FC<ImageSelectorProps> = ({ onImageSelect, onImageRem
                     </TouchableOpacity>
                 ) : null
             }
+            renderItem={({ item, index }) => (
+                <View style={styles.imageItem}>
+                    <Image source={{ uri: item?.startsWith("data:image") ? item : `${BASE_URL_IMAGES}/${item}` }} style={styles.selectedImage} />
+                    <TouchableOpacity
+                        style={styles.removeImageButton}
+                        onPress={() => onImageRemove(index)}
+                    >
+                        <Ionicons name="close-circle" size={24} color="#fff" />
+                    </TouchableOpacity>
+                </View>
+            )}
         />
         {selectedImages.length === 0 && (
             <TouchableOpacity
@@ -119,8 +121,15 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ label, time, onPress }) => 
 );
 
 // Composant principal
-const AddTerrainScreen: React.FC = () => {
-    const navigation = useNavigation();
+const TerrainFormScreen: React.FC = () => {
+    const navigation = useNavigation<ScreenNavigationProps>();
+    const route = useRoute<ScreenRouteProps<'TerrainForm'>>();
+
+    // Récupérer les paramètres de navigation
+    const mode = route.params?.mode || 'create';
+    const terrainData = route.params?.terrainData;
+    console.log("🚀 ~ terrainData>>>>>>>>>>>>>>>>>:", terrainData)
+    const onTerrainUpdated = route.params?.onTerrainUpdated;
 
     // Refs pour la navigation entre les champs
     const nomRef = useRef<TextInput>(null);
@@ -133,6 +142,7 @@ const AddTerrainScreen: React.FC = () => {
         formData,
         errors,
         isSubmitting,
+        isLoading,
         showStartTimePicker,
         showEndTimePicker,
         successMessage,
@@ -152,7 +162,8 @@ const AddTerrainScreen: React.FC = () => {
         isFormReady,
         clearSuccessMessage,
         clearErrorMessage,
-    } = useAddTerrain();
+    } = useTerrainForm({ mode, terrainData, onTerrainUpdated });
+    console.log("🚀 ~ formData>>>>>>>>>>>:", formData)
 
     const handleBack = () => {
         navigation.goBack();
@@ -160,7 +171,6 @@ const AddTerrainScreen: React.FC = () => {
 
     const handleRetry = () => {
         clearErrorMessage();
-        // Optionnel : relancer la soumission
         if (isFormReady) {
             handleSubmit();
         }
@@ -169,7 +179,7 @@ const AddTerrainScreen: React.FC = () => {
     return (
         <SafeAreaView style={styles.safeArea}>
             <Header
-                mode="create"
+                mode={mode}
                 onSave={handleSubmit}
                 onBack={handleBack}
                 isSubmitting={isSubmitting}
@@ -199,9 +209,14 @@ const AddTerrainScreen: React.FC = () => {
                     <View style={styles.formContainer}>
                         {/* Informations générales */}
                         <View style={styles.infoSection}>
-                            <Text style={styles.infoTitle}>Informations du terrain</Text>
+                            <Text style={styles.infoTitle}>
+                                {mode === 'create' ? 'Informations du terrain' : 'Modifier le terrain'}
+                            </Text>
                             <Text style={styles.infoText}>
-                                Ajoutez un nouveau terrain sportif pour permettre aux utilisateurs de réserver des créneaux.
+                                {mode === 'create'
+                                    ? 'Ajoutez un nouveau terrain sportif pour permettre aux utilisateurs de réserver des créneaux.'
+                                    : 'Modifiez les informations de votre terrain sportif.'
+                                }
                             </Text>
                         </View>
 
@@ -247,8 +262,6 @@ const AddTerrainScreen: React.FC = () => {
                                 refInput={descriptionRef}
                                 onSubmitEditing={() => prixRef.current?.focus()}
                             />
-
-
                         </Card>
 
                         <Card icon="cash" title="Tarification">
@@ -258,7 +271,6 @@ const AddTerrainScreen: React.FC = () => {
                                 onChangeText={setTerrainPrixParHeure}
                                 placeholder="Ex: 15000"
                                 keyboardType="numeric"
-                                // returnKeyType="done"
                                 error={errors.terrainPrixParHeure}
                                 refInput={prixRef}
                             />
@@ -291,7 +303,9 @@ const AddTerrainScreen: React.FC = () => {
                         {/* Résumé du terrain */}
                         {isFormReady && (
                             <View style={styles.summarySection}>
-                                <Text style={styles.summaryTitle}>Résumé de votre terrain</Text>
+                                <Text style={styles.summaryTitle}>
+                                    {mode === 'create' ? 'Résumé de votre terrain' : 'Résumé des modifications'}
+                                </Text>
                                 <View style={styles.summaryCard}>
                                     <View style={styles.summaryRow}>
                                         <Text style={styles.summaryLabel}>Nom:</Text>
@@ -367,6 +381,17 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f7fa',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f5f7fa',
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 16,
+        color: '#666',
     },
     keyboardAvoidingView: {
         flex: 1,
@@ -497,6 +522,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#f8f9fa',
+        marginRight: 12,
     },
     addImageButtonError: {
         borderColor: '#dc3545',
@@ -543,4 +569,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AddTerrainScreen; 
+export default TerrainFormScreen; 

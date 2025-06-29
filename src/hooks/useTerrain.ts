@@ -18,7 +18,8 @@ interface UseTerrainReturn {
 
 // Hook personnalisé pour gérer les données de terrain avec pagination et rafraîchissement
 export const useTerrain = (): UseTerrainReturn => {
-  const [terrains, setTerrains] = useState<Terrain[]>([]);
+  const [allTerrains, setAllTerrains] = useState<Terrain[]>([]); // Tous les terrains
+  const [terrains, setTerrains] = useState<Terrain[]>([]); // Terrains affichés (paginated)
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,11 +31,9 @@ export const useTerrain = (): UseTerrainReturn => {
   const ITEMS_PER_PAGE = 10;
 
   /**
-   * Récupère les terrains paginés depuis l'API.
-   * @param page Page à charger.
-   * @param append Si vrai, on ajoute les nouveaux terrains aux existants.
+   * Récupère tous les terrains depuis l'API (une seule fois).
    */
-  const loadTerrains = useCallback(async (page: number = 1, append: boolean = false) => {
+  const loadAllTerrains = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -46,16 +45,18 @@ export const useTerrain = (): UseTerrainReturn => {
         newTerrains = await terrainService.getManagerTerrains(user.utilisateurId);
       } 
       
-      console.log('🚀 ~ loadTerrains ~ newTerrains:', newTerrains.length);
+      console.log('🚀 ~ loadAllTerrains ~ newTerrains:', newTerrains.length);
 
-      // Mise à jour du flag de fin de données
-      if (newTerrains.length < ITEMS_PER_PAGE) {
-        setHasMoreData(false);
-      }
-
-      // Fusion ou remplacement de la liste des terrains
-      setTerrains(prev => (append ? [...prev, ...newTerrains] : newTerrains));
-      setCurrentPage(page);
+      // Stocker tous les terrains
+      setAllTerrains(newTerrains);
+      
+      // Afficher la première page
+      const firstPage = newTerrains.slice(0, ITEMS_PER_PAGE);
+      setTerrains(firstPage);
+      setCurrentPage(1);
+      
+      // Vérifier s'il y a plus de données
+      setHasMoreData(newTerrains.length > ITEMS_PER_PAGE);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       console.error('Erreur lors du chargement des terrains:', err);
@@ -65,13 +66,22 @@ export const useTerrain = (): UseTerrainReturn => {
   }, [user?.utilisateurId, user?.utilisateurRole]);
 
   /**
-   * Charge les données de la page suivante (pour l'infinite scroll).
+   * Charge les données de la page suivante (pagination côté client).
    */
   const loadMoreData = useCallback(() => {
     if (!isLoading && hasMoreData) {
-      loadTerrains(currentPage + 1, true);
+      const nextPage = currentPage + 1;
+      const startIndex = (nextPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = startIndex + ITEMS_PER_PAGE;
+      const nextPageTerrains = allTerrains.slice(startIndex, endIndex);
+      
+      setTerrains(prev => [...prev, ...nextPageTerrains]);
+      setCurrentPage(nextPage);
+      
+      // Vérifier s'il y a encore plus de données
+      setHasMoreData(endIndex < allTerrains.length);
     }
-  }, [isLoading, hasMoreData, currentPage, loadTerrains]);
+  }, [isLoading, hasMoreData, currentPage, allTerrains]);
 
   /**
    * Rafraîchit les données (reset à la première page).
@@ -79,17 +89,17 @@ export const useTerrain = (): UseTerrainReturn => {
   const refreshData = useCallback(() => {
     setHasMoreData(true);
     setCurrentPage(1);
-    loadTerrains(1, false);
-  }, [loadTerrains]);
+    loadAllTerrains();
+  }, [loadAllTerrains]);
 
   /**
    * Appelé au premier rendu pour charger les données initiales.
    */
   useEffect(() => {
     if (user?.utilisateurId) {
-      loadTerrains(1, false);
+      loadAllTerrains();
     }
-  }, [loadTerrains, user?.utilisateurId]);
+  }, [loadAllTerrains, user?.utilisateurId]);
 
   /**
    * Appelé lorsque l'utilisateur atteint la fin de la liste.

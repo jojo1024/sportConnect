@@ -1,11 +1,23 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-import { terrainService, CreateTerrainData } from '../services/terrainService';
+import { terrainService, CreateTerrainData, Terrain } from '../services/terrainService';
 import { validatePhoneNumber, cleanPhoneNumber } from '../components/PhoneInput';
 import { useAppSelector } from '../store/hooks/hooks';
 import { selectUser } from '../store/slices/userSlice';
 
+const initialFormData: FormData = {
+    terrainNom: '',
+    terrainLocalisation: '',
+    terrainDescription: '',
+    terrainContact: '',
+    terrainPrixParHeure: '',
+    terrainHoraires: {
+        ouverture: '07:00',
+        fermeture: '22:00',
+    },
+    terrainImages: [],
+}   
 interface FormData {
     terrainNom: string;
     terrainLocalisation: string;
@@ -27,10 +39,17 @@ interface ValidationErrors {
     terrainImages?: string;
 }
 
-interface UseAddTerrainReturn {
+interface UseTerrainFormProps {
+    mode: 'create' | 'edit';
+    terrainData?: Terrain; // Données du terrain pour l'édition
+    onTerrainUpdated?: (updatedTerrain: Terrain) => void; // Callback pour notifier les mises à jour
+}
+
+interface UseTerrainFormReturn {
     formData: FormData;
     errors: ValidationErrors;
     isSubmitting: boolean;
+    isLoading: boolean;
     showStartTimePicker: boolean;
     showEndTimePicker: boolean;
     
@@ -69,9 +88,8 @@ interface UseAddTerrainReturn {
 
 const MAX_IMAGES = 5;
 
-export const useAddTerrain = (): UseAddTerrainReturn => {
-  
-  const user = useAppSelector(selectUser)
+export const useTerrainForm = ({ mode, terrainData, onTerrainUpdated }: UseTerrainFormProps): UseTerrainFormReturn => {
+    const user = useAppSelector(selectUser);
     const [formData, setFormData] = useState<FormData>({
         terrainNom: '',
         terrainLocalisation: '',
@@ -87,12 +105,30 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
 
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(false); // Plus besoin de loading initial
     const [showStartTimePicker, setShowStartTimePicker] = useState(false);
     const [showEndTimePicker, setShowEndTimePicker] = useState(false);
     
     // États pour les messages de succès et d'erreur
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    // Charger les données du terrain en mode édition
+    useEffect(() => {
+        if (mode === 'edit' && terrainData) {
+            // loadTerrainData();
+
+            setFormData({
+                terrainNom: terrainData.terrainNom,
+                terrainLocalisation: terrainData.terrainLocalisation,
+                terrainDescription: terrainData.terrainDescription || '',
+                terrainContact: terrainData.terrainContact,
+                terrainPrixParHeure: terrainData.terrainPrixParHeure.toString(),
+                terrainHoraires: terrainData.terrainHoraires,
+                terrainImages: terrainData.terrainImages,
+            });
+        }
+    }, [mode, terrainData]);
 
     // Form handlers
     const setTerrainNom = useCallback((value: string) => {
@@ -243,7 +279,6 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
         } else if (isNaN(Number(formData.terrainPrixParHeure))) {
             newErrors.terrainPrixParHeure = 'Le prix doit être un nombre valide';
         }
-        // Temporairement désactiver la validation des images pour le test
         if (formData.terrainImages.length === 0) {
             newErrors.terrainImages = 'Au moins une photo de couverture est requise';
         }
@@ -257,7 +292,6 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
         formData.terrainLocalisation.trim() !== '' && 
         formData.terrainContact.trim() !== '' && 
         formData.terrainPrixParHeure.trim() !== '' &&
-        // Temporairement retirer la validation des images
         formData.terrainImages.length > 0;
 
     // Submit handlers
@@ -267,48 +301,64 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
         }
 
         setIsSubmitting(true);
-        setErrorMessage(null); // Clear previous error
-        setSuccessMessage(null); // Clear previous success
+        setErrorMessage(null);
+        setSuccessMessage(null);
         
         try {
-            const terrainData: CreateTerrainData = {
-                terrainNom: formData.terrainNom.trim(),
-                terrainLocalisation: formData.terrainLocalisation.trim(),
-                terrainDescription: formData.terrainDescription.trim() || undefined,
-                terrainContact: cleanPhoneNumber(formData.terrainContact),
-                terrainPrixParHeure: Number(formData.terrainPrixParHeure),
-                terrainHoraires: formData.terrainHoraires,
-                terrainImages: formData.terrainImages,
-                gerantId: user?.utilisateurId || 0,
-            };
+            if (mode === 'create') {
+                // Mode création
+                const terrainData: CreateTerrainData = {
+                    terrainNom: formData.terrainNom.trim(),
+                    terrainLocalisation: formData.terrainLocalisation.trim(),
+                    terrainDescription: formData.terrainDescription.trim() || undefined,
+                    terrainContact: cleanPhoneNumber(formData.terrainContact),
+                    terrainPrixParHeure: Number(formData.terrainPrixParHeure),
+                    terrainHoraires: formData.terrainHoraires,
+                    terrainImages: formData.terrainImages,
+                    gerantId: user?.utilisateurId || 0,
+                };
 
-            // Appel API pour créer le terrain
-            const createdTerrain = await terrainService.createTerrain(terrainData);
-            
-            setSuccessMessage('Terrain créé avec succès ! les capo pourront reserver ce terrain après validation par l\'administrateur.');
+                await terrainService.createTerrain(terrainData);
+                setSuccessMessage('Terrain créé avec succès ! Il sera visible après validation par l\'administrateur.');
 
-            // Reset form
-            setFormData({
-                terrainNom: '',
-                terrainLocalisation: '',
-                terrainDescription: '',
-                terrainContact: '',
-                terrainPrixParHeure: '',
-                terrainHoraires: {
-                    ouverture: '07:00',
-                    fermeture: '22:00',
-                },
-                terrainImages: [],
-            });
+                // Reset form
+                setFormData(initialFormData);
+            } else {
+                // Mode modification
+                if (!terrainData) {
+                    setErrorMessage('Données du terrain manquantes');
+                    return;
+                }
+                
+                const updateData = {
+                    terrainNom: formData.terrainNom.trim(),
+                    terrainLocalisation: formData.terrainLocalisation.trim(),
+                    terrainDescription: formData.terrainDescription.trim() || undefined,
+                    terrainContact: cleanPhoneNumber(formData.terrainContact),
+                    terrainPrixParHeure: Number(formData.terrainPrixParHeure),
+                    terrainHoraires: formData.terrainHoraires,
+                    terrainImages: formData.terrainImages,
+                };
+
+              const response =   await terrainService.updateTerrain(terrainData.terrainId, updateData);
+                console.log("🚀 ~ handleSubmit ~ response:", response)
+                setSuccessMessage('Terrain modifié avec succès !');
+
+                // Notifier le parent avec les données mises à jour
+                if (onTerrainUpdated && terrainData) {
+                    onTerrainUpdated(response);
+                }
+            }
 
         } catch (error: any) {
-            console.error('Erreur lors de la création du terrain:', error);
-            const errorMessage = error.response?.data?.message || 'Impossible de créer le terrain. Veuillez réessayer.';
+            console.error(`Erreur lors de la ${mode === 'create' ? 'création' : 'modification'} du terrain:`, error);
+            const errorMessage = error.response?.data?.message || 
+                `Impossible de ${mode === 'create' ? 'créer' : 'modifier'} le terrain. Veuillez réessayer.`;
             setErrorMessage(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
-    }, [formData, validateForm]);
+    }, [formData, validateForm, mode, terrainData, user?.utilisateurId, onTerrainUpdated]);
 
     const clearSuccessMessage = useCallback(() => {
         setSuccessMessage(null);
@@ -322,6 +372,7 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
         formData,
         errors,
         isSubmitting,
+        isLoading,
         showStartTimePicker,
         showEndTimePicker,
         successMessage,

@@ -8,6 +8,7 @@ import { RenderFooter, RetryComponent } from '../../components/UtilsComponent';
 import { Terrain } from '../../services/terrainService';
 import { name as projectName, version } from '../../../package.json';
 import { ScreenNavigationProps } from '../../navigation/types';
+import { BASE_URL_IMAGES } from '../../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -84,7 +85,9 @@ const TerrainsScreen: React.FC = () => {
     };
 
     const handleAddTerrain = () => {
-        navigation.navigate('AddTerrain');
+        navigation.navigate('TerrainForm', {
+            mode: 'create'
+        });
     };
 
     // Afficher l'erreur si elle existe
@@ -102,7 +105,7 @@ const TerrainsScreen: React.FC = () => {
         >
             <View style={styles.imageContainer}>
                 <Image
-                    source={{ uri: getTerrainImage(item.terrainImages) }}
+                    source={{ uri: `${BASE_URL_IMAGES}/${getTerrainImage(item.terrainImages)}` }}
                     style={styles.terrainImage}
                 />
                 <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.terrainDisponibilite) }]}>
@@ -155,7 +158,7 @@ const TerrainsScreen: React.FC = () => {
 
             <FlatList
                 data={terrains}
-                keyExtractor={(item) => item.terrainId.toString()}
+                keyExtractor={(item) => `terrain-${item.terrainId}`}
                 renderItem={renderTerrainCard}
                 contentContainerStyle={styles.listContainer}
                 showsVerticalScrollIndicator={false}

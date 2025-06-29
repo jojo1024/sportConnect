@@ -24,6 +24,16 @@ export interface CreateTerrainData {
     gerantId: number;
 }
 
+export interface UpdateTerrainData {
+    terrainNom: string;
+    terrainLocalisation: string;
+    terrainDescription?: string;
+    terrainContact: string;
+    terrainPrixParHeure: number;
+    terrainHoraires: any;
+    terrainImages: string[];
+}
+
 export interface TerrainResponse {
     success: boolean;
     message: string;
@@ -37,9 +47,18 @@ export interface SingleTerrainResponse {
 }
 
 export const terrainService = {
+    // URL de base pour les images
+    BASE_URL: api.defaults.baseURL,
+
     // Créer un nouveau terrain
     createTerrain: async (terrainData: CreateTerrainData): Promise<Terrain> => {
         const response = await api.post<SingleTerrainResponse>('/terrains/create', terrainData);
+        return response.data.data;
+    },
+
+    // Mettre à jour un terrain existant
+    updateTerrain: async (terrainId: number, terrainData: UpdateTerrainData): Promise<Terrain> => {
+        const response = await api.put<SingleTerrainResponse>(`/terrains/update/${terrainId}`, terrainData);
         return response.data.data;
     },
 

@@ -10,6 +10,11 @@ export type RootStackParamList = {
     MainTabs: undefined;
     Terrains: undefined;
     AddTerrain: undefined;
+    TerrainForm: {
+        mode: 'create' | 'edit';
+        terrainData?: Terrain;
+        onTerrainUpdated?: (updatedTerrain: Terrain) => void;
+    };
     TerrainDetails: {
         terrain: Terrain;
     };

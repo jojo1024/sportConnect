@@ -16,15 +16,24 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { PRIMARY_COLOR } from '../../utils/constant';
 import { Terrain } from '../../services/terrainService';
 import { ScreenNavigationProps, ScreenRouteProps } from '../../navigation/types';
+import { BASE_URL_IMAGES } from '../../services/api';
 
 const { width, height } = Dimensions.get('window');
 
 const TerrainDetailsScreen: React.FC = () => {
     const navigation = useNavigation<ScreenNavigationProps>();
     const route = useRoute<ScreenRouteProps<'TerrainDetails'>>();
-    const { terrain } = route.params;
+    const { terrain: initialTerrain } = route.params;
+
+    // État local pour les données du terrain (peut être mis à jour)
+    const [terrain, setTerrain] = useState<Terrain>(initialTerrain);
 
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [copied, setCopied] = useState(false);
+    // Fonction pour mettre à jour les données du terrain
+    const handleTerrainUpdated = (updatedTerrain: Terrain) => {
+        setTerrain(updatedTerrain);
+    };
 
     const getStatusText = (status: "confirme" | "en_attente") => {
         switch (status) {
@@ -79,40 +88,30 @@ const TerrainDetailsScreen: React.FC = () => {
     };
 
     const handleEdit = () => {
-        // TODO: Naviguer vers l'écran d'édition
-        Alert.alert('Fonctionnalité', 'Édition du terrain à implémenter');
+        navigation.navigate('TerrainForm', {
+            mode: 'edit',
+            terrainData: terrain,
+            onTerrainUpdated: handleTerrainUpdated
+        });
     };
 
     const handleCopyContact = async () => {
         if (terrain.terrainContact) {
             try {
                 await Clipboard.setStringAsync(terrain.terrainContact);
-                Alert.alert('Succès', 'Contact copié dans le presse-papiers');
+                setCopied(true);
+
+                // Reset copied state after 2 seconds
+                setTimeout(() => {
+                    setCopied(false);
+                }, 2000);
             } catch (error) {
-                Alert.alert('Erreur', 'Impossible de copier le contact');
             }
         } else {
             Alert.alert('Erreur', 'Aucun contact disponible');
         }
     };
 
-    const handleDelete = () => {
-        Alert.alert(
-            'Supprimer le terrain',
-            'Êtes-vous sûr de vouloir supprimer ce terrain ? Cette action est irréversible.',
-            [
-                { text: 'Annuler', style: 'cancel' },
-                {
-                    text: 'Supprimer',
-                    style: 'destructive',
-                    onPress: () => {
-                        // TODO: Implémenter la suppression
-                        Alert.alert('Suppression', 'Fonctionnalité de suppression à implémenter');
-                    }
-                }
-            ]
-        );
-    };
 
     const handleReservations = () => {
         // TODO: Naviguer vers l'écran des réservations
@@ -144,7 +143,7 @@ const TerrainDetailsScreen: React.FC = () => {
                 {/* Image du terrain avec navigation */}
                 <View style={styles.imageContainer}>
                     <Image
-                        source={{ uri: getTerrainImage(terrain.terrainImages, currentImageIndex) }}
+                        source={{ uri: `${BASE_URL_IMAGES}/${getTerrainImage(terrain.terrainImages, currentImageIndex)}` }}
                         style={styles.terrainImage}
                     />
 
@@ -214,7 +213,7 @@ const TerrainDetailsScreen: React.FC = () => {
 
                 {/* Actions rapides */}
                 <View style={styles.actionButtons}>
-                $
+
 
                     <TouchableOpacity style={styles.actionButton} onPress={handleReservations}>
                         <FontAwesome5 name="calendar-alt" size={18} color="#fff" />
@@ -261,8 +260,12 @@ const TerrainDetailsScreen: React.FC = () => {
                                     <Text style={styles.detailLabel}>Contact</Text>
                                     <Text style={styles.detailValue}>{terrain.terrainContact}</Text>
                                 </View>
-                                <TouchableOpacity style={styles.copyButton} onPress={handleCopyContact}>
-                                    <Ionicons name="copy-outline" size={20} color={PRIMARY_COLOR} />
+                                <TouchableOpacity style={[styles.copyButton, copied && styles.copyButtonActive]} onPress={handleCopyContact}>
+                                    <Ionicons
+                                        name={copied ? "checkmark" : "copy-outline"}
+                                        size={20}
+                                        color={copied ? "#4CAF50" : PRIMARY_COLOR}
+                                    />
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -309,7 +312,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: 'rgba(0,0,0,0.2)',
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
@@ -474,8 +477,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     copyButton: {
-        padding: 8,
-        marginLeft: 8,
+        padding: 4,
+        borderRadius: 6,
     },
     prevButton: {
         position: 'absolute',
@@ -497,6 +500,9 @@ const styles = StyleSheet.create({
     },
     editIconButton: {
         padding: 8,
+    },
+    copyButtonActive: {
+        backgroundColor: '#e8f5e8',
     },
 });
 

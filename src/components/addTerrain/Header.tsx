@@ -4,49 +4,66 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '../../theme/colors';
 
 interface HeaderProps {
+    mode: 'create' | 'edit';
     onSave: () => void;
     onBack?: () => void;
     isSubmitting: boolean;
     isFormReady?: boolean;
+    isLoading?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onSave, onBack, isSubmitting, isFormReady = false }) => (
-    <View style={styles.header}>
-        <View style={styles.leftSection}>
-            {onBack && (
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={onBack}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="arrow-back" size={20} />
-                </TouchableOpacity>
-            )}
-            <Text style={styles.title}>Ajouter un terrain</Text>
-        </View>
+export const Header: React.FC<HeaderProps> = ({ 
+    mode, 
+    onSave, 
+    onBack, 
+    isSubmitting, 
+    isFormReady = false,
+    isLoading = false 
+}) => {
+    const title = mode === 'create' ? 'Ajouter un terrain' : 'Modifier le terrain';
+    const buttonText = isSubmitting 
+        ? (mode === 'create' ? 'Création...' : 'Modification...')
+        : (mode === 'create' ? 'Ajouter' : 'Modifier');
 
-        <TouchableOpacity
-            style={[
-                styles.saveButton,
-                (isSubmitting || !isFormReady) && styles.saveButtonDisabled
-            ]}
-            onPress={onSave}
-            disabled={isSubmitting || !isFormReady}
-        >
-            <Ionicons
-                name="save"
-                size={16}
-                color={(isSubmitting || !isFormReady) ? '#ccc' : COLORS.primary}
-            />
-            <Text style={[
-                styles.saveButtonText,
-                (isSubmitting || !isFormReady) && styles.saveButtonTextDisabled
-            ]}>
-                {isSubmitting ? 'Création...' : 'Ajouter'}
-            </Text>
-        </TouchableOpacity>
-    </View>
-);
+    return (
+        <View style={styles.header}>
+            <View style={styles.leftSection}>
+                {onBack && (
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={onBack}
+                        activeOpacity={0.7}
+                        disabled={isLoading}
+                    >
+                        <Ionicons name="arrow-back" size={20} />
+                    </TouchableOpacity>
+                )}
+                <Text style={styles.title}>{title}</Text>
+            </View>
+
+            <TouchableOpacity
+                style={[
+                    styles.saveButton,
+                    (isSubmitting || !isFormReady || isLoading) && styles.saveButtonDisabled
+                ]}
+                onPress={onSave}
+                disabled={isSubmitting || !isFormReady || isLoading}
+            >
+                <Ionicons
+                    name="save"
+                    size={16}
+                    color={(isSubmitting || !isFormReady || isLoading) ? '#ccc' : COLORS.primary}
+                />
+                <Text style={[
+                    styles.saveButtonText,
+                    (isSubmitting || !isFormReady || isLoading) && styles.saveButtonTextDisabled
+                ]}>
+                    {buttonText}
+                </Text>
+            </TouchableOpacity>
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
     header: {

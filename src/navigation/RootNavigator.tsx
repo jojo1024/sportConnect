@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StatusBar } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import LoginScreen from "../screens/LoginScreen";
-import AddTerrainScreen from "../screens/manager/AddTerrainScreen";
+import TerrainFormScreen from "../screens/manager/TerrainFormScreen";
 import TerrainsScreen from "../screens/manager/TerrainsScreen";
 import TerrainDetailsScreen from "../screens/manager/TerrainDetailsScreen";
 import RegisterScreen from "../screens/RegisterScreen";
@@ -45,7 +45,7 @@ const RootNavigator = () => {
                                 {() => <BottomTabs userRole={user?.utilisateurRole || "lambda"} />}
                             </Stack.Screen>
                             <Stack.Screen name="Terrains" component={TerrainsScreen} />
-                            <Stack.Screen name="AddTerrain" component={AddTerrainScreen} />
+                            <Stack.Screen name="TerrainForm" component={TerrainFormScreen} />
                             <Stack.Screen name="TerrainDetails" component={TerrainDetailsScreen} />
                             <Stack.Screen name="MatchDetails" component={MatchDetailsScreen} />
                             <Stack.Screen name="MatchSummary" component={MatchSummaryScreen} />
