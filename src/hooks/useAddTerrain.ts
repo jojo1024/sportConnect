@@ -1,215 +1,145 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { terrainService, CreateTerrainData } from '../services/terrainService';
 import { validatePhoneNumber, cleanPhoneNumber } from '../components/PhoneInput';
 import { useAppSelector } from '../store/hooks/hooks';
 import { selectUser } from '../store/slices/userSlice';
+import { FormData, initialTerrainFormData, ValidationErrors } from './useTerrainForm';
+import { UseAddTerrainReturn } from './interface';
 
-interface FormData {
-    terrainNom: string;
-    terrainLocalisation: string;
-    terrainDescription: string;
-    terrainContact: string;
-    terrainPrixParHeure: string;
-    terrainHoraires: {
-        ouverture: string;
-        fermeture: string;
-    };
-    terrainImages: string[];
-}
-
-interface ValidationErrors {
-    terrainNom?: string;
-    terrainLocalisation?: string;
-    terrainContact?: string;
-    terrainPrixParHeure?: string;
-    terrainImages?: string;
-}
-
-interface UseAddTerrainReturn {
-    formData: FormData;
-    errors: ValidationErrors;
-    isSubmitting: boolean;
-    showStartTimePicker: boolean;
-    showEndTimePicker: boolean;
-    
-    // États de succès et d'erreur
-    successMessage: string | null;
-    errorMessage: string | null;
-    
-    // Form handlers
-    setTerrainNom: (value: string) => void;
-    setTerrainLocalisation: (value: string) => void;
-    setTerrainDescription: (value: string) => void;
-    setTerrainContact: (value: string) => void;
-    setTerrainPrixParHeure: (value: string) => void;
-    
-    // Time handlers
-    setShowStartTimePicker: (show: boolean) => void;
-    setShowEndTimePicker: (show: boolean) => void;
-    handleStartTimeChange: (event: any, selectedDate?: Date) => void;
-    handleEndTimeChange: (event: any, selectedDate?: Date) => void;
-    
-    // Image handlers
-    pickImage: () => Promise<void>;
-    removeImage: (index: number) => void;
-    
-    // Submit handlers
-    handleSubmit: () => Promise<void>;
-    
-    // Validation
-    validateForm: () => boolean;
-    isFormReady: boolean;
-    
-    // Clear messages
-    clearSuccessMessage: () => void;
-    clearErrorMessage: () => void;
-}
-
+// Constantes
 const MAX_IMAGES = 5;
+const IMAGE_PICKER_OPTIONS = {
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [16, 9] as [number, number],
+    quality: 0.8,
+    base64: true,
+};
+
+const TIME_FORMAT_OPTIONS = {
+    hour: '2-digit' as const,
+    minute: '2-digit' as const,
+};
+
+
+const validateField = {
+    required: (value: string, fieldName: string): string | null => 
+        !value.trim() ? `${fieldName} est requis` : null,
+    
+    phone: (value: string): string | null => {
+        if (!value.trim()) return 'Le contact est requis';
+        const phoneError = validatePhoneNumber(value);
+        return phoneError || null;
+    },
+    
+    price: (value: string): string | null => {
+        if (!value.trim()) return 'Le prix par heure est requis';
+        if (isNaN(Number(value))) return 'Le prix doit être un nombre valide';
+        if (Number(value) <= 0) return 'Le prix doit être supérieur à 0';
+        return null;
+    },
+    
+    images: (images: string[]): string | null => 
+        images.length === 0 ? 'Au moins une photo de couverture est requise' : null,
+};
+
+// Image processing helpers
+const processImageAsset = async (asset: ImagePicker.ImagePickerAsset): Promise<string> => {
+    if (asset.base64) {
+        return `data:image/jpeg;base64,${asset.base64}`;
+    }
+    
+    if (asset.uri) {
+        try {
+            const base64 = await FileSystem.readAsStringAsync(asset.uri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+            return `data:image/jpeg;base64,${base64}`;
+        } catch (error) {
+            console.warn('Erreur lors de la conversion en base64, utilisation de l\'URI:', error);
+            return asset.uri;
+        }
+    }
+    
+    throw new Error('Format d\'image non supporté');
+};
 
 export const useAddTerrain = (): UseAddTerrainReturn => {
-  
-  const user = useAppSelector(selectUser)
-    const [formData, setFormData] = useState<FormData>({
-        terrainNom: '',
-        terrainLocalisation: '',
-        terrainDescription: '',
-        terrainContact: '',
-        terrainPrixParHeure: '',
-        terrainHoraires: {
-            ouverture: '07:00',
-            fermeture: '22:00',
-        },
-        terrainImages: [],
-    });
-
+    const user = useAppSelector(selectUser);
+    
+    // États principaux
+    const [formData, setFormData] = useState<FormData>(initialTerrainFormData);
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showStartTimePicker, setShowStartTimePicker] = useState(false);
     const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-    
-    // États pour les messages de succès et d'erreur
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    // Form handlers
-    const setTerrainNom = useCallback((value: string) => {
-        setFormData(prev => ({ ...prev, terrainNom: value }));
-        if (errors.terrainNom) {
-            setErrors(prev => ({ ...prev, terrainNom: undefined }));
-        }
-    }, [errors.terrainNom]);
+    // Handlers de formulaire optimisés avec useCallback
+    const createFieldHandler = useCallback((field: keyof FormData) => {
+        return (value: string) => {
+            setFormData(prev => ({ ...prev, [field]: value }));
+            // Clear error for this field if it exists
+            if (errors[field as keyof ValidationErrors]) {
+                setErrors(prev => ({ ...prev, [field]: undefined }));
+            }
+        };
+    }, [errors]);
 
-    const setTerrainLocalisation = useCallback((value: string) => {
-        setFormData(prev => ({ ...prev, terrainLocalisation: value }));
-        if (errors.terrainLocalisation) {
-            setErrors(prev => ({ ...prev, terrainLocalisation: undefined }));
-        }
-    }, [errors.terrainLocalisation]);
+    const setTerrainNom = createFieldHandler('terrainNom');
+    const setTerrainLocalisation = createFieldHandler('terrainLocalisation');
+    const setTerrainDescription = createFieldHandler('terrainDescription');
+    const setTerrainContact = createFieldHandler('terrainContact');
+    const setTerrainPrixParHeure = createFieldHandler('terrainPrixParHeure');
 
-    const setTerrainDescription = useCallback((value: string) => {
-        setFormData(prev => ({ ...prev, terrainDescription: value }));
+    // Handlers de temps optimisés
+    const createTimeHandler = useCallback((timeField: 'ouverture' | 'fermeture', setShowPicker: (show: boolean) => void) => {
+        return (event: any, selectedDate?: Date) => {
+            setShowPicker(false);
+            if (selectedDate) {
+                setFormData(prev => ({
+                    ...prev,
+                    terrainHoraires: {
+                        ...prev.terrainHoraires,
+                        [timeField]: selectedDate.toLocaleTimeString('fr-FR', TIME_FORMAT_OPTIONS)
+                    }
+                }));
+            }
+        };
     }, []);
 
-    const setTerrainContact = useCallback((value: string) => {
-        setFormData(prev => ({ ...prev, terrainContact: value }));
-        if (errors.terrainContact) {
-            setErrors(prev => ({ ...prev, terrainContact: undefined }));
-        }
-    }, [errors.terrainContact]);
+    const handleStartTimeChange = createTimeHandler('ouverture', setShowStartTimePicker);
+    const handleEndTimeChange = createTimeHandler('fermeture', setShowEndTimePicker);
 
-    const setTerrainPrixParHeure = useCallback((value: string) => {
-        setFormData(prev => ({ ...prev, terrainPrixParHeure: value }));
-        if (errors.terrainPrixParHeure) {
-            setErrors(prev => ({ ...prev, terrainPrixParHeure: undefined }));
-        }
-    }, [errors.terrainPrixParHeure]);
-
-    // Time handlers
-    const handleStartTimeChange = useCallback((event: any, selectedDate?: Date) => {
-        setShowStartTimePicker(false);
-        if (selectedDate) {
-            setFormData(prev => ({
-                ...prev,
-                terrainHoraires: {
-                    ...prev.terrainHoraires,
-                    ouverture: selectedDate.toLocaleTimeString('fr-FR', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                    })
-                }
-            }));
-        }
-    }, []);
-
-    const handleEndTimeChange = useCallback((event: any, selectedDate?: Date) => {
-        setShowEndTimePicker(false);
-        if (selectedDate) {
-            setFormData(prev => ({
-                ...prev,
-                terrainHoraires: {
-                    ...prev.terrainHoraires,
-                    fermeture: selectedDate.toLocaleTimeString('fr-FR', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                    })
-                }
-            }));
-        }
-    }, []);
-
-    // Image handlers
+    // Handler d'images optimisé
     const pickImage = useCallback(async () => {
         if (formData.terrainImages.length >= MAX_IMAGES) {
-            console.error('Limite atteinte');
+            setErrorMessage(`Limite de ${MAX_IMAGES} images atteinte`);
             return;
         }
 
         try {
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [16, 9],
-                quality: 0.8,
-                base64: true,
-            });
+            const result = await ImagePicker.launchImageLibraryAsync(IMAGE_PICKER_OPTIONS);
 
-            if (!result.canceled && result.assets && result.assets.length > 0) {
-                const asset = result.assets[0];
+            if (!result.canceled && result.assets?.[0]) {
+                const processedImage = await processImageAsset(result.assets[0]);
                 
-                if (asset.base64) {
-                    const base64String = `data:image/jpeg;base64,${asset.base64}`;
-                    setFormData(prev => ({
-                        ...prev,
-                        terrainImages: [...prev.terrainImages, base64String]
-                    }));
-                } else if (asset.uri) {
-                    try {
-                        const base64 = await FileSystem.readAsStringAsync(asset.uri, {
-                            encoding: FileSystem.EncodingType.Base64,
-                        });
-                        const base64String = `data:image/jpeg;base64,${base64}`;
-                        setFormData(prev => ({
-                            ...prev,
-                            terrainImages: [...prev.terrainImages, base64String]
-                        }));
-                    } catch (conversionError) {
-                        console.error('Erreur lors de la conversion en base64:', conversionError);
-                        setFormData(prev => ({
-                            ...prev,
-                            terrainImages: [...prev.terrainImages, asset.uri]
-                        }));
-                    }
-                }
-                
+                setFormData(prev => ({
+                    ...prev,
+                    terrainImages: [...prev.terrainImages, processedImage]
+                }));
+
+                // Clear image error if it exists
                 if (errors.terrainImages) {
                     setErrors(prev => ({ ...prev, terrainImages: undefined }));
                 }
             }
         } catch (error) {
             console.error('Erreur lors de la sélection de l\'image:', error);
+            setErrorMessage('Erreur lors de la sélection de l\'image');
         }
     }, [formData.terrainImages.length, errors.terrainImages]);
 
@@ -220,55 +150,49 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
         }));
     }, []);
 
-    // Validation
+    // Validation optimisée avec useMemo
     const validateForm = useCallback(() => {
         const newErrors: ValidationErrors = {};
 
-        if (!formData.terrainNom.trim()) {
-            newErrors.terrainNom = 'Le nom du terrain est requis';
-        }
-        if (!formData.terrainLocalisation.trim()) {
-            newErrors.terrainLocalisation = 'La localisation est requise';
-        }
-        if (!formData.terrainContact.trim()) {
-            newErrors.terrainContact = 'Le contact est requis';
-        } else {
-            const contactError = validatePhoneNumber(formData.terrainContact);
-            if (contactError) {
-                newErrors.terrainContact = contactError;
-            }
-        }
-        if (!formData.terrainPrixParHeure.trim()) {
-            newErrors.terrainPrixParHeure = 'Le prix par heure est requis';
-        } else if (isNaN(Number(formData.terrainPrixParHeure))) {
-            newErrors.terrainPrixParHeure = 'Le prix doit être un nombre valide';
-        }
-        // Temporairement désactiver la validation des images pour le test
-        if (formData.terrainImages.length === 0) {
-            newErrors.terrainImages = 'Au moins une photo de couverture est requise';
-        }
+        // Validation des champs requis
+        const nomError = validateField.required(formData.terrainNom, 'Le nom du terrain');
+        if (nomError) newErrors.terrainNom = nomError;
+
+        const localisationError = validateField.required(formData.terrainLocalisation, 'La localisation');
+        if (localisationError) newErrors.terrainLocalisation = localisationError;
+
+        const contactError = validateField.phone(formData.terrainContact);
+        if (contactError) newErrors.terrainContact = contactError;
+
+        const priceError = validateField.price(formData.terrainPrixParHeure);
+        if (priceError) newErrors.terrainPrixParHeure = priceError;
+
+        const imagesError = validateField.images(formData.terrainImages);
+        if (imagesError) newErrors.terrainImages = imagesError;
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     }, [formData]);
 
-    const isFormReady = Object.keys(errors).length === 0 && 
-        formData.terrainNom.trim() !== '' && 
-        formData.terrainLocalisation.trim() !== '' && 
-        formData.terrainContact.trim() !== '' && 
-        formData.terrainPrixParHeure.trim() !== '' &&
-        // Temporairement retirer la validation des images
-        formData.terrainImages.length > 0;
+    // État du formulaire calculé avec useMemo
+    const isFormReady = useMemo(() => {
+        return Object.keys(errors).length === 0 && 
+            formData.terrainNom.trim() !== '' && 
+            formData.terrainLocalisation.trim() !== '' && 
+            formData.terrainContact.trim() !== '' && 
+            formData.terrainPrixParHeure.trim() !== '' &&
+            formData.terrainImages.length > 0;
+    }, [errors, formData]);
 
-    // Submit handlers
+    // Handler de soumission optimisé
     const handleSubmit = useCallback(async () => {
-        if (!validateForm()) {
+        if (!validateForm() || !user?.utilisateurId) {
             return;
         }
 
         setIsSubmitting(true);
-        setErrorMessage(null); // Clear previous error
-        setSuccessMessage(null); // Clear previous success
+        setErrorMessage(null);
+        setSuccessMessage(null);
         
         try {
             const terrainData: CreateTerrainData = {
@@ -279,67 +203,61 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
                 terrainPrixParHeure: Number(formData.terrainPrixParHeure),
                 terrainHoraires: formData.terrainHoraires,
                 terrainImages: formData.terrainImages,
-                gerantId: user?.utilisateurId || 0,
+                gerantId: user.utilisateurId,
             };
 
-            // Appel API pour créer le terrain
-            const createdTerrain = await terrainService.createTerrain(terrainData);
+            await terrainService.createTerrain(terrainData);
             
-            setSuccessMessage('Terrain créé avec succès ! les capo pourront reserver ce terrain après validation par l\'administrateur.');
-
-            // Reset form
-            setFormData({
-                terrainNom: '',
-                terrainLocalisation: '',
-                terrainDescription: '',
-                terrainContact: '',
-                terrainPrixParHeure: '',
-                terrainHoraires: {
-                    ouverture: '07:00',
-                    fermeture: '22:00',
-                },
-                terrainImages: [],
-            });
+            setSuccessMessage('Terrain créé avec succès ! Les capo pourront réserver ce terrain après validation par l\'administrateur.');
+            setFormData(initialTerrainFormData);
 
         } catch (error: any) {
             console.error('Erreur lors de la création du terrain:', error);
-            const errorMessage = error.response?.data?.message || 'Impossible de créer le terrain. Veuillez réessayer.';
+            const errorMessage = error.response?.data?.message || 
+                'Impossible de créer le terrain. Veuillez réessayer.';
             setErrorMessage(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
-    }, [formData, validateForm]);
+    }, [formData, validateForm, user?.utilisateurId]);
 
-    const clearSuccessMessage = useCallback(() => {
-        setSuccessMessage(null);
-    }, []);
-
-    const clearErrorMessage = useCallback(() => {
-        setErrorMessage(null);
-    }, []);
+    // Handlers de nettoyage
+    const clearSuccessMessage = useCallback(() => setSuccessMessage(null), []);
+    const clearErrorMessage = useCallback(() => setErrorMessage(null), []);
 
     return {
+        // États
         formData,
         errors,
         isSubmitting,
+        isFormReady,
         showStartTimePicker,
         showEndTimePicker,
         successMessage,
         errorMessage,
+        
+        // Handlers de formulaire
         setTerrainNom,
         setTerrainLocalisation,
         setTerrainDescription,
         setTerrainContact,
         setTerrainPrixParHeure,
+        
+        // Handlers de temps
         setShowStartTimePicker,
         setShowEndTimePicker,
         handleStartTimeChange,
         handleEndTimeChange,
+        
+        // Handlers d'images
         pickImage,
         removeImage,
+        
+        // Handlers de soumission
         handleSubmit,
+        
+        // Utilitaires
         validateForm,
-        isFormReady,
         clearSuccessMessage,
         clearErrorMessage,
     };

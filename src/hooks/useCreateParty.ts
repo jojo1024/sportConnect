@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { matchService, CreateMatchData } from '../services/matchService';
-import { terrainService, Terrain } from '../services/terrainService';
+import { CreateMatchData, matchService } from '../services/matchService';
+import { Terrain, terrainService } from '../services/terrainService';
 import { store } from '../store';
-import { ErrorType } from '../services/api';
 import { useApiError } from './useApiError';
 import { useCustomAlert } from './useCustomAlert';
+import { PARTICIPANTS_LIMITS } from '../utils/constant';
 
 // Types
 export interface Field {
@@ -30,14 +30,6 @@ export interface CreatePartyValidation {
     errors: string[];
 }
 
-// Constants
-export const DURATION_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24, 72];
-
-export const PARTICIPANTS_LIMITS = {
-    MIN: 2,
-    MAX: 50,
-    DEFAULT: 10,
-} as const;
 
 // Validation functions
 const validateForm = (formData: CreatePartyFormData): CreatePartyValidation => {

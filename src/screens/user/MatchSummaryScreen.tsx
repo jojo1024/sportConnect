@@ -19,6 +19,7 @@ import { useAppSelector } from '../../store/hooks/hooks';
 import { selectUser } from '../../store/slices/userSlice';
 import { SuccessModal } from '../../components/SuccessModal';
 import CompactErrorCard from '../../components/CompactErrorCard';
+import DetailCard, { DetailRow } from '../../components/DetailCard';
 
 interface MatchSummaryScreenProps {
     route: {
@@ -123,78 +124,66 @@ const MatchSummaryScreen: React.FC<MatchSummaryScreenProps> = ({ route, navigati
                     />
                 )}
 
-                {/* Titre du match */}
-                <View style={{ alignItems: 'center', marginTop: 24, marginBottom: 8, marginHorizontal: 5 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                        <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: COLORS.primary, letterSpacing: 0.5 }}>
-                            Match à {`${match.joueurxMax}, ${match.terrainNom}`}
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Carte infos principales - Même style que MatchDetailsScreen */}
-                <View style={[styles.card, { marginTop: 10 }]}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <View style={{ alignItems: 'center', flex: 1 }}>
-                            <Ionicons name="calendar" size={22} color="#888" />
-                            <Text style={{ marginTop: 4, fontWeight: '600', fontSize: 12, color: '#666', marginBottom: 2 }}>Date</Text>
-                            <Text style={{ fontWeight: '600', fontSize: 14, color: '#222' }}>
-                                {formatDate(match.matchDateDebut)}, {formatTime(match.matchDateDebut)}
-                            </Text>
-                        </View>
-                        <View style={{ width: 1, height: 50, backgroundColor: '#e0e0e0', marginHorizontal: 10 }} />
-                        <View style={{ alignItems: 'center', flex: 1 }}>
-                            <Ionicons name="time-outline" size={22} color="#888" />
-                            <Text style={{ marginTop: 4, fontWeight: '600', fontSize: 12, color: '#666', marginBottom: 2 }}>Durée</Text>
-                            <Text style={{ fontWeight: '600', fontSize: 14, color: '#222' }}>{calculateMatchDuration(match.matchDateDebut, match.matchDateFin)}</Text>
-                        </View>
-                        <View style={{ width: 1, height: 50, backgroundColor: '#e0e0e0', marginHorizontal: 10 }} />
-                        <View style={{ alignItems: 'center', flex: 1 }}>
-                            <MaterialCommunityIcons name="currency-btc" size={22} color="#888" />
-                            <Text style={{ marginTop: 4, fontWeight: '600', fontSize: 12, color: '#666', marginBottom: 2 }}>Prix</Text>
-                            <Text style={{ fontWeight: '600', fontSize: 14, color: '#222' }}>{match.matchPrixParJoueur} F</Text>
-                        </View>
-                    </View>
-                </View>
+                <View style={{ marginBottom: 15 }}></View>
+                {/* Informations du match */}
+                <DetailCard title="Informations du match">
+                    <DetailRow
+                        icon="calendar-outline"
+                        label="Date et heure"
+                        value={`${formatDate(match.matchDateDebut)}, ${formatTime(match.matchDateDebut)}`}
+                    />
+                    <DetailRow
+                        icon="time-outline"
+                        label="Durée du match"
+                        value={calculateMatchDuration(match.matchDateDebut, match.matchDateFin)}
+                    />
+                    <DetailRow
+                        icon="cash-outline"
+                        label="Prix par joueur"
+                        value={`${match.matchPrixParJoueur} F CFA`}
+                        iconColor={COLORS.primary}
+                    />
+                </DetailCard>
 
                 {/* Conditions d'utilisation */}
-                <View style={styles.termsCard}>
+                <View style={styles.termsSection}>
                     <Text style={styles.termsTitle}>Conditions d'utilisation</Text>
+                    <View style={styles.termsCard}>
+                        <View style={styles.termsContent}>
+                            <ScrollView
+                                style={styles.termsScrollView}
+                                showsVerticalScrollIndicator={true}
+                                nestedScrollEnabled={true}
+                            >
+                                <Text style={styles.termsText}>
+                                    En rejoignant cette partie, vous acceptez les conditions suivantes :{'\n\n'}
 
-                    <View style={styles.termsContent}>
-                        <ScrollView
-                            style={styles.termsScrollView}
-                            showsVerticalScrollIndicator={true}
-                            nestedScrollEnabled={true}
-                        >
-                            <Text style={styles.termsText}>
-                                En rejoignant cette partie, vous acceptez les conditions suivantes :{'\n\n'}
+                                    <Text style={styles.termsBold}>1. Engagement de participation :</Text>{'\n'}
+                                    • Vous vous engagez à participer au match à la date et heure indiquées{'\n'}
+                                    • En cas d'absence, vous ne serez pas remboursé{'\n\n'}
 
-                                <Text style={styles.termsBold}>1. Engagement de participation :</Text>{'\n'}
-                                • Vous vous engagez à participer au match à la date et heure indiquées{'\n'}
-                                • En cas d'absence, vous ne serez pas remboursé{'\n\n'}
+                                    <Text style={styles.termsBold}>2. Règles de jeu :</Text>{'\n'}
+                                    • Respectez les règles établies par le capo{'\n'}
+                                    • Comportement sportif obligatoire{'\n'}
+                                    • Équipement approprié requis{'\n\n'}
 
-                                <Text style={styles.termsBold}>2. Règles de jeu :</Text>{'\n'}
-                                • Respectez les règles établies par le capo{'\n'}
-                                • Comportement sportif obligatoire{'\n'}
-                                • Équipement approprié requis{'\n\n'}
+                                    <Text style={styles.termsBold}>3. Remboursement :</Text>{'\n'}
+                                    • Remboursement possible jusqu'à 24h avant le match{'\n'}
+                                    • Aucun remboursement en cas d'annulation tardive{'\n'}
+                                    • Remboursement en crédit application uniquement{'\n\n'}
 
-                                <Text style={styles.termsBold}>3. Remboursement :</Text>{'\n'}
-                                • Remboursement possible jusqu'à 24h avant le match{'\n'}
-                                • Aucun remboursement en cas d'annulation tardive{'\n'}
-                                • Remboursement en crédit application uniquement{'\n\n'}
+                                    <Text style={styles.termsBold}>4. Responsabilité :</Text>{'\n'}
+                                    • Vous participez à vos propres risques{'\n'}
+                                    • L'application n'est pas responsable des blessures{'\n'}
+                                    • Respectez les consignes de sécurité{'\n\n'}
 
-                                <Text style={styles.termsBold}>4. Responsabilité :</Text>{'\n'}
-                                • Vous participez à vos propres risques{'\n'}
-                                • L'application n'est pas responsable des blessures{'\n'}
-                                • Respectez les consignes de sécurité{'\n\n'}
-
-                                <Text style={styles.termsBold}>5. Paiement :</Text>{'\n'}
-                                • Paiement sécurisé via Wave{'\n'}
-                                • Aucun frais supplémentaire{'\n'}
-                                • Confirmation immédiate après paiement
-                            </Text>
-                        </ScrollView>
+                                    <Text style={styles.termsBold}>5. Paiement :</Text>{'\n'}
+                                    • Paiement sécurisé via Wave{'\n'}
+                                    • Aucun frais supplémentaire{'\n'}
+                                    • Confirmation immédiate après paiement
+                                </Text>
+                            </ScrollView>
+                        </View>
                     </View>
                 </View>
 
@@ -224,7 +213,7 @@ const MatchSummaryScreen: React.FC<MatchSummaryScreenProps> = ({ route, navigati
             {/* Bouton de paiement */}
             <View style={styles.paymentButtonContainer}>
                 <LinearGradient
-                    colors={acceptedTerms ? [COLORS.primary, '#FF6B35'] : ['#ccc', '#bbb']}
+                    colors={acceptedTerms ? ['#7CD5F8FF', '#65C0E4FF'] : ['#ccc', '#bbb']}
                     style={styles.paymentButtonGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -366,24 +355,20 @@ const styles = StyleSheet.create({
         color: COLORS.primary,
         fontWeight: 'bold',
     },
-    termsCard: {
-        backgroundColor: COLORS.white,
-        marginHorizontal: 16,
-        marginBottom: 16,
-        marginTop: 16,
-        borderRadius: 16,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
+    termsSection: {
+        paddingHorizontal: 20,
+        marginBottom: 20,
     },
     termsTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: COLORS.black,
-        marginBottom: 16,
+        color: '#1a1a1a',
+        marginBottom: 12,
+    },
+    termsCard: {
+        backgroundColor: COLORS.white,
+        borderRadius: 12,
+        padding: 16,
     },
     termsContent: {
         maxHeight: 200,
@@ -404,8 +389,8 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     checkbox: {
-        width: 28,
-        height: 28,
+        width: 22,
+        height: 22,
         borderRadius: 6,
         borderWidth: 2,
         borderColor: '#ddd',
@@ -466,11 +451,9 @@ const styles = StyleSheet.create({
     },
     paymentButtonGradient: {
         borderRadius: 16,
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
+        shadowRadius: 6,
+        elevation: 4,
     },
     paymentButton: {
         paddingVertical: 14,

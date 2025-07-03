@@ -1,12 +1,15 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { terrainService, CreateTerrainData, Terrain } from '../services/terrainService';
 import { validatePhoneNumber, cleanPhoneNumber } from '../components/PhoneInput';
 import { useAppSelector } from '../store/hooks/hooks';
 import { selectUser } from '../store/slices/userSlice';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { ScreenNavigationProps, ScreenRouteProps } from '../navigation/types';
+import { TextInput } from 'react-native';
 
-const initialFormData: FormData = {
+export const initialTerrainFormData: FormData = {
     terrainNom: '',
     terrainLocalisation: '',
     terrainDescription: '',
@@ -18,7 +21,7 @@ const initialFormData: FormData = {
     },
     terrainImages: [],
 }   
-interface FormData {
+export interface FormData {
     terrainNom: string;
     terrainLocalisation: string;
     terrainDescription: string;
@@ -31,7 +34,7 @@ interface FormData {
     terrainImages: string[];
 }
 
-interface ValidationErrors {
+export interface ValidationErrors {
     terrainNom?: string;
     terrainLocalisation?: string;
     terrainContact?: string;
@@ -39,11 +42,6 @@ interface ValidationErrors {
     terrainImages?: string;
 }
 
-interface UseTerrainFormProps {
-    mode: 'create' | 'edit';
-    terrainData?: Terrain; // Données du terrain pour l'édition
-    onTerrainUpdated?: (updatedTerrain: Terrain) => void; // Callback pour notifier les mises à jour
-}
 
 interface UseTerrainFormReturn {
     formData: FormData;
@@ -52,6 +50,12 @@ interface UseTerrainFormReturn {
     isLoading: boolean;
     showStartTimePicker: boolean;
     showEndTimePicker: boolean;
+    mode: 'create' | 'edit';
+    nomRef: React.RefObject<TextInput | null>;
+    localisationRef: React.RefObject<TextInput | null>;
+    descriptionRef: React.RefObject<TextInput | null>;
+    contactRef: React.RefObject<TextInput | null>;
+    prixRef: React.RefObject<TextInput | null>;
     
     // États de succès et d'erreur
     successMessage: string | null;
@@ -84,24 +88,33 @@ interface UseTerrainFormReturn {
     // Clear messages
     clearSuccessMessage: () => void;
     clearErrorMessage: () => void;
+
+    // Back handlers
+    handleBack: () => void;
+    handleRetry: () => void;
 }
 
 const MAX_IMAGES = 5;
 
-export const useTerrainForm = ({ mode, terrainData, onTerrainUpdated }: UseTerrainFormProps): UseTerrainFormReturn => {
+export const useTerrainForm = (): UseTerrainFormReturn => {
+ 
+    const navigation = useNavigation<ScreenNavigationProps>();
+
+    const route = useRoute<ScreenRouteProps<'TerrainForm'>>();
+
+    // Récupérer les paramètres de navigation
+    const mode = route.params?.mode || 'create';
+    const terrainData = route.params?.terrainData;
+    const onTerrainUpdated = route.params?.onTerrainUpdated;
+
+    // Refs pour la navigation entre les champs
+    const nomRef = useRef<TextInput>(null);
+    const localisationRef = useRef<TextInput>(null);
+    const descriptionRef = useRef<TextInput>(null);
+    const contactRef = useRef<TextInput>(null);
+    const prixRef = useRef<TextInput>(null);
     const user = useAppSelector(selectUser);
-    const [formData, setFormData] = useState<FormData>({
-        terrainNom: '',
-        terrainLocalisation: '',
-        terrainDescription: '',
-        terrainContact: '',
-        terrainPrixParHeure: '',
-        terrainHoraires: {
-            ouverture: '07:00',
-            fermeture: '22:00',
-        },
-        terrainImages: [],
-    });
+    const [formData, setFormData] = useState<FormData>(initialTerrainFormData);
 
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -322,7 +335,7 @@ export const useTerrainForm = ({ mode, terrainData, onTerrainUpdated }: UseTerra
                 setSuccessMessage('Terrain créé avec succès ! Il sera visible après validation par l\'administrateur.');
 
                 // Reset form
-                setFormData(initialFormData);
+                setFormData(initialTerrainFormData);
             } else {
                 // Mode modification
                 if (!terrainData) {
@@ -368,6 +381,17 @@ export const useTerrainForm = ({ mode, terrainData, onTerrainUpdated }: UseTerra
         setErrorMessage(null);
     }, []);
 
+    const handleBack = useCallback(() => {
+        navigation.goBack();
+    }, []);
+
+    const handleRetry = useCallback(() => {
+        clearErrorMessage();
+        if (isFormReady) {
+            handleSubmit();
+        }
+    }, [isFormReady, handleSubmit, clearErrorMessage]);
+
     return {
         formData,
         errors,
@@ -377,6 +401,12 @@ export const useTerrainForm = ({ mode, terrainData, onTerrainUpdated }: UseTerra
         showEndTimePicker,
         successMessage,
         errorMessage,
+        mode,
+        nomRef,
+        localisationRef,
+        descriptionRef,
+        contactRef,
+        prixRef,
         setTerrainNom,
         setTerrainLocalisation,
         setTerrainDescription,
@@ -393,5 +423,7 @@ export const useTerrainForm = ({ mode, terrainData, onTerrainUpdated }: UseTerra
         isFormReady,
         clearSuccessMessage,
         clearErrorMessage,
+        handleBack,
+        handleRetry,
     };
 }; 

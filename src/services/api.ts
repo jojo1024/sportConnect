@@ -43,7 +43,9 @@ export enum ErrorType {
     SESSION_EXPIRED = 'SESSION_EXPIRED',
     VALIDATION = 'VALIDATION',
     SERVER = 'SERVER',
-    UNKNOWN = 'UNKNOWN'
+    UNKNOWN = 'UNKNOWN',
+    UNAUTHORIZED = 'UNAUTHORIZED',
+    FORBIDDEN = 'FORBIDDEN'
 }
 
 export interface ApiError {

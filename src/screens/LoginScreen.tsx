@@ -68,7 +68,6 @@ export default function LoginScreen() {
             <CustomButton
                 title={"Se connecter"}
                 onPress={handleLogin}
-                disabled={!formHandlers.isFormValid}
                 loading={isLoading}
             />
 

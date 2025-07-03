@@ -7,7 +7,7 @@ export interface Match {
     matchDuree: number;
     matchDescription: string;
     matchNbreParticipant: number;
-    matchStatus: 'enAttente' | 'confirme' | 'annule' | 'termine';
+    matchStatus: 'en_attente' | 'confirme' | 'annule' | 'termine';
     codeMatch: string;
     matchDateCreation: string;
     capoNomUtilisateur: string;
@@ -20,7 +20,7 @@ export interface Match {
     terrainPrixParHeure: number;
     terrainHoraires: any;
     terrainImages: string[];
-    terrainStatut: 'enAttente' | 'valide' | 'refuse';
+    terrainStatut: 'en_attente' | 'valide' | 'refuse';
     nbreJoueursInscrits: number;
     joueurxMax: number;
     matchPrixParJoueur: number;
@@ -66,6 +66,20 @@ export interface MatchParticipantsResponse {
     success: boolean;
     message: string;
     data: MatchParticipant[];
+}
+
+export interface PaginationInfo {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}
+
+export interface ReservationsResponse {
+    reservations: Match[];
+    pagination: PaginationInfo;
 }
 
 export const matchService = {
@@ -198,6 +212,22 @@ export const matchService = {
             return response.data.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des participants:', error);
+            throw error;
+        }
+    },
+
+    // Récupérer les réservations d'un gérant
+    getGerantReservations: async (status?: string, page: number = 1, limit: number = 10): Promise<ReservationsResponse> => {
+        try {
+            const params = new URLSearchParams();
+            if (status) params.append('status', status);
+            params.append('page', page.toString());
+            params.append('limit', limit.toString());
+            
+            const response = await api.get<{ success: boolean; message: string; data: ReservationsResponse }>(`/matchs/gerant-reservations?${params.toString()}`);
+            return response.data.data;
+        } catch (error) {
+            console.error('Erreur lors de la récupération des réservations:', error);
             throw error;
         }
     },

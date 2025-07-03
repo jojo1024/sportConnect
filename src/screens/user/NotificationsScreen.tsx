@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { EmptyState, GetIcon, RenderFooter, RetryComponent } from '../../components/UtilsComponent';
+import { EmptyState, GetIcon, RetryComponent } from '../../components/UtilsComponent';
 import { useNotification } from '../../hooks/useNotification';
 import { COLORS } from '../../theme/colors';
 import { formatNotificationDate } from '../../utils/functions';
 import { Styles } from '../../utils/interface';
+import LoadingFooter from '../../components/LoadingFooter';
 
 const NotificationsScreen: React.FC = () => {
     const {
@@ -85,7 +86,7 @@ const NotificationsScreen: React.FC = () => {
                 ]}
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={0.1}
-                ListFooterComponent={RenderFooter(isLoading)}
+                ListFooterComponent={<LoadingFooter loading={isLoading} />}
                 ListEmptyComponent={!isLoading ? <EmptyState /> : null}
             />
             <View style={{ height: 50 }}></View>

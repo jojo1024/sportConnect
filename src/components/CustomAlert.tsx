@@ -38,7 +38,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
     onConfirm,
     onCancel,
 }) => {
- 
+
 
     const getIconName = () => {
         switch (type) {
@@ -120,7 +120,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                     <Text style={styles.title}>{title}</Text>
 
                     {/* Message avec scroll si nécessaire */}
-                    <ScrollView 
+                    <ScrollView
                         style={styles.messageContainer}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.messageContent}
@@ -227,9 +227,6 @@ const styles = StyleSheet.create({
     confirmButton: {
         backgroundColor: COLORS.primary,
     },
-    confirmButtonWithCancel: {
-        flex: 1,
-    },
     cancelButtonText: {
         fontSize: 16,
         fontWeight: '600',
@@ -239,6 +236,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#fff',
+    },
+    confirmButtonWithCancel: {
+        flex: 1,
     },
 });
 

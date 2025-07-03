@@ -1,220 +1,70 @@
-import React, { useState } from 'react';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
+import React from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
     ScrollView,
+    StyleSheet,
+    Text,
     TouchableOpacity,
-    Image,
-    Dimensions,
-    Alert,
-    Linking
+    View,
+    SafeAreaView
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTerrain } from '../../hooks/useTerrain';
 import { PRIMARY_COLOR } from '../../utils/constant';
-import { Terrain } from '../../services/terrainService';
-import { ScreenNavigationProps, ScreenRouteProps } from '../../navigation/types';
-import { BASE_URL_IMAGES } from '../../services/api';
-
-const { width, height } = Dimensions.get('window');
+import { formatHoraires } from '../../utils/functions';
+import { useNavigation } from '@react-navigation/native';
+import ImageGallery from '../../components/ImageGallery';
+import HeaderWithBackButton from '../../components/HeaderWithBackButton';
+import DetailCard, { DetailRow } from '../../components/DetailCard';
+import MainInfoCard from '../../components/MainInfoCard';
 
 const TerrainDetailsScreen: React.FC = () => {
-    const navigation = useNavigation<ScreenNavigationProps>();
-    const route = useRoute<ScreenRouteProps<'TerrainDetails'>>();
-    const { terrain: initialTerrain } = route.params;
 
-    // État local pour les données du terrain (peut être mis à jour)
-    const [terrain, setTerrain] = useState<Terrain>(initialTerrain);
+    const {
+        terrain,
+        copied,
+        handleCopyContact,
+        handleReservations,
+        handleStatistics,
+        handleEdit,
+        handleBack,
+    } = useTerrain();
 
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [copied, setCopied] = useState(false);
-    // Fonction pour mettre à jour les données du terrain
-    const handleTerrainUpdated = (updatedTerrain: Terrain) => {
-        setTerrain(updatedTerrain);
-    };
-
-    const getStatusText = (status: "confirme" | "en_attente") => {
-        switch (status) {
-            case "en_attente":
-                return 'En attente de validation';
-            case "confirme":
-                return 'Validé';
-            default:
-                return 'Inconnu';
-        }
-    };
-
-    const getStatusColor = (status: "confirme" | "en_attente") => {
-        switch (status) {
-            case "en_attente":
-                return '#FFA500';
-            case "confirme":
-                return '#4CAF50';
-            default:
-                return '#999';
-        }
-    };
-
-    const getTerrainImage = (images: string[] | null, index: number = 0) => {
-        if (images && images.length > index) {
-            return images[index];
-        }
-        return 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0';
-    };
-
-    const formatHoraires = (horaires: any) => {
-        if (!horaires) return 'Horaires non définis';
-
-        try {
-            const parsed = typeof horaires === 'string' ? JSON.parse(horaires) : horaires;
-            if (parsed.ouverture && parsed.fermeture) {
-                return `${parsed.ouverture} - ${parsed.fermeture}`;
-            }
-        } catch (e) {
-            console.error('Erreur parsing horaires:', e);
-        }
-
-        return 'Horaires non définis';
-    };
-
-    const handleCall = () => {
-        if (terrain.terrainContact) {
-            Linking.openURL(`tel:${terrain.terrainContact}`);
-        } else {
-            Alert.alert('Erreur', 'Numéro de contact non disponible');
-        }
-    };
-
-    const handleEdit = () => {
-        navigation.navigate('TerrainForm', {
-            mode: 'edit',
-            terrainData: terrain,
-            onTerrainUpdated: handleTerrainUpdated
-        });
-    };
-
-    const handleCopyContact = async () => {
-        if (terrain.terrainContact) {
-            try {
-                await Clipboard.setStringAsync(terrain.terrainContact);
-                setCopied(true);
-
-                // Reset copied state after 2 seconds
-                setTimeout(() => {
-                    setCopied(false);
-                }, 2000);
-            } catch (error) {
-            }
-        } else {
-            Alert.alert('Erreur', 'Aucun contact disponible');
-        }
-    };
+    const navigation = useNavigation();
 
 
-    const handleReservations = () => {
-        // TODO: Naviguer vers l'écran des réservations
-        Alert.alert('Fonctionnalité', 'Gestion des réservations à implémenter');
-    };
-
-    const handleStatistics = () => {
-        // TODO: Naviguer vers l'écran des statistiques
-        Alert.alert('Fonctionnalité', 'Statistiques du terrain à implémenter');
-    };
-
-    const handlePreviousImage = () => {
-        if (terrain.terrainImages && terrain.terrainImages.length > 1) {
-            const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : terrain.terrainImages.length - 1;
-            setCurrentImageIndex(newIndex);
-        }
-    };
-
-    const handleNextImage = () => {
-        if (terrain.terrainImages && terrain.terrainImages.length > 1) {
-            const newIndex = currentImageIndex < terrain.terrainImages.length - 1 ? currentImageIndex + 1 : 0;
-            setCurrentImageIndex(newIndex);
-        }
-    };
+    // Vérifier si terrain existe
+    if (!terrain) {
+        return (
+            <View style={styles.container}>
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>Terrain non trouvé</Text>
+                    <TouchableOpacity style={styles.errorBackButton} onPress={handleBack}>
+                        <Text style={styles.errorBackButtonText}>Retour</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    }
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
+            <HeaderWithBackButton onBack={() => navigation.goBack()} />
+
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* Image du terrain avec navigation */}
-                <View style={styles.imageContainer}>
-                    <Image
-                        source={{ uri: `${BASE_URL_IMAGES}/${getTerrainImage(terrain.terrainImages, currentImageIndex)}` }}
-                        style={styles.terrainImage}
-                    />
+                <ImageGallery
+                    images={terrain.terrainImages || []}
+                    height={280}
+                />
 
-                    {/* Boutons de navigation des images */}
-                    {terrain.terrainImages && terrain.terrainImages.length > 1 && (
-                        <>
-                            <TouchableOpacity
-                                style={styles.prevButton}
-                                onPress={handlePreviousImage}
-                            >
-                                <Ionicons name="chevron-back" size={20} color="#fff" />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.nextButton}
-                                onPress={handleNextImage}
-                            >
-                                <Ionicons name="chevron-forward" size={20} color="#fff" />
-                            </TouchableOpacity>
-                        </>
-                    )}
-
-                    {/* Overlay avec bouton retour et statut */}
-                    <View style={styles.imageOverlay}>
-                        <TouchableOpacity
-                            style={styles.backButton}
-                            onPress={() => navigation.goBack()}
-                        >
-                            <Ionicons name="arrow-back" size={24} color="#fff" />
-                        </TouchableOpacity>
-                        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(terrain.terrainDisponibilite) }]}>
-                            <Text style={styles.statusText}>
-                                {getStatusText(terrain.terrainDisponibilite)}
-                            </Text>
-                        </View>
-                    </View>
-
-                    {/* Indicateurs d'images si plusieurs images */}
-                    {terrain.terrainImages && terrain.terrainImages.length > 1 && (
-                        <View style={styles.imageIndicators}>
-                            {terrain.terrainImages.map((_, index) => (
-                                <View
-                                    key={index}
-                                    style={[
-                                        styles.indicator,
-                                        { backgroundColor: index === currentImageIndex ? '#fff' : 'rgba(255,255,255,0.5)' }
-                                    ]}
-                                />
-                            ))}
-                        </View>
-                    )}
-                </View>
-
-                {/* Informations principales */}
-                <View style={styles.mainInfo}>
-                    <View style={styles.titleRow}>
-                        <Text style={styles.terrainName}>{terrain.terrainNom}</Text>
-                        <TouchableOpacity style={styles.editIconButton} onPress={handleEdit}>
-                            <Ionicons name="create-outline" size={24} color={PRIMARY_COLOR} />
-                        </TouchableOpacity>
-                    </View>
-                    <View style={styles.locationContainer}>
-                        <Ionicons name="location" size={20} color={PRIMARY_COLOR} />
-                        <Text style={styles.locationText}>{terrain.terrainLocalisation}</Text>
-                    </View>
-                </View>
+                <MainInfoCard
+                    title={terrain.terrainNom}
+                    location={terrain.terrainLocalisation}
+                    onEdit={handleEdit}
+                    showEditButton={true}
+                />
 
                 {/* Actions rapides */}
                 <View style={styles.actionButtons}>
-
-
                     <TouchableOpacity style={styles.actionButton} onPress={handleReservations}>
                         <FontAwesome5 name="calendar-alt" size={18} color="#fff" />
                         <Text style={styles.actionButtonText}>Réservations</Text>
@@ -227,50 +77,27 @@ const TerrainDetailsScreen: React.FC = () => {
                 </View>
 
                 {/* Détails du terrain */}
-                <View style={styles.detailsSection}>
-                    <Text style={styles.sectionTitle}>Informations du terrain</Text>
-
-                    <View style={styles.detailCard}>
-                        <View style={styles.detailRow}>
-                            <View style={styles.detailIcon}>
-                                <Ionicons name="cash-outline" size={20} color={PRIMARY_COLOR} />
-                            </View>
-                            <View style={styles.detailContent}>
-                                <Text style={styles.detailLabel}>Prix par heure</Text>
-                                <Text style={styles.detailValue}>{terrain.terrainPrixParHeure} XOF</Text>
-                            </View>
-                        </View>
-
-                        <View style={styles.detailRow}>
-                            <View style={styles.detailIcon}>
-                                <Ionicons name="time-outline" size={20} color={PRIMARY_COLOR} />
-                            </View>
-                            <View style={styles.detailContent}>
-                                <Text style={styles.detailLabel}>Horaires d'ouverture</Text>
-                                <Text style={styles.detailValue}>{formatHoraires(terrain.terrainHoraires)}</Text>
-                            </View>
-                        </View>
-
-                        {terrain.terrainContact && (
-                            <View style={styles.detailRow}>
-                                <View style={styles.detailIcon}>
-                                    <Ionicons name="call-outline" size={20} color={PRIMARY_COLOR} />
-                                </View>
-                                <View style={styles.detailContent}>
-                                    <Text style={styles.detailLabel}>Contact</Text>
-                                    <Text style={styles.detailValue}>{terrain.terrainContact}</Text>
-                                </View>
-                                <TouchableOpacity style={[styles.copyButton, copied && styles.copyButtonActive]} onPress={handleCopyContact}>
-                                    <Ionicons
-                                        name={copied ? "checkmark" : "copy-outline"}
-                                        size={20}
-                                        color={copied ? "#4CAF50" : PRIMARY_COLOR}
-                                    />
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                    </View>
-                </View>
+                <DetailCard title="Informations du terrain">
+                    <DetailRow
+                        icon="cash-outline"
+                        label="Prix par heure"
+                        value={`${terrain.terrainPrixParHeure} XOF`}
+                    />
+                    <DetailRow
+                        icon="time-outline"
+                        label="Horaires d'ouverture"
+                        value={formatHoraires(terrain.terrainHoraires)}
+                    />
+                    {terrain.terrainContact && (
+                        <DetailRow
+                            icon="call-outline"
+                            label="Contact"
+                            value={terrain.terrainContact}
+                            onCopy={handleCopyContact}
+                            copied={copied}
+                        />
+                    )}
+                </DetailCard>
 
                 {/* Description */}
                 {terrain.terrainDescription && (
@@ -281,11 +108,9 @@ const TerrainDetailsScreen: React.FC = () => {
                         </View>
                     </View>
                 )}
-
-
                 <View style={{ height: 100 }} />
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 };
 
@@ -297,82 +122,6 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         backgroundColor: '#f8f9fa',
-    },
-    imageContainer: {
-        height: height * 0.4,
-        position: 'relative',
-    },
-    terrainImage: {
-        width: '100%',
-        height: '100%',
-    },
-    imageOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.2)',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        paddingTop: 50,
-        paddingHorizontal: 20,
-    },
-    backButton: {
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        borderRadius: 20,
-        padding: 8,
-    },
-    statusBadge: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-    },
-    statusText: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 12,
-    },
-    imageIndicators: {
-        position: 'absolute',
-        bottom: 20,
-        left: 0,
-        right: 0,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 8,
-    },
-    indicator: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-    },
-    mainInfo: {
-        backgroundColor: '#fff',
-        padding: 20,
-        marginBottom: 16,
-    },
-    titleRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    terrainName: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1a1a1a',
-        flex: 1,
-    },
-    locationContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    locationText: {
-        fontSize: 16,
-        color: '#666',
-        marginLeft: 8,
     },
     actionButtons: {
         flexDirection: 'row',
@@ -396,7 +145,7 @@ const styles = StyleSheet.create({
         marginLeft: 6,
         fontSize: 12,
     },
-    detailsSection: {
+    descriptionSection: {
         paddingHorizontal: 20,
         marginBottom: 20,
     },
@@ -405,42 +154,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#1a1a1a',
         marginBottom: 12,
-    },
-    detailCard: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-    },
-    detailRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    detailIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#f0f8ff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    detailContent: {
-        flex: 1,
-    },
-    detailLabel: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 2,
-    },
-    detailValue: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1a1a1a',
-    },
-    descriptionSection: {
-        paddingHorizontal: 20,
-        marginBottom: 20,
     },
     descriptionCard: {
         backgroundColor: '#fff',
@@ -452,57 +165,26 @@ const styles = StyleSheet.create({
         color: '#666',
         lineHeight: 20,
     },
-    gallerySection: {
-        paddingHorizontal: 20,
-        marginBottom: 20,
-    },
-    galleryContainer: {
-        flexDirection: 'row',
-    },
-    galleryImageContainer: {
-        marginRight: 12,
-    },
-    galleryImage: {
-        width: 80,
-        height: 80,
-        borderRadius: 8,
-        borderWidth: 2,
-    },
-    managementSection: {
-        paddingHorizontal: 20,
-        marginBottom: 20,
-    },
-    managementButtons: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-    },
-    copyButton: {
-        padding: 4,
-        borderRadius: 6,
-    },
-    prevButton: {
-        position: 'absolute',
-        top: '50%',
-        transform: [{ translateY: -20 }],
+    errorContainer: {
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 10,
-        left: 10,
     },
-    nextButton: {
-        position: 'absolute',
-        top: '50%',
-        transform: [{ translateY: -20 }],
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 10,
-        right: 10,
+    errorText: {
+        color: '#1a1a1a',
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 20,
     },
-    editIconButton: {
-        padding: 8,
+    errorBackButton: {
+        backgroundColor: PRIMARY_COLOR,
+        padding: 12,
+        borderRadius: 20,
     },
-    copyButtonActive: {
-        backgroundColor: '#e8f5e8',
+    errorBackButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 

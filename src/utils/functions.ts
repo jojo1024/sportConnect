@@ -1,15 +1,21 @@
-import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
 
-export const formatDate = (date: Date | null) => {
+export const formatDate = (date: string | null) => {
     if (!date) return '';
-    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const dateObj = new Date(date);
+    return dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+
+export const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 };
 
 export const today = new Date().toISOString().split('T')[0];
 export const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
 
-export const getSectionLabel = (date: string) => {
+export const getDateSectionLabel = (date: string) => {
     if (date === today) return "Aujourd'hui";
     if (date === tomorrow) return 'Demain';
 
@@ -147,3 +153,51 @@ export const formatNotificationDate = (dateString: string): string => {
     });
   };
   
+
+export  const getStatusText = (status: "confirme" | "en_attente" | "annule") => {
+    switch (status) {
+        case "en_attente":
+            return 'En attente';
+        case "confirme":
+            return 'Confirmée';
+        case 'annule':
+            return 'Annulée';
+        default:
+            return 'Inconnu';
+    }
+};
+
+export const getStatusColor = (status: "confirme" | "en_attente" | "annule") => {
+    switch (status) {
+        case "en_attente":
+            return '#FFA500'; // Orange pour en attente
+        case "confirme":
+            return '#4CAF50'; // Vert pour validé
+        case 'annule':
+            return '#F44336';
+        default:
+            return '#999';
+    }
+};
+
+export const getTerrainImage = (images: string[] | null, index: number = 0) => {
+    if (images && images.length > index) {
+        return images[index];
+    }
+    return 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0';
+};
+
+export const formatHoraires = (horaires: string | { ouverture: string, fermeture: string }) => {
+    if (!horaires) return 'Horaires non définis';
+
+    try {
+        const parsed = typeof horaires === 'string' ? JSON.parse(horaires) : horaires;
+        if (parsed.ouverture && parsed.fermeture) {
+            return `${parsed.ouverture} - ${parsed.fermeture}`;
+        }
+    } catch (e) {
+        console.error('Erreur parsing horaires:', e);
+    }
+
+    return 'Horaires non définis';
+};

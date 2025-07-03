@@ -6,4 +6,5 @@ export { DurationSelector } from './DurationSelector';
 export { ParticipantsSelector } from './ParticipantsSelector';
 export { FieldCard } from './FieldCard';
 export { FieldsBottomSheet } from './FieldsBottomSheet';
-export { DescriptionInput } from './DescriptionInput'; 
+export { DescriptionInput } from './DescriptionInput';
+export { Summary } from './Summary'; 

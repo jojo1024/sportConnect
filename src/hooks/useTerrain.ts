@@ -2,6 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { Terrain, terrainService } from '../services/terrainService';
 import { useAppSelector } from '../store/hooks/hooks';
 import { selectUser } from '../store/slices/userSlice';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { ScreenNavigationProps, ScreenRouteProps } from '../navigation/types';
+import * as Clipboard from 'expo-clipboard';
+import { Alert } from 'react-native';
 
 // Interface de retour du hook
 interface UseTerrainReturn {
@@ -14,10 +18,35 @@ interface UseTerrainReturn {
   refreshData: () => void;
   handleEndReached: () => void;
   handleRefresh: () => void;
+  handleTerrainPress: (terrain: Terrain) => void;
+  handleAddTerrain: () => void;
+  handlePreviousImage: () => void;
+  handleNextImage: () => void;
+  handleCopyContact: () => void;
+  handleReservations: () => void;
+  handleStatistics: () => void;
+  handleEdit: () => void;
+  terrain: Terrain | null;
+  currentImageIndex: number;
+  setCurrentImageIndex: (index: number) => void;
+  copied: boolean;
+  handleBack: () => void;
 }
 
 // Hook personnalisé pour gérer les données de terrain avec pagination et rafraîchissement
 export const useTerrain = (): UseTerrainReturn => {
+
+  const navigation = useNavigation<ScreenNavigationProps>();
+  const route = useRoute<ScreenRouteProps<'TerrainDetails'>>();
+  
+  // Vérifier si route.params existe et contient terrain
+  const initialTerrain = route.params?.terrain;
+
+  // État local pour les données du terrain (peut être mis à jour)
+  const [terrain, setTerrain] = useState<Terrain | null>(initialTerrain || null);
+
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [copied, setCopied] = useState(false);
   const [allTerrains, setAllTerrains] = useState<Terrain[]>([]); // Tous les terrains
   const [terrains, setTerrains] = useState<Terrain[]>([]); // Terrains affichés (paginated)
   const [isLoading, setIsLoading] = useState(false);
@@ -117,6 +146,77 @@ export const useTerrain = (): UseTerrainReturn => {
     refreshData();
   }, [refreshData]);
 
+  const handleTerrainPress = useCallback((terrain: Terrain) => {
+    navigation.navigate('TerrainDetails', { terrain });
+}, [navigation]);
+
+const handleAddTerrain = useCallback(() => {
+    navigation.navigate('TerrainForm', {
+        mode: 'create'
+    });
+}, [navigation]);
+
+    // Fonction pour mettre à jour les données du terrain
+    const handleTerrainUpdated = (updatedTerrain: Terrain) => {
+      setTerrain(updatedTerrain);
+  };
+
+  const handleEdit = () => {
+      if (terrain) {
+          navigation.navigate('TerrainForm', {
+              mode: 'edit',
+              terrainData: terrain,
+              onTerrainUpdated: handleTerrainUpdated
+          });
+      }
+  };
+
+  const handleCopyContact = async () => {
+      if (terrain?.terrainContact) {
+          try {
+              await Clipboard.setStringAsync(terrain.terrainContact);
+              setCopied(true);
+
+              // Reset copied state after 2 seconds
+              setTimeout(() => {
+                  setCopied(false);
+              }, 2000);
+          } catch (error) {
+          }
+      } else {
+          Alert.alert('Erreur', 'Aucun contact disponible');
+      }
+  };
+
+
+  const handleReservations = () => {
+      // TODO: Naviguer vers l'écran des réservations
+      Alert.alert('Fonctionnalité', 'Gestion des réservations à implémenter');
+  };
+
+  const handleStatistics = () => {
+      // TODO: Naviguer vers l'écran des statistiques
+      Alert.alert('Fonctionnalité', 'Statistiques du terrain à implémenter');
+  };
+
+  const handlePreviousImage = () => {
+      if (terrain?.terrainImages && terrain.terrainImages.length > 1) {
+          const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : terrain.terrainImages.length - 1;
+          setCurrentImageIndex(newIndex);
+      }
+  };
+
+  const handleNextImage = () => {
+      if (terrain?.terrainImages && terrain.terrainImages.length > 1) {
+          const newIndex = currentImageIndex < terrain.terrainImages.length - 1 ? currentImageIndex + 1 : 0;
+          setCurrentImageIndex(newIndex);
+      }
+  };
+
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
   // Retour de toutes les données nécessaires à un composant de liste
   return {
     terrains,
@@ -128,5 +228,18 @@ export const useTerrain = (): UseTerrainReturn => {
     refreshData,
     handleEndReached,
     handleRefresh,
+    handleTerrainPress,
+    handleAddTerrain,
+    handlePreviousImage,
+    handleNextImage,
+    handleCopyContact,
+    handleReservations,
+    handleStatistics,
+    handleEdit,
+    terrain,
+    currentImageIndex,
+    setCurrentImageIndex,
+    copied,
+    handleBack,
   };
 }; 

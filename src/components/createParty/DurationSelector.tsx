@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '../../theme/colors';
-import { DURATION_OPTIONS } from '../../hooks/useCreateParty';
+import { DURATION_OPTIONS } from '../../utils/constant';
 
 interface DurationSelectorProps {
     duration: number;

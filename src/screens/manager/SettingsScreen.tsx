@@ -2,11 +2,14 @@ import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useAuthLogout } from '../../store/hooks/hooks';
+import { useAppSelector, useAuthLogout } from '../../store/hooks/hooks';
 import { ScreenNavigationProps } from '../../navigation/types';
+import { selectUser } from '../../store/slices/userSlice';
 
 const SettingsScreen: React.FC = () => {
     const { logout } = useAuthLogout();
+    const utilisateur = useAppSelector(selectUser);
+
     const navigation = useNavigation<ScreenNavigationProps>();
     const [notifications, setNotifications] = React.useState(true);
     const [emailNotifications, setEmailNotifications] = React.useState(true);
@@ -30,8 +33,8 @@ const SettingsScreen: React.FC = () => {
                         style={styles.avatar}
                     />
                 </View>
-                <Text style={styles.name}>Jean-Marc Memel</Text>
-                <Text style={styles.waveNumber}>Numéro Wave : 0556123411</Text>
+                <Text style={styles.name}>{utilisateur?.utilisateurNom}</Text>
+                <Text style={styles.waveNumber}>Numéro Wave : {utilisateur?.utilisateurTelephone}</Text>
             </View>
 
             {/* Menu principal */}

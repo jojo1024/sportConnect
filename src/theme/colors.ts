@@ -11,7 +11,7 @@ export const COLORS = {
 	primary7: "#00AB8C",
 	yellow: "#FFCD90",
 	secondary: "#704FFE",
-	success: "#54D969",
+	success: "#2DB842FF",
 	danger: '#FF3B30',
 	warning: "#ffb02c",
 	white: "#fff",

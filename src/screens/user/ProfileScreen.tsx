@@ -11,9 +11,6 @@ import { COLORS } from '../../theme/colors';
 const activities = [
     { id: 1, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 2 jours', points: 9 },
     { id: 2, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
-    // { id: 3, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
-    // { id: 4, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
-    // { id: 5, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
 ];
 
 const ProfileScreen: React.FC = () => {

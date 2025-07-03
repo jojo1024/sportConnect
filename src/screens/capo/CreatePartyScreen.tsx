@@ -21,7 +21,8 @@ import {
     DurationSelector,
     ParticipantsSelector,
     FieldsBottomSheet,
-    DescriptionInput
+    DescriptionInput,
+    Summary
 } from '../../components/createParty';
 import { COLORS } from '../../theme/colors';
 import { useApiError } from '../../hooks/useApiError';
@@ -167,49 +168,15 @@ const CreatePartyScreen: React.FC = () => {
                     </Card>
 
                     {/* Résumé de la partie */}
-                    {selectedField && (
-                        <View style={styles.summarySection}>
-                            <Text style={styles.summaryTitle}>Résumé de votre partie</Text>
-                            <View style={styles.summaryCard}>
-                                <View style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>Terrain:</Text>
-                                    <Text style={styles.summaryValue}>{selectedField.terrainNom}</Text>
-                                </View>
-                                <View style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>Date:</Text>
-                                    <Text style={styles.summaryValue}>
-                                        {formatDate(formData.date)} à {formatTime(formData.date)}
-                                    </Text>
-                                </View>
-                                <View style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>Durée:</Text>
-                                    <Text style={styles.summaryValue}>{formData.duration}h</Text>
-                                </View>
-                                <View style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>Participants:</Text>
-                                    <Text style={styles.summaryValue}>
-                                        {formData.numberOfParticipants} joueurs
-                                    </Text>
-                                </View>
-                                {selectedField && (
-                                    <View style={styles.summaryRow}>
-                                        <Text style={styles.summaryLabel}>Prix du terrain:</Text>
-                                        <Text style={styles.summaryValue}>
-                                            {selectedField.terrainPrixParHeure} XOF/heure
-                                        </Text>
-                                    </View>
-                                )}
-                                {formData.description && (
-                                    <View style={styles.summaryRow}>
-                                        <Text style={styles.summaryLabel}>Message:</Text>
-                                        <Text style={styles.summaryValue} numberOfLines={2}>
-                                            {formData.description}
-                                        </Text>
-                                    </View>
-                                )}
-                            </View>
-                        </View>
-                    )}
+                    <Summary
+                        selectedField={selectedField}
+                        date={formData.date}
+                        duration={formData.duration}
+                        numberOfParticipants={formData.numberOfParticipants}
+                        description={formData.description}
+                        formatDate={formatDate}
+                        formatTime={formatTime}
+                    />
 
                     {/* Messages de validation */}
                     {!validation.isValid && validation.errors.length > 0 && (
@@ -270,21 +237,6 @@ const CreatePartyScreen: React.FC = () => {
                     }}
                 />
             )}
-
-            {/* Alerte personnalisée */}
-            <CustomAlert
-                visible={!!alertConfig}
-                title={alertConfig?.title || ''}
-                message={alertConfig?.message || ''}
-                type={alertConfig?.type}
-                confirmText={alertConfig?.confirmText}
-                cancelText={alertConfig?.cancelText}
-                showCancel={alertConfig?.showCancel}
-                autoClose={alertConfig?.autoClose}
-                autoCloseDelay={alertConfig?.autoCloseDelay}
-                onConfirm={alertConfig?.onConfirm}
-                onCancel={alertConfig?.onCancel || (() => { })}
-            />
         </SafeAreaView>
     );
 };
@@ -328,41 +280,6 @@ const styles = StyleSheet.create({
         marginLeft: 8,
         fontSize: 14,
         color: '#666',
-    },
-    summarySection: {
-        marginTop: 8,
-    },
-    summaryTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 12,
-    },
-    summaryCard: {
-        backgroundColor: COLORS.white,
-        padding: 16,
-        borderRadius: 12,
-        borderLeftWidth: 4,
-        borderLeftColor: COLORS.primary,
-    },
-    summaryRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 8,
-    },
-    summaryLabel: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
-        flex: 1,
-    },
-    summaryValue: {
-        fontSize: 14,
-        color: '#333',
-        fontWeight: '600',
-        flex: 2,
-        textAlign: 'right',
     },
     validationSection: {
         backgroundColor: '#fff3cd',

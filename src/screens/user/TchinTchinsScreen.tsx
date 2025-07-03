@@ -5,9 +5,11 @@ import { RenderFooter, RetryComponent } from '../../components/UtilsComponent';
 import NewMatchesNotification from '../../components/NewMatchesNotification';
 import { useMatch } from '../../hooks/useMatch';
 import { COLORS } from '../../theme/colors';
-import { calculateMatchDuration, extractHour, getSectionLabel, getTerrainImages } from '../../utils/functions';
+import { calculateMatchDuration, extractHour, getDateSectionLabel, getTerrainImage, getTerrainImages } from '../../utils/functions';
 import { name as projectName, version } from '../../../package.json';
 import { creditService } from '../../services/creditService';
+import LoadingFooter from '../../components/LoadingFooter';
+import { BASE_URL_IMAGES } from '../../services/api';
 
 interface TchinTchinsScreenProps {
     navigation: any;
@@ -104,13 +106,6 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
                 </View>
             </View>
 
-            {/* {error && (
-                <CompactErrorCard
-                    message={error}
-                    onRetry={handleRefresh}
-                />
-            )} */}
-
             <FlatList
                 data={allMatchFiltredByDate}
                 keyExtractor={(date) => date}
@@ -123,7 +118,7 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
                 }
                 renderItem={({ item: date }) => (
                     <View style={styles.dateSection}>
-                        <Text style={styles.dateTitle}>{getSectionLabel(date)}</Text>
+                        <Text style={styles.dateTitle}>{getDateSectionLabel(date)}</Text>
                         <Text style={styles.dateShort}>{new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</Text>
                         {groupedMatchsByDate[date].length > 0 ? (
                             groupedMatchsByDate[date].map((match) => {
@@ -145,7 +140,7 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
                                             )}
 
                                             <Image
-                                                source={{ uri: match.terrainImages?.[0] }}
+                                                source={{ uri: `${BASE_URL_IMAGES}/${getTerrainImage(match.terrainImages)}` }}
                                                 style={styles.image}
                                                 defaultSource={{ uri: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=500' }}
                                             />
@@ -186,7 +181,7 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
                 showsVerticalScrollIndicator={false}
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={0.1}
-                ListFooterComponent={RenderFooter(isLoading)}
+                ListFooterComponent={<LoadingFooter loading={isLoading} />}
             />
             <View style={{ height: 30 }}></View>
         </View>
