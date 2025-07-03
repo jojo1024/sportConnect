@@ -193,6 +193,17 @@ export const matchService = {
         }
     },
 
+    // Rechercher des matchs par code avec pagination
+    searchMatchesByCode: async (code: string, page: number = 1, limit: number = 10): Promise<{matches: Match[], pagination: PaginationInfo}> => {
+        try {
+            const response = await api.get<{success: boolean, message: string, data: {matches: Match[], pagination: PaginationInfo}}>(`/matchs/search-by-code?code=${code}&page=${page}&limit=${limit}`);
+            return response.data.data;
+        } catch (error) {
+            console.error('Erreur lors de la recherche de matchs par code:', error);
+            throw error;
+        }
+    },
+
     // Vérifier la disponibilité d'un terrain
     checkTerrainAvailability: async (terrainId: number, dateDebut: string, dateFin: string): Promise<any> => {
         try {

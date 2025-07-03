@@ -1,8 +1,10 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import RBSheet from 'react-native-raw-bottom-sheet';
 import { RenderFooter, RetryComponent } from '../../components/UtilsComponent';
 import NewMatchesNotification from '../../components/NewMatchesNotification';
+import SearchMatchBottomSheet from '../../components/SearchMatchBottomSheet';
 import { useMatch } from '../../hooks/useMatch';
 import { COLORS } from '../../theme/colors';
 import { calculateMatchDuration, extractHour, getDateSectionLabel, getTerrainImage, getTerrainImages } from '../../utils/functions';
@@ -18,6 +20,7 @@ interface TchinTchinsScreenProps {
 const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => {
     const [solde, setSolde] = useState<number>(0);
     const [loadingSolde, setLoadingSolde] = useState<boolean>(true);
+    const searchBottomSheetRef = useRef<RBSheet>(null);
 
     const {
         matches,
@@ -65,6 +68,18 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
         return null
     };
 
+    const handleSearchPress = () => {
+        searchBottomSheetRef.current?.open();
+    };
+
+    const handleSearchMatchPress = (match: any) => {
+        // Marquer le match comme vu si c'est un nouveau match
+        if (newMatchesIds.has(match.matchId)) {
+            markMatchAsSeen(match.matchId);
+        }
+        navigation.navigate('MatchDetails', { match });
+    };
+
     // Afficher l'erreur si elle existe
     if (error) {
         return (
@@ -88,7 +103,7 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
                 </View>
                 <View style={styles.headerActions}>
                     {/* Carte de crédit compacte */}
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                         style={styles.creditCard}
                         onPress={handleCreditPress}
                         activeOpacity={0.7}
@@ -97,10 +112,14 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
                         <Text style={styles.creditAmount}>
                             {loadingSolde ? '...' : `${solde.toFixed(0)} F`}
                         </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     {/* Bouton de recherche */}
-                    <TouchableOpacity style={styles.searchButton} activeOpacity={0.7}>
+                    <TouchableOpacity
+                        style={styles.searchButton}
+                        activeOpacity={0.7}
+                        onPress={handleSearchPress}
+                    >
                         <Ionicons name="search" size={18} color={COLORS.black} />
                     </TouchableOpacity>
                 </View>
@@ -155,6 +174,9 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
                                                 <View style={styles.cardFieldRow}>
                                                     <Text style={styles.cardFormat}>Temps de jeu: {calculateMatchDuration(match.matchDateDebut, match.matchDateFin)}</Text>
                                                 </View>
+                                                <View style={styles.cardCodeRow}>
+                                                    <Text style={styles.cardCode}>Code: {match.codeMatch}</Text>
+                                                </View>
                                                 <View style={styles.cardFooter}>
                                                     <Text style={styles.capo}>Capo: {match.capoNomUtilisateur}</Text>
                                                     <View style={styles.playersRow}>
@@ -184,6 +206,12 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
                 ListFooterComponent={<LoadingFooter loading={isLoading} />}
             />
             <View style={{ height: 30 }}></View>
+
+            {/* Bottom Sheet de recherche */}
+            <SearchMatchBottomSheet
+                bottomSheetRef={searchBottomSheetRef}
+                onMatchPress={handleSearchMatchPress}
+            />
         </View>
     );
 };
@@ -326,6 +354,17 @@ const styles = StyleSheet.create({
     cardFormat: {
         fontSize: 13,
         color: '#555',
+    },
+    cardCodeRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    cardCode: {
+        fontSize: 12,
+        color: COLORS.primary,
+        fontWeight: '600',
     },
     cardFooter: {
         flexDirection: 'row',
