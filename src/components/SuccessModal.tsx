@@ -27,6 +27,7 @@ interface SuccessModalProps {
         duration: number;
         participants: number;
         matchPrixParJoueur?: number;
+        sportName?: string;
     };
 }
 
@@ -38,7 +39,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
     matchCode,
     matchDetails,
     title = "Partie créée !",
-    subtitle = "Votre partie a été créée avec succès",      
+    subtitle = "Votre partie a été créée avec succès",
     isCapo = false,
 }) => {
     const [copied, setCopied] = useState(false);
@@ -134,6 +135,13 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                                     <Text style={styles.detailLabel}>Terrain:</Text>
                                     <Text style={styles.detailValue}>{safeString(matchDetails.terrainName)}</Text>
                                 </View>
+                                {matchDetails.sportName && (
+                                    <View style={styles.detailRow}>
+                                        <Ionicons name="football" size={16} color="#666" />
+                                        <Text style={styles.detailLabel}>Sport:</Text>
+                                        <Text style={styles.detailValue}>{safeString(matchDetails.sportName)}</Text>
+                                    </View>
+                                )}
                                 <View style={styles.detailRow}>
                                     <Ionicons name="calendar" size={16} color="#666" />
                                     <Text style={styles.detailLabel}>Date:</Text>
@@ -168,8 +176,8 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                         {isCapo && (
                             <View style={styles.capoNoteContainer}>
                                 <Ionicons name="information-circle" size={16} color={COLORS.primary} />
-                            <Text style={styles.capoNoteText}>
-                                En tant que Capo, vous participez gratuitement à cette partie
+                                <Text style={styles.capoNoteText}>
+                                    En tant que Capo, vous participez gratuitement à cette partie
                                 </Text>
                             </View>
                         )}

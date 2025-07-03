@@ -3,6 +3,13 @@ import { View, Text, StyleSheet } from 'react-native';
 import { COLORS } from '../../theme/colors';
 import { Terrain } from '../../services/terrainService';
 
+interface Sport {
+    sportId: number;
+    sportNom: string;
+    sportIcone: string;
+    sportStatus: boolean;
+}
+
 interface SummaryProps {
     selectedField: Terrain | undefined;
     date: Date;
@@ -11,6 +18,7 @@ interface SummaryProps {
     description?: string;
     formatDate: (date: Date) => string;
     formatTime: (date: Date) => string;
+    selectedSport?: Sport | undefined;
 }
 
 export const Summary: React.FC<SummaryProps> = ({
@@ -21,6 +29,7 @@ export const Summary: React.FC<SummaryProps> = ({
     description,
     formatDate,
     formatTime,
+    selectedSport,
 }) => {
     if (!selectedField) {
         return null;
@@ -34,6 +43,12 @@ export const Summary: React.FC<SummaryProps> = ({
                     <Text style={styles.summaryLabel}>Terrain:</Text>
                     <Text style={styles.summaryValue}>{selectedField.terrainNom}</Text>
                 </View>
+                {selectedSport && (
+                    <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Sport:</Text>
+                        <Text style={styles.summaryValue}>{selectedSport.sportNom}</Text>
+                    </View>
+                )}
                 <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Date:</Text>
                     <Text style={styles.summaryValue}>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { CreateMatchData, matchService } from '../services/matchService';
 import { Terrain, terrainService } from '../services/terrainService';
+import { useSport } from './useSport';
 import { store } from '../store';
 import { useApiError } from './useApiError';
 import { useCustomAlert } from './useCustomAlert';
@@ -23,6 +24,7 @@ export interface CreatePartyFormData {
     duration: number;
     numberOfParticipants: number;
     description: string;
+    sportId: number | null;
 }
 
 export interface CreatePartyValidation {
@@ -37,6 +39,10 @@ const validateForm = (formData: CreatePartyFormData): CreatePartyValidation => {
 
     if (!formData.selectedFieldId) {
         errors.push('Veuillez sélectionner un terrain');
+    }
+
+    if (!formData.sportId) {
+        errors.push('Veuillez sélectionner un sport');
     }
 
     if (!formData.date) {
@@ -85,6 +91,7 @@ const validateForm = (formData: CreatePartyFormData): CreatePartyValidation => {
 export const useCreateParty = () => {
     const { handleApiError, requiresReconnection } = useApiError();
     const { showError, showSuccess, showWarning } = useCustomAlert();
+    const { activeSports, loading: loadingSports, error: sportError, fetchActiveSports } = useSport();
 
     // State principal
     const [formData, setFormData] = useState<CreatePartyFormData>({
@@ -94,10 +101,12 @@ export const useCreateParty = () => {
         duration: 1,
         numberOfParticipants: PARTICIPANTS_LIMITS.DEFAULT,
         description: '',
+        sportId: null,
     });
 
     // State UI
     const [searchQuery, setSearchQuery] = useState('');
+    const [sportSearchQuery, setSportSearchQuery] = useState('');
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,9 +131,14 @@ export const useCreateParty = () => {
         image: terrain.terrainImages?.[0] || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=500',
     }));
 
+    const filteredSports = activeSports.filter(sport =>
+        sport.sportNom.toLowerCase().includes(sportSearchQuery.toLowerCase())
+    );
+
     const validation = validateForm(formData);
 
     const selectedField = terrains.find(terrain => terrain.terrainId.toString() === formData.selectedFieldId);
+    const selectedSport = activeSports.find(sport => sport.sportId === formData.sportId);
 
     // Charger les terrains depuis l'API
     const loadTerrains = useCallback(async () => {
@@ -147,10 +161,20 @@ export const useCreateParty = () => {
         loadTerrains();
     }, [loadTerrains]);
 
+    // Fonction de retry pour charger les sports
+    const retryLoadSports = useCallback(() => {
+        fetchActiveSports();
+    }, [fetchActiveSports]);
+
     // Charger les terrains au montage du composant
     useEffect(() => {
         loadTerrains();
     }, [loadTerrains]);
+
+    // Charger les sports actifs au montage du composant
+    useEffect(() => {
+        fetchActiveSports();
+    }, []);
 
     // Form update handlers
     const updateFormData = useCallback((updates: Partial<CreatePartyFormData>) => {
@@ -162,6 +186,10 @@ export const useCreateParty = () => {
             selectedFieldId: field.id,
             selectedFieldName: field.name,
         });
+    }, [updateFormData]);
+
+    const setSport = useCallback((sport: any) => {
+        updateFormData({ sportId: sport.sportId });
     }, [updateFormData]);
 
     const setDate = useCallback((date: Date) => {
@@ -182,16 +210,22 @@ export const useCreateParty = () => {
 
     // Participants handlers
     const increaseParticipants = useCallback(() => {
-        if (formData.numberOfParticipants < PARTICIPANTS_LIMITS.MAX) {
-            setNumberOfParticipants(formData.numberOfParticipants + 1);
-        }
-    }, [formData.numberOfParticipants, setNumberOfParticipants]);
+        setFormData(prev => {
+            if (prev.numberOfParticipants < PARTICIPANTS_LIMITS.MAX) {
+                return { ...prev, numberOfParticipants: prev.numberOfParticipants + 1 };
+            }
+            return prev;
+        });
+    }, []);
 
     const decreaseParticipants = useCallback(() => {
-        if (formData.numberOfParticipants > PARTICIPANTS_LIMITS.MIN) {
-            setNumberOfParticipants(formData.numberOfParticipants - 1);
-        }
-    }, [formData.numberOfParticipants, setNumberOfParticipants]);
+        setFormData(prev => {
+            if (prev.numberOfParticipants > PARTICIPANTS_LIMITS.MIN) {
+                return { ...prev, numberOfParticipants: prev.numberOfParticipants - 1 };
+            }
+            return prev;
+        });
+    }, []);
 
     // Date/Time handlers
     const handleDateChange = useCallback((event: any, selectedDate?: Date) => {
@@ -215,6 +249,10 @@ export const useCreateParty = () => {
         setSearchQuery(query);
     }, []);
 
+    const updateSportSearchQuery = useCallback((query: string) => {
+        setSportSearchQuery(query);
+    }, []);
+
     // Formater les dates au format attendu par MySQL (YYYY-MM-DD HH:MM:SS)
     const formatDateForMySQL = (date: Date) => {
         const year = date.getFullYear();
@@ -228,6 +266,9 @@ export const useCreateParty = () => {
 
     // Submit handler
     const handleSubmit = useCallback(async () => {
+        console.log('🚀 handleSubmit appelé');
+        console.log('🚀 validation.isValid:', validation.isValid);
+        
         if (!validation.isValid) {
             showError('Erreur de validation', 'Veuillez corriger les erreurs dans le formulaire');
             return;
@@ -256,6 +297,7 @@ export const useCreateParty = () => {
                 matchDescription: formData.description,
                 matchNbreParticipant: formData.numberOfParticipants,
                 capoId: user.utilisateurId,
+                sportId: formData.sportId!, // On sait que sportId n'est pas null grâce à la validation
             };
 
             console.log('🚀 ~ Données envoyées au backend:', matchData);
@@ -275,6 +317,7 @@ export const useCreateParty = () => {
                 duration: 1,
                 numberOfParticipants: PARTICIPANTS_LIMITS.DEFAULT,
                 description: '',
+                sportId: null,
             });
 
         } catch (err: any) {
@@ -292,7 +335,16 @@ export const useCreateParty = () => {
         } finally {
             setIsSubmitting(false);
         }
-    }, [validation.isValid, formData, showError, handleApiError]);
+    }, [
+        validation.isValid,
+        formData,
+        showError,
+        handleApiError,
+        setFormData,
+        setCreatedMatch,
+        setShowSuccessModal,
+        setError
+    ]);
 
     // Reset handler
     const resetForm = useCallback(() => {
@@ -303,6 +355,7 @@ export const useCreateParty = () => {
             duration: 1,
             numberOfParticipants: PARTICIPANTS_LIMITS.DEFAULT,
             description: '',
+            sportId: null,
         });
         setSearchQuery('');
         setShowDatePicker(false);
@@ -338,6 +391,7 @@ export const useCreateParty = () => {
         // State
         formData,
         searchQuery,
+        sportSearchQuery,
         showDatePicker,
         showTimePicker,
         isSubmitting,
@@ -346,8 +400,15 @@ export const useCreateParty = () => {
         showSuccessModal,
         createdMatch,
         
+        // Sports state
+        activeSports,
+        loadingSports,
+        sportError,
+        selectedSport,
+        
         // Computed values
         filteredFields,
+        filteredSports,
         validation,
         selectedField,
         isMinParticipantsReached,
@@ -356,6 +417,7 @@ export const useCreateParty = () => {
         // Form handlers
         updateFormData,
         setSelectedField,
+        setSport,
         setDate,
         setDuration,
         setNumberOfParticipants,
@@ -372,6 +434,7 @@ export const useCreateParty = () => {
         
         // Search handlers
         updateSearchQuery,
+        updateSportSearchQuery,
         
         // Submit handlers
         handleSubmit,
@@ -384,6 +447,7 @@ export const useCreateParty = () => {
         // Data loading
         loadTerrains,
         retryLoadTerrains,
+        retryLoadSports,
         
         // Modal handlers
         closeSuccessModal,

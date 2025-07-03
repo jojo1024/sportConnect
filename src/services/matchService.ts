@@ -34,6 +34,7 @@ export interface CreateMatchData {
     matchDescription: string;
     matchNbreParticipant: number;
     capoId: number;
+    sportId?: number;
 }
 
 export interface MatchResponse {

@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     },
     capo: {
         fontSize: 12,
-        color: COLORS.primary,
+        color: COLORS.textLight,
     },
     playersRow: {
         flexDirection: 'row',

@@ -22,8 +22,12 @@ import {
     ParticipantsSelector,
     FieldsBottomSheet,
     DescriptionInput,
-    Summary
+    Summary,
+    SportSelector
 } from '../../components/createParty';
+import { SportsBottomSheet } from '../../components/createParty/SportsBottomSheet';
+import { SportSelectorBottomSheet } from '../../components/createParty/SportSelectorBottomSheet';
+import { Sport } from '../../components/createParty/SportCard';
 import { COLORS } from '../../theme/colors';
 import { useApiError } from '../../hooks/useApiError';
 import { useCustomAlert } from '../../hooks/useCustomAlert';
@@ -34,6 +38,7 @@ import { SuccessModal } from '../../components/SuccessModal';
 // Main component
 const CreatePartyScreen: React.FC = () => {
     const bottomSheetRef = useRef<any>(null);
+    const sportBottomSheetRef = useRef<any>(null);
     const { allowsRetry } = useApiError();
     const { alertConfig } = useCustomAlert();
 
@@ -41,6 +46,7 @@ const CreatePartyScreen: React.FC = () => {
         // State
         formData,
         searchQuery,
+        sportSearchQuery,
         showDatePicker,
         showTimePicker,
         isSubmitting,
@@ -49,8 +55,15 @@ const CreatePartyScreen: React.FC = () => {
         showSuccessModal,
         createdMatch,
 
+        // Sports state
+        activeSports,
+        loadingSports,
+        sportError,
+        selectedSport,
+
         // Computed values
         filteredFields,
+        filteredSports,
         validation,
         selectedField,
         isMinParticipantsReached,
@@ -58,6 +71,7 @@ const CreatePartyScreen: React.FC = () => {
 
         // Form handlers
         setSelectedField,
+        setSport,
         setDuration,
         setDescription,
 
@@ -74,6 +88,7 @@ const CreatePartyScreen: React.FC = () => {
 
         // Search handlers
         updateSearchQuery,
+        updateSportSearchQuery,
 
         // Submit handlers
         handleSubmit,
@@ -83,6 +98,7 @@ const CreatePartyScreen: React.FC = () => {
 
         // Data loading
         retryLoadTerrains,
+        retryLoadSports,
     } = useCreateParty();
 
     const openFieldSelector = () => {
@@ -94,18 +110,54 @@ const CreatePartyScreen: React.FC = () => {
         bottomSheetRef.current?.close();
     };
 
+    const openSportSelector = () => {
+        sportBottomSheetRef.current?.open();
+    };
+
+    const handleSportSelection = (sport: Sport) => {
+        setSport(sport);
+        sportBottomSheetRef.current?.close();
+    };
+
     // Vérifier si le formulaire est prêt à être soumis
-    const isFormReady = validation.isValid && !isSubmitting && !isLoadingTerrains;
+    const isFormReady = validation.isValid && !isSubmitting && !isLoadingTerrains && !loadingSports;
+
+    // Debug: Log de l'état du formulaire
+    console.log('🔍 Debug isFormReady:', {
+        validationIsValid: validation.isValid,
+        validationErrors: validation.errors,
+        isSubmitting,
+        isLoadingTerrains,
+        loadingSports,
+        isFormReady,
+        formData: {
+            selectedFieldId: formData.selectedFieldId,
+            selectedFieldName: formData.selectedFieldName,
+            sportId: formData.sportId,
+            date: formData.date,
+            duration: formData.duration,
+            numberOfParticipants: formData.numberOfParticipants,
+            description: formData.description
+        }
+    });
 
     return (
         <SafeAreaView style={styles.safeArea}>
             <Header onCreate={handleSubmit} isSubmitting={isSubmitting} isFormReady={isFormReady} />
 
-            {/* Affichage de l'erreur compacte */}
+            {/* Affichage de l'erreur compacte pour les terrains */}
             {error && (
                 <CompactErrorCard
                     message={error}
                     onRetry={retryLoadTerrains}
+                />
+            )}
+
+            {/* Affichage de l'erreur compacte pour les sports */}
+            {sportError && (
+                <CompactErrorCard
+                    message={sportError}
+                    onRetry={retryLoadSports}
                 />
             )}
 
@@ -120,17 +172,23 @@ const CreatePartyScreen: React.FC = () => {
                     </View>
 
                     <Card icon="location" title="Terrain">
-                        {isLoadingTerrains ? (
-                            <View style={styles.loadingContainer}>
-                                <ActivityIndicator size="small" color={COLORS.primary} />
-                                <Text style={styles.loadingText}>Chargement des terrains...</Text>
-                            </View>
-                        ) : (
-                            <FieldSelector
-                                selectedField={formData.selectedFieldName}
-                                onPress={openFieldSelector}
-                            />
-                        )}
+                        <FieldSelector
+                            selectedField={formData.selectedFieldName}
+                            loading={isLoadingTerrains}
+                            error={error}
+                            onPress={openFieldSelector}
+                            onRetry={retryLoadTerrains}
+                        />
+                    </Card>
+
+                    <Card icon="football" title="Sport">
+                        <SportSelectorBottomSheet
+                            selectedSport={selectedSport}
+                            loading={loadingSports}
+                            error={sportError}
+                            onPress={openSportSelector}
+                            onRetry={retryLoadSports}
+                        />
                     </Card>
 
                     <Card icon="calendar" title="Date et heure">
@@ -176,6 +234,7 @@ const CreatePartyScreen: React.FC = () => {
                         description={formData.description}
                         formatDate={formatDate}
                         formatTime={formatTime}
+                        selectedSport={selectedSport}
                     />
 
                     {/* Messages de validation */}
@@ -200,6 +259,15 @@ const CreatePartyScreen: React.FC = () => {
                 filteredFields={filteredFields}
                 selectedFieldId={formData.selectedFieldId}
                 onFieldSelect={handleFieldSelection}
+            />
+
+            <SportsBottomSheet
+                bottomSheetRef={sportBottomSheetRef}
+                searchQuery={sportSearchQuery}
+                onSearchChange={updateSportSearchQuery}
+                filteredSports={filteredSports}
+                selectedSportId={formData.sportId}
+                onSportSelect={handleSportSelection}
             />
 
             {showDatePicker && (
@@ -234,6 +302,7 @@ const CreatePartyScreen: React.FC = () => {
                         duration: createdMatch.matchDuree,
                         participants: createdMatch.matchNbreParticipant,
                         matchPrixParJoueur: createdMatch.matchPrixParJoueur,
+                        sportName: createdMatch?.sportNom || 'Sport non spécifié',
                     }}
                 />
             )}
@@ -248,9 +317,10 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
+        paddingHorizontal: 16,
     },
     formContainer: {
-        padding: 16,
+        paddingTop: 20,
         gap: 16,
     },
     infoSection: {
@@ -260,46 +330,34 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     infoTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: COLORS.primary,
-        marginBottom: 4,
+        fontSize: 18,
+        fontWeight: '600',
+        color: COLORS.dark,
+        marginBottom: 8,
     },
     infoText: {
         fontSize: 14,
-        color: '#666',
+        color: COLORS.textLight,
         lineHeight: 20,
     },
-    loadingContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-    },
-    loadingText: {
-        marginLeft: 8,
-        fontSize: 14,
-        color: '#666',
-    },
+
     validationSection: {
-        backgroundColor: '#fff3cd',
-        borderColor: '#ffeaa7',
-        borderWidth: 1,
-        borderRadius: 8,
-        padding: 12,
-        marginTop: 8,
+        backgroundColor: COLORS.white,
+        padding: 16,
+        borderRadius: 12,
+        borderLeftWidth: 4,
+        borderLeftColor: COLORS.danger,
     },
     validationTitle: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#856404',
+        fontSize: 16,
+        fontWeight: '600',
+        color: COLORS.danger,
         marginBottom: 8,
     },
     validationError: {
-        fontSize: 13,
-        color: '#856404',
+        fontSize: 14,
+        color: COLORS.danger,
         marginBottom: 4,
-        lineHeight: 18,
     },
 });
 

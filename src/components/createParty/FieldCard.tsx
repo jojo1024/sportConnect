@@ -2,6 +2,8 @@ import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '../../theme/colors';
 import { Field } from '../../hooks/useCreateParty';
+import { BASE_URL_IMAGES } from '../../services/api';
+import { getTerrainImage } from '../../utils/functions';
 
 interface FieldCardProps {
     field: Field;
@@ -14,7 +16,9 @@ export const FieldCard: React.FC<FieldCardProps> = ({ field, isSelected, onSelec
         style={[styles.fieldCard, isSelected && styles.fieldCardSelected]}
         onPress={() => onSelect(field)}
     >
-        <Image source={{ uri: field.image }} style={styles.fieldImage} />
+        <Image
+            source={{ uri: `${BASE_URL_IMAGES}/${field.image}` }}
+            style={styles.fieldImage} />
         <View style={styles.fieldInfo}>
             <View style={styles.fieldHeader}>
                 <Text style={styles.fieldName}>{field.name}</Text>
