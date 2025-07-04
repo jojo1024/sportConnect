@@ -83,11 +83,11 @@ const BarChart: React.FC<BarChartProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
+            backgroundColor: COLORS.backgroundWhite,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+            shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+            color: COLORS.almostBlack,
     marginBottom: 16,
   },
   chartContainer: {
@@ -121,12 +121,12 @@ const styles = StyleSheet.create({
   barValue: {
     fontSize: 10,
     fontWeight: '500',
-    color: '#6B7280',
+            color: COLORS.gray[600],
     marginTop: 4,
   },
   barLabel: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: COLORS.gray[400],
     textAlign: 'center',
     fontWeight: '400',
   },
@@ -137,13 +137,13 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: COLORS.gray[400],
     fontStyle: 'italic',
   },
   // Styles pour le loading
   loadingTitle: {
     height: 16,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: COLORS.gray[300],
     borderRadius: 4,
     marginBottom: 16,
     width: '40%',
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   loadingBar: {
     width: 20,
     height: 100,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: COLORS.gray[300],
     borderRadius: 4,
     marginHorizontal: 4,
   },

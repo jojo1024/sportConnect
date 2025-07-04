@@ -35,7 +35,7 @@ export default function CommuneSelector({
             height={SIZES.height - 200}
             customStyles={{
                 wrapper: {
-                    backgroundColor: "rgba(0,0,0,0.5)"
+                    backgroundColor: COLORS.overlay
                 },
                 container: {
                     borderTopLeftRadius: 20,

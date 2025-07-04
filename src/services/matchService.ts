@@ -24,6 +24,9 @@ export interface Match {
     nbreJoueursInscrits: number;
     joueurxMax: number;
     matchPrixParJoueur: number;
+    sportId?: number;
+    sportNom?: string;
+    sportIcone?: string;
 }
 
 export interface CreateMatchData {
@@ -94,9 +97,13 @@ export const matchService = {
         }
     },
 
-    getMatchesWithPagination: async (page: number = 1, limit: number = 10): Promise<Match[]> => {
+    getMatchesWithPagination: async (page: number = 1, limit: number = 10, sportId?: number): Promise<Match[]> => {
         try {
-            const response = await api.get<MatchResponse>(`/matchs/fetchAllPaginated?page=${page}&limit=${limit}`);
+            let url = `/matchs/fetchAllPaginated?page=${page}&limit=${limit}`;
+            if (sportId) {
+                url += `&sportId=${sportId}`;
+            }
+            const response = await api.get<MatchResponse>(url);
             return response.data.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des matchs paginés:', error);

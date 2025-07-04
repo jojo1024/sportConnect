@@ -7,20 +7,20 @@ import {
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { SIZES } from '../../theme/typography';
-import { Field } from '../../hooks/useCreateParty';
 import { FieldCard } from './FieldCard';
 import { COLORS } from '../../theme/colors';
+import { Terrain } from '../../services/terrainService';
 
-interface FieldsBottomSheetProps {
+interface TerrainsBottomSheetProps {
     bottomSheetRef: React.RefObject<RBSheet | null>;
     searchQuery: string;
     onSearchChange: (query: string) => void;
-    filteredFields: Field[];
+    filteredFields: Terrain[];
     selectedFieldId: string;
-    onFieldSelect: (field: Field) => void;
+    onFieldSelect: (field: Terrain) => void;
 }
 
-export const FieldsBottomSheet: React.FC<FieldsBottomSheetProps> = ({
+export const TerrainsBottomSheet: React.FC<TerrainsBottomSheetProps> = ({
     bottomSheetRef,
     searchQuery,
     onSearchChange,
@@ -34,7 +34,7 @@ export const FieldsBottomSheet: React.FC<FieldsBottomSheetProps> = ({
         closeOnPressMask={true}
         height={SIZES.height - 200}
         customStyles={{
-            wrapper: { backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+            wrapper: { backgroundColor: COLORS.overlay },
             draggableIcon: { backgroundColor: '#000' },
             container: {
                 borderTopLeftRadius: 20,
@@ -52,11 +52,11 @@ export const FieldsBottomSheet: React.FC<FieldsBottomSheetProps> = ({
             />
             <FlatList
                 data={filteredFields}
-                keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item) => item?.terrainId?.toString()}
                 renderItem={({ item }) => (
                     <FieldCard
-                        field={item}
-                        isSelected={selectedFieldId === item.id}
+                        terrain={item}
+                        isSelected={selectedFieldId === item?.terrainId?.toString()}
                         onSelect={onFieldSelect}
                     />
                 )}

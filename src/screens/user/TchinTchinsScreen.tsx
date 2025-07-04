@@ -1,31 +1,30 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
-import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import RBSheet from 'react-native-raw-bottom-sheet';
-import { RenderFooter, RetryComponent } from '../../components/UtilsComponent';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { name as projectName, version } from '../../../package.json';
+import LoadingFooter from '../../components/LoadingFooter';
 import NewMatchesNotification from '../../components/NewMatchesNotification';
 import SearchMatchBottomSheet from '../../components/SearchMatchBottomSheet';
+import { MatchCard } from '../../components/MatchCard';
+import SportFilter from '../../components/SportFilter';
+import { ErrorDemoComponent, RetryComponent } from '../../components/UtilsComponent';
 import { useMatch } from '../../hooks/useMatch';
+import { useSport } from '../../hooks/useSport';
 import { COLORS } from '../../theme/colors';
-import { calculateMatchDuration, extractHour, getDateSectionLabel, getTerrainImage, getTerrainImages } from '../../utils/functions';
-import { name as projectName, version } from '../../../package.json';
-import { creditService } from '../../services/creditService';
-import LoadingFooter from '../../components/LoadingFooter';
-import { BASE_URL_IMAGES } from '../../services/api';
+import { getDateSectionLabel } from '../../utils/functions';
 
-interface TchinTchinsScreenProps {
-    navigation: any;
-}
 
-const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => {
-    const [solde, setSolde] = useState<number>(0);
-    const [loadingSolde, setLoadingSolde] = useState<boolean>(true);
-    const searchBottomSheetRef = useRef<RBSheet>(null);
+const TchinTchinsScreen = () => {
 
+    // Hook pour les sports
+    const { activeSports, selectedSportId, handleSportSelect } = useSport();
+
+    // Hook pour les matchs avec filtrage par sport
     const {
         matches,
         isLoading,
         error,
+        errorType,
         refreshData,
         allMatchFiltredByDate,
         groupedMatchsByDate,
@@ -35,55 +34,41 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
         showNewMatchesNotification,
         hideNewMatchesNotification,
         newMatchesIds,
-        markMatchAsSeen
-    } = useMatch();
+        handleMatchPress,
+        handleSearchPress,
+        handleSearchMatchPress,
+        searchBottomSheetRef
+    } = useMatch(selectedSportId);
 
-    // Charger le solde de crédit
-    useEffect(() => {
-        loadSolde();
-    }, []);
-
-    const loadSolde = async () => {
-        try {
-            setLoadingSolde(true);
-            const userSolde = await creditService.getUserSolde();
-            setSolde(userSolde);
-        } catch (err) {
-            console.error('Erreur lors du chargement du solde:', err);
-            setSolde(0);
-        } finally {
-            setLoadingSolde(false);
-        }
-    };
-
-    const handleMatchPress = (match: any) => {
-        // Marquer le match comme vu si c'est un nouveau match
-        if (newMatchesIds.has(match.matchId)) {
-            markMatchAsSeen(match.matchId);
-        }
-        navigation.navigate('MatchDetails', { match });
-    };
-
-    const handleCreditPress = () => {
-        return null
-    };
-
-    const handleSearchPress = () => {
-        searchBottomSheetRef.current?.open();
-    };
-
-    const handleSearchMatchPress = (match: any) => {
-        // Marquer le match comme vu si c'est un nouveau match
-        if (newMatchesIds.has(match.matchId)) {
-            markMatchAsSeen(match.matchId);
-        }
-        navigation.navigate('MatchDetails', { match });
-    };
+    // État pour afficher la démonstration des erreurs (à supprimer en production)
+    const [showErrorDemo, setShowErrorDemo] = useState(false);
 
     // Afficher l'erreur si elle existe
     if (error) {
         return (
-            <RetryComponent onRetry={refreshData} />
+            <RetryComponent
+                onRetry={refreshData}
+                errorType={errorType || undefined}
+                customMessage={error}
+            />
+        );
+    }
+
+    // Afficher la démonstration des erreurs si activée (à supprimer en production)
+    if (showErrorDemo) {
+        return (
+            <View style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => setShowErrorDemo(false)}
+                    >
+                        <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+                    </TouchableOpacity>
+                    <Text style={styles.demoHeaderTitle}>Test des Messages d'Erreur</Text>
+                </View>
+                <ErrorDemoComponent />
+            </View>
         );
     }
 
@@ -102,17 +87,14 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
                     <Text style={styles.subtitle}>{version}</Text>
                 </View>
                 <View style={styles.headerActions}>
-                    {/* Carte de crédit compacte */}
-                    {/* <TouchableOpacity
-                        style={styles.creditCard}
-                        onPress={handleCreditPress}
+                    {/* Bouton de démonstration des erreurs (à supprimer en production) */}
+                    <TouchableOpacity
+                        style={styles.demoButton}
+                        onPress={() => setShowErrorDemo(true)}
                         activeOpacity={0.7}
                     >
-                        <MaterialCommunityIcons name="credit-card" size={16} color={COLORS.primary} />
-                        <Text style={styles.creditAmount}>
-                            {loadingSolde ? '...' : `${solde.toFixed(0)} F`}
-                        </Text>
-                    </TouchableOpacity> */}
+                        <Ionicons name="bug-outline" size={18} color={COLORS.warning} />
+                    </TouchableOpacity>
 
                     {/* Bouton de recherche */}
                     <TouchableOpacity
@@ -124,6 +106,14 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
                     </TouchableOpacity>
                 </View>
             </View>
+
+            {/* Filtre par sport */}
+            <SportFilter
+                sports={activeSports}
+                selectedSportId={selectedSportId}
+                onSportSelect={handleSportSelect}
+                isLoading={false}
+            />
 
             <FlatList
                 data={allMatchFiltredByDate}
@@ -140,57 +130,11 @@ const TchinTchinsScreen: React.FC<TchinTchinsScreenProps> = ({ navigation }) => 
                         <Text style={styles.dateTitle}>{getDateSectionLabel(date)}</Text>
                         <Text style={styles.dateShort}>{new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</Text>
                         {groupedMatchsByDate[date].length > 0 ? (
-                            groupedMatchsByDate[date].map((match) => {
+                            groupedMatchsByDate[date].map((match, index) => {
                                 const isNewMatch = newMatchesIds.has(match.matchId);
                                 // const terrainImages = getTerrainImages(match?.terrainImages || [] as string[]);
                                 return (
-                                    <TouchableOpacity
-                                        key={match.matchId}
-                                        style={styles.cardWrapper}
-                                        onPress={() => handleMatchPress(match)}
-                                        activeOpacity={0.7}
-                                    >
-                                        <View style={styles.card}>
-                                            {/* Indicateur de nouveau match - seulement le petit point orange */}
-                                            {isNewMatch && (
-                                                <View style={styles.newMatchIndicator}>
-                                                    <View style={styles.newMatchDot} />
-                                                </View>
-                                            )}
-
-                                            <Image
-                                                source={{ uri: `${BASE_URL_IMAGES}/${getTerrainImage(match.terrainImages)}` }}
-                                                style={styles.image}
-                                                defaultSource={{ uri: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=500' }}
-                                            />
-                                            <View style={styles.cardContent}>
-                                                <View style={styles.cardHeader}>
-                                                    <Text style={styles.cardTitle}>{match.terrainNom}</Text>
-                                                    <View style={styles.hourBadge}>
-                                                        <Text style={styles.cardHour}>{extractHour(match.matchDateDebut)}</Text>
-                                                    </View>
-                                                </View>
-                                                <Text style={styles.cardLocation}>{match.terrainLocalisation}</Text>
-                                                <View style={styles.cardFieldRow}>
-                                                    <Text style={styles.cardFormat}>Temps de jeu: {calculateMatchDuration(match.matchDateDebut, match.matchDateFin)}</Text>
-                                                </View>
-                                                <View style={styles.cardCodeRow}>
-                                                    <Text style={styles.cardCode}>Code: {match.codeMatch}</Text>
-                                                </View>
-                                                <View style={styles.cardFooter}>
-                                                    <Text style={styles.capo}>Capo: {match.capoNomUtilisateur}</Text>
-                                                    <View style={styles.playersRow}>
-                                                        <Text style={styles.players}>{match.nbreJoueursInscrits}/{match.joueurxMax}</Text>
-                                                        <MaterialCommunityIcons name="account" size={16} color="#bbb" style={{ marginLeft: 3 }} />
-                                                    </View>
-                                                </View>
-                                            </View>
-                                            {/* Indicateur de clic */}
-                                            <View style={styles.clickIndicator}>
-                                                <Ionicons name="chevron-forward" size={20} color="#ccc" />
-                                            </View>
-                                        </View>
-                                    </TouchableOpacity>
+                                    <MatchCard key={index} match={match} onPress={handleMatchPress} compact={false} isNewMatch={isNewMatch} />
                                 );
                             })
                         ) : (
@@ -228,9 +172,9 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e9ecef',
+        borderBottomColor: COLORS.gray[200],
         elevation: 2,
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 3,
@@ -247,7 +191,7 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 8,
-        color: '#666',
+        color: COLORS.darkGray,
         fontStyle: 'italic',
         paddingTop: 10,
     },
@@ -258,11 +202,11 @@ const styles = StyleSheet.create({
     dateTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#3a3a3a',
+        color: COLORS.darkestGray,
     },
     dateShort: {
         fontSize: 14,
-        color: '#b0b8c1',
+        color: COLORS.gray[400],
         marginBottom: 14,
         marginLeft: 2,
     },
@@ -275,7 +219,7 @@ const styles = StyleSheet.create({
         borderRadius: 22,
         overflow: 'hidden',
         elevation: 4,
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.10,
         shadowRadius: 6,
@@ -317,12 +261,12 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 17,
         fontWeight: 'bold',
-        color: '#222',
+        color: COLORS.veryDarkGray,
         flex: 1,
         flexWrap: 'wrap',
     },
     hourBadge: {
-        backgroundColor: '#f2f3f7',
+        backgroundColor: COLORS.backgroundLightGray,
         borderRadius: 12,
         paddingHorizontal: 10,
         paddingVertical: 2,
@@ -336,7 +280,7 @@ const styles = StyleSheet.create({
     },
     cardLocation: {
         fontSize: 13,
-        color: '#666',
+        color: COLORS.darkGray,
         marginBottom: 4,
         marginTop: 2,
     },
@@ -348,12 +292,12 @@ const styles = StyleSheet.create({
     },
     cardField: {
         fontSize: 13,
-        color: '#555',
+        color: COLORS.darkerGray,
         marginRight: 16,
     },
     cardFormat: {
         fontSize: 13,
-        color: '#555',
+        color: COLORS.darkerGray,
     },
     cardCodeRow: {
         flexDirection: 'row',
@@ -382,7 +326,7 @@ const styles = StyleSheet.create({
     },
     players: {
         fontSize: 12,
-        color: '#888',
+        color: COLORS.gray[500],
     },
     clickIndicator: {
         position: 'absolute',
@@ -394,14 +338,14 @@ const styles = StyleSheet.create({
     },
     emptyState: {
         alignItems: 'center',
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.gray[100],
         borderRadius: 12,
         marginHorizontal: 5,
         marginTop: 10,
     },
     emptyText: {
         fontSize: 14,
-        color: '#999',
+        color: COLORS.gray[600],
         fontStyle: 'italic',
     },
     loadingFooter: {
@@ -414,7 +358,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginLeft: 10,
         fontSize: 14,
-        color: '#666',
+        color: COLORS.darkGray,
     },
     searchButton: {
         width: 36,
@@ -445,6 +389,31 @@ const styles = StyleSheet.create({
     creditAmount: {
         fontSize: 12,
         fontWeight: '600',
+        color: COLORS.primary,
+    },
+    demoButton: {
+        width: 36,
+        height: 36,
+        backgroundColor: '#f8f9fa',
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+    },
+    backButton: {
+        width: 36,
+        height: 36,
+        backgroundColor: '#f8f9fa',
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+    },
+    demoHeaderTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
         color: COLORS.primary,
     },
 });

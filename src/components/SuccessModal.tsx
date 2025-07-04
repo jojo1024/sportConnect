@@ -94,7 +94,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                         {/* Header avec icône de succès */}
                         <View style={styles.header}>
                             <View style={styles.successIconContainer}>
-                                <Ionicons name="checkmark-circle" size={height < 700 ? 50 : 60} color="#4CAF50" />
+                                <Ionicons name="checkmark-circle" size={height < 700 ? 50 : 60} color={COLORS.successGreen} />
                             </View>
                             <Text style={styles.title}>{title}</Text>
                             <Text style={styles.subtitle}>
@@ -114,7 +114,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                                     <Ionicons
                                         name={copied ? "checkmark" : "copy-outline"}
                                         size={20}
-                                        color={copied ? "#4CAF50" : COLORS.primary}
+                                        color={copied ? COLORS.successGreen : COLORS.primary}
                                     />
                                 </TouchableOpacity>
                             </View>
@@ -131,40 +131,40 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                             <Text style={styles.detailsTitle}>Détails de la partie</Text>
                             <View style={styles.detailsList}>
                                 <View style={styles.detailRow}>
-                                    <Ionicons name="location" size={16} color="#666" />
+                                    <Ionicons name="location" size={16} color={COLORS.darkGray} />
                                     <Text style={styles.detailLabel}>Terrain:</Text>
                                     <Text style={styles.detailValue}>{safeString(matchDetails.terrainName)}</Text>
                                 </View>
                                 {matchDetails.sportName && (
                                     <View style={styles.detailRow}>
-                                        <Ionicons name="football" size={16} color="#666" />
+                                        <Ionicons name="football" size={16} color={COLORS.darkGray} />
                                         <Text style={styles.detailLabel}>Sport:</Text>
                                         <Text style={styles.detailValue}>{safeString(matchDetails.sportName)}</Text>
                                     </View>
                                 )}
                                 <View style={styles.detailRow}>
-                                    <Ionicons name="calendar" size={16} color="#666" />
+                                    <Ionicons name="calendar" size={16} color={COLORS.darkGray} />
                                     <Text style={styles.detailLabel}>Date:</Text>
                                     <Text style={styles.detailValue}>{safeString(matchDetails.date)}</Text>
                                 </View>
                                 <View style={styles.detailRow}>
-                                    <Ionicons name="time" size={16} color="#666" />
+                                    <Ionicons name="time" size={16} color={COLORS.darkGray} />
                                     <Text style={styles.detailLabel}>Heure:</Text>
                                     <Text style={styles.detailValue}>{safeString(matchDetails.time)}</Text>
                                 </View>
                                 <View style={styles.detailRow}>
-                                    <Ionicons name="hourglass" size={16} color="#666" />
+                                    <Ionicons name="hourglass" size={16} color={COLORS.darkGray} />
                                     <Text style={styles.detailLabel}>Durée:</Text>
                                     <Text style={styles.detailValue}>{safeNumber(matchDetails.duration)}h</Text>
                                 </View>
                                 <View style={styles.detailRow}>
-                                    <Ionicons name="people" size={16} color="#666" />
+                                    <Ionicons name="people" size={16} color={COLORS.darkGray} />
                                     <Text style={styles.detailLabel}>Participants:</Text>
                                     <Text style={styles.detailValue}>{safeNumber(matchDetails.participants)} joueurs</Text>
                                 </View>
                                 {matchDetails.matchPrixParJoueur && (
                                     <View style={styles.detailRow}>
-                                        <Ionicons name="cash" size={16} color="#666" />
+                                        <Ionicons name="cash" size={16} color={COLORS.darkGray} />
                                         <Text style={styles.detailLabel}>Prix par joueur:</Text>
                                         <Text style={styles.detailValue}>{safeNumber(matchDetails.matchPrixParJoueur)} XOF</Text>
                                     </View>
@@ -186,7 +186,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                     {/* Actions */}
                     <View style={styles.actionsContainer}>
                         <TouchableOpacity style={styles.primaryButton} onPress={onClose}>
-                            <Ionicons name="checkmark" size={20} color="#fff" />
+                            <Ionicons name="checkmark" size={20} color={COLORS.white} />
                             <Text style={styles.primaryButtonText}>Parfait !</Text>
                         </TouchableOpacity>
                     </View>
@@ -199,18 +199,18 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: COLORS.overlay,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 16,
     },
     modalContainer: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.backgroundWhite,
         borderRadius: 20,
         width: width - 32,
         maxWidth: 400,
         maxHeight: height * 0.85, // Limite la hauteur à 85% de l'écran
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow,
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.25,
         shadowRadius: 20,
@@ -230,13 +230,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: height < 700 ? 20 : 24,
         fontWeight: 'bold',
-        color: '#333',
+        color: COLORS.darkestGray,
         marginBottom: 6,
         textAlign: 'center',
     },
     subtitle: {
         fontSize: height < 700 ? 14 : 16,
-        color: '#666',
+        color: COLORS.darkGray,
         textAlign: 'center',
     },
     codeContainer: {
@@ -246,13 +246,13 @@ const styles = StyleSheet.create({
     },
     codeLabel: {
         fontSize: 14,
-        color: '#666',
+        color: COLORS.darkGray,
         marginBottom: 8,
     },
     codeBox: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.gray[100],
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderRadius: 12,
@@ -274,11 +274,11 @@ const styles = StyleSheet.create({
         borderRadius: 6,
     },
     copyButtonActive: {
-        backgroundColor: '#e8f5e8',
+        backgroundColor: COLORS.successGreen,
     },
     codeHint: {
         fontSize: 12,
-        color: '#666',
+        color: COLORS.darkGray,
         textAlign: 'center',
         fontStyle: 'italic',
     },
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     detailsTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#333',
+        color: COLORS.darkestGray,
         marginBottom: 12,
     },
     detailsList: {
@@ -302,21 +302,21 @@ const styles = StyleSheet.create({
     },
     detailLabel: {
         fontSize: 14,
-        color: '#666',
+        color: COLORS.darkGray,
         marginLeft: 8,
         marginRight: 8,
         minWidth: 80,
     },
     detailValue: {
         fontSize: 14,
-        color: '#333',
+        color: COLORS.darkestGray,
         fontWeight: '500',
         flex: 1,
     },
     capoNoteContainer: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        backgroundColor: '#FFF8F0',
+        backgroundColor: COLORS.backgroundLightYellow,
         padding: 12,
         borderRadius: 8,
         marginBottom: 16,
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
         padding: 20,
         paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
+        borderTopColor: COLORS.gray[100],
     },
     primaryButton: {
         flexDirection: 'row',
@@ -347,6 +347,6 @@ const styles = StyleSheet.create({
     primaryButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#fff',
+        color: COLORS.white,
     },
 }); 

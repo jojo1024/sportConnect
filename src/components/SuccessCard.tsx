@@ -62,7 +62,7 @@ const SuccessCard: React.FC<SuccessCardProps> = ({
                     <Ionicons
                         name="close"
                         size={16}
-                        color="#666"
+                        color={COLORS.darkGray}
                     />
                 </TouchableOpacity>
             </View>
@@ -78,12 +78,12 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F0FDF4',
+        backgroundColor: COLORS.successGreen,
         borderWidth: 1,
-        borderColor: '#BBF7D0',
+        borderColor: COLORS.successGreen,
         borderRadius: 12,
         padding: 16,
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow,
         shadowOffset: {
             width: 0,
             height: 2,
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     },
     successText: {
         fontSize: 14,
-        color: '#166534',
+        color: COLORS.successGreen,
         fontWeight: '500',
         lineHeight: 20,
     },
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: COLORS.gray[100],
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 8,

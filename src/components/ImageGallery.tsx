@@ -7,6 +7,7 @@ import {
     StyleSheet,
 } from 'react-native';
 import { BASE_URL_IMAGES } from '../services/api';
+import { COLORS } from '../theme/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: 'rgba(255,255,255,0.5)',
+        backgroundColor: COLORS.whiteOverlayLight,
         marginHorizontal: 4,
     },
     paginationDotActive: {

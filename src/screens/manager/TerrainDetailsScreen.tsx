@@ -14,7 +14,7 @@ import { formatHoraires } from '../../utils/functions';
 import { useNavigation } from '@react-navigation/native';
 import ImageGallery from '../../components/ImageGallery';
 import HeaderWithBackButton from '../../components/HeaderWithBackButton';
-import DetailCard, { DetailRow } from '../../components/DetailCard';
+import InfoSectionCard, { InfoItemRow } from '../../components/DetailCard';
 import MainInfoCard from '../../components/MainInfoCard';
 
 const TerrainDetailsScreen: React.FC = () => {
@@ -77,19 +77,19 @@ const TerrainDetailsScreen: React.FC = () => {
                 </View>
 
                 {/* Détails du terrain */}
-                <DetailCard title="Informations du terrain">
-                    <DetailRow
+                <InfoSectionCard title="Informations du terrain">
+                    <InfoItemRow
                         icon="cash-outline"
                         label="Prix par heure"
                         value={`${terrain.terrainPrixParHeure} XOF`}
                     />
-                    <DetailRow
+                    <InfoItemRow
                         icon="time-outline"
                         label="Horaires d'ouverture"
                         value={formatHoraires(terrain.terrainHoraires)}
                     />
                     {terrain.terrainContact && (
-                        <DetailRow
+                        <InfoItemRow
                             icon="call-outline"
                             label="Contact"
                             value={terrain.terrainContact}
@@ -97,7 +97,7 @@ const TerrainDetailsScreen: React.FC = () => {
                             copied={copied}
                         />
                     )}
-                </DetailCard>
+                </InfoSectionCard>
 
                 {/* Description */}
                 {terrain.terrainDescription && (

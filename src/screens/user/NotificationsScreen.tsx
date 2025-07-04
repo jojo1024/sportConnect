@@ -106,9 +106,9 @@ const styles = StyleSheet.create<Styles>({
         padding: 20,
         backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e9ecef',
+        borderBottomColor: COLORS.gray[200],
         elevation: 2,
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 3,
@@ -116,7 +116,7 @@ const styles = StyleSheet.create<Styles>({
     title: {
         fontSize: 24,
         fontWeight: '700',
-        color: '#1a1a1a',
+        color: COLORS.almostBlack,
     },
     filterButton: {
         padding: 8,
@@ -136,14 +136,14 @@ const styles = StyleSheet.create<Styles>({
         padding: 16,
         marginBottom: 6,
         elevation: 2,
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
         position: 'relative',
     },
     unreadNotificationItem: {
-        backgroundColor: '#f8fbff',
+        backgroundColor: COLORS.backgroundLightBlue,
         borderLeftWidth: 4,
         borderLeftColor: COLORS.primary,
     },
@@ -156,34 +156,34 @@ const styles = StyleSheet.create<Styles>({
         marginRight: 16,
     },
     matchIcon: {
-        backgroundColor: 'rgba(0, 123, 131, 0.1)',
+        backgroundColor: COLORS.notificationBlue,
     },
     reminderIcon: {
-        backgroundColor: 'rgba(245, 166, 35, 0.1)',
+        backgroundColor: COLORS.notificationOrange,
     },
     paymentIcon: {
-        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        backgroundColor: COLORS.notificationGreen,
     },
     validationIcon: {
-        backgroundColor: 'rgba(0, 123, 131, 0.1)',
+        backgroundColor: COLORS.notificationBlue,
     },
     cancelIcon: {
-        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+        backgroundColor: COLORS.notificationRed,
     },
     creditIcon: {
-        backgroundColor: 'rgba(245, 166, 35, 0.1)',
+        backgroundColor: COLORS.notificationOrange,
     },
     infoIcon: {
-        backgroundColor: 'rgba(0, 123, 131, 0.1)',
+        backgroundColor: COLORS.notificationBlue,
     },
     emailIcon: {
-        backgroundColor: 'rgba(66, 133, 244, 0.1)',
+        backgroundColor: COLORS.notificationGoogleBlue,
     },
     smsIcon: {
-        backgroundColor: 'rgba(52, 168, 83, 0.1)',
+        backgroundColor: COLORS.notificationGoogleGreen,
     },
     pushIcon: {
-        backgroundColor: 'rgba(136, 136, 136, 0.1)',
+        backgroundColor: COLORS.notificationGray,
     },
     notificationContent: {
         flex: 1,
@@ -197,7 +197,7 @@ const styles = StyleSheet.create<Styles>({
     notificationTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#1a1a1a',
+        color: COLORS.almostBlack,
         flex: 1,
     },
     unreadNotificationTitle: {

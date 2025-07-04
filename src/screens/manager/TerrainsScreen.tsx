@@ -7,6 +7,7 @@ import { TerrainCard } from '../../components/terrain';
 import { useTerrain } from '../../hooks/useTerrain';
 import { Terrain } from '../../services/terrainService';
 import { PRIMARY_COLOR } from '../../utils/constant';
+import { COLORS } from '../../theme/colors';
 
 const TerrainsScreen: React.FC = () => {
 
@@ -64,7 +65,7 @@ const TerrainsScreen: React.FC = () => {
                 ListEmptyComponent={
                     !isLoading ? (
                         <View style={styles.emptyState}>
-                            <Ionicons name="football" size={64} color="#ccc" />
+                            <Ionicons name="football" size={64} color={COLORS.mediumGray} />
                             <Text style={styles.emptyTitle}>Aucun terrain</Text>
                             <Text style={styles.emptyText}>Vous n'avez pas encore ajouté de terrains</Text>
                             <TouchableOpacity style={styles.emptyButton} onPress={handleAddTerrain}>

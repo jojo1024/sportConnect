@@ -20,3 +20,86 @@ export const PARTICIPANTS_LIMITS = {
     MAX: 50,
     DEFAULT: 10,
 } as const;
+
+export const SPORTS = [
+    {
+      "sportId": 1,
+      "sportNom": "Football",
+      "sportIcone": "football-outline",
+      "sportStatus": 1,
+      "createdAt": "2025-07-03T04:36:39.000Z",
+      "updatedAt": "2025-07-03T04:36:39.000Z"
+    },
+    {
+      "sportId": 2,
+      "sportNom": "Basketball",
+      "sportIcone": "basketball-outline",
+      "sportStatus": 1,
+      "createdAt": "2025-07-03T04:36:39.000Z",
+      "updatedAt": "2025-07-03T04:36:39.000Z"
+    },
+    {
+      "sportId": 3,
+      "sportNom": "Tennis",
+      "sportIcone": "tennisball-outline",
+      "sportStatus": 1,
+      "createdAt": "2025-07-03T04:36:39.000Z",
+      "updatedAt": "2025-07-03T04:36:39.000Z"
+    },
+    {
+      "sportId": 4,
+      "sportNom": "Handball",
+      "sportIcone": "handball-outline",
+      "sportStatus": 1,
+      "createdAt": "2025-07-03T04:36:39.000Z",
+      "updatedAt": "2025-07-03T04:36:39.000Z"
+    },
+    {
+      "sportId": 5,
+      "sportNom": "Paddle",
+      "sportIcone": "paddle-outline",
+      "sportStatus": 1,
+      "createdAt": "2025-07-03T04:36:39.000Z",
+      "updatedAt": "2025-07-03T04:36:39.000Z"
+    },
+    {
+      "sportId": 6,
+      "sportNom": "Golf",
+      "sportIcone": "golf-outline",
+      "sportStatus": 1,
+      "createdAt": "2025-07-03T04:36:39.000Z",
+      "updatedAt": "2025-07-03T04:36:39.000Z"
+    },
+    {
+      "sportId": 7,
+      "sportNom": "Volleyball",
+      "sportIcone": "volleyball-outline",
+      "sportStatus": 1,
+      "createdAt": "2025-07-03T04:36:39.000Z",
+      "updatedAt": "2025-07-03T04:36:39.000Z"
+    },
+    {
+      "sportId": 8,
+      "sportNom": "Badminton",
+      "sportIcone": "badminton-outline",
+      "sportStatus": 1,
+      "createdAt": "2025-07-03T04:36:39.000Z",
+      "updatedAt": "2025-07-03T04:36:39.000Z"
+    }
+  ]
+  
+    // Fonction pour mapper les icônes avec les bonnes bibliothèques
+  export   const getSportIcon = (iconName: string): { name: string; library: 'Ionicons' | 'MaterialCommunityIcons' } => {
+      const iconMapping: { [key: string]: { name: string; library: 'Ionicons' | 'MaterialCommunityIcons' } } = {
+          'football-outline': { name: 'football-outline', library: 'Ionicons' },
+          'basketball-outline': { name: 'basketball-outline', library: 'Ionicons' },
+          'tennisball-outline': { name: 'tennisball-outline', library: 'Ionicons' },
+          'handball-outline': { name: 'basketball', library: 'MaterialCommunityIcons' },
+          'paddle-outline': { name: 'table-tennis', library: 'MaterialCommunityIcons' },
+          'golf-outline': { name: 'golf', library: 'MaterialCommunityIcons' },
+          'volleyball-outline': { name: 'volleyball', library: 'MaterialCommunityIcons' },
+          'badminton-outline': { name: 'badminton', library: 'MaterialCommunityIcons' },
+      };
+
+      return iconMapping[iconName] || { name: 'football-outline', library: 'Ionicons' };
+  };

@@ -47,7 +47,7 @@ const ImageSelector: React.FC<ImageSelectorProps> = ({
                         style={styles.removeImageButton}
                         onPress={() => onImageRemove(index)}
                     >
-                        <Ionicons name="close-circle" size={24} color="#fff" />
+                        <Ionicons name="close-circle" size={24} color={COLORS.white} />
                     </TouchableOpacity>
                 </View>
             )}
@@ -60,7 +60,7 @@ const ImageSelector: React.FC<ImageSelectorProps> = ({
             >
                 <View style={styles.imageSelectorContent}>
                     <View style={styles.imageSelectorIcon}>
-                        <Ionicons name="camera" size={32} color="#fff" />
+                        <Ionicons name="camera" size={32} color={COLORS.white} />
                     </View>
                     <Text style={styles.imageSelectorText}>Sélectionner des photos (max 5)</Text>
                 </View>
@@ -75,11 +75,11 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     imageSelector: {
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.gray[100],
         borderRadius: 12,
         marginTop: 10,
         borderWidth: 2,
-        borderColor: '#e9ecef',
+        borderColor: COLORS.gray[200],
         borderStyle: 'dashed',
         height: 120,
         justifyContent: 'center',
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     imageSelectorError: {
-        borderColor: '#dc3545',
+        borderColor: COLORS.danger,
     },
     imageSelectorContent: {
         alignItems: 'center',
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     imageSelectorText: {
-        color: '#666',
+        color: COLORS.darkGray,
         fontSize: 14,
         fontWeight: '500',
     },
@@ -131,11 +131,11 @@ const styles = StyleSheet.create({
         borderStyle: 'dashed',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.gray[100],
         marginRight: 12,
     },
     addImageButtonError: {
-        borderColor: '#dc3545',
+        borderColor: COLORS.danger,
     },
     addImageText: {
         fontSize: 12,
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     errorText: {
-        color: '#dc3545',
+        color: COLORS.danger,
         fontSize: 12,
         marginTop: 4,
         fontWeight: '500',

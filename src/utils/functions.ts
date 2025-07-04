@@ -1,12 +1,12 @@
-
-export const formatDate = (date: string | null) => {
+export const formatDate = (date: Date | string | null) => {
     if (!date) return '';
     const dateObj = new Date(date);
     return dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 
-export const formatTime = (dateString: string) => {
+export const formatTime = (dateString: Date | string | null) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 };
@@ -144,9 +144,8 @@ export const formatNotificationDate = (dateString: string): string => {
   
     // Date formatée pour les événements plus anciens
     return date.toLocaleDateString('fr-FR', {
-      weekday: 'long',
       day: '2-digit',
-      month: 'long',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
@@ -201,3 +200,24 @@ export const formatHoraires = (horaires: string | { ouverture: string, fermeture
 
     return 'Horaires non définis';
 };
+
+export const formatDateLong = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+};
+
+    // Formater les dates au format attendu par MySQL (YYYY-MM-DD HH:MM:SS)
+export    const formatDateForMySQL = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    };

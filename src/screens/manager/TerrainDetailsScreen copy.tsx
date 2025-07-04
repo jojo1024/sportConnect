@@ -15,6 +15,7 @@ import { BASE_URL_IMAGES } from '../../services/api';
 import { PRIMARY_COLOR } from '../../utils/constant';
 import { formatHoraires, getStatusColor, getStatusText, getTerrainImage } from '../../utils/functions';
 import { SIZES } from '../../theme/typography';
+import { COLORS } from '../../theme/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -74,50 +75,50 @@ const TerrainDetailsScreen: React.FC = () => {
 
             {/* Contenu scrollable */}
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            {/* Images du terrain en scroll horizontal - EN DEHORS du ScrollView */}
-            <View style={styles.imagesContainer}>
-                <FlatList
-                    ref={imagesFlatListRef}
-                    data={images}
-                    renderItem={renderImage}
-                    keyExtractor={(item, index) => index.toString()}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    pagingEnabled
-                    onMomentumScrollEnd={handleImageScroll}
-                    style={styles.imagesScroll}
-                />
+                {/* Images du terrain en scroll horizontal - EN DEHORS du ScrollView */}
+                <View style={styles.imagesContainer}>
+                    <FlatList
+                        ref={imagesFlatListRef}
+                        data={images}
+                        renderItem={renderImage}
+                        keyExtractor={(item, index) => index.toString()}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        pagingEnabled
+                        onMomentumScrollEnd={handleImageScroll}
+                        style={styles.imagesScroll}
+                    />
 
-                {/* Indicateurs d'images si plusieurs images */}
-                {images.length > 1 && (
-                    <View style={styles.paginationContainer}>
-                        {images.map((_, index) => (
-                            <View
-                                key={index}
-                                style={[
-                                    styles.paginationDot,
-                                    index === currentImageIndex && styles.paginationDotActive
-                                ]}
-                            />
-                        ))}
-                    </View>
-                )}
+                    {/* Indicateurs d'images si plusieurs images */}
+                    {images.length > 1 && (
+                        <View style={styles.paginationContainer}>
+                            {images.map((_, index) => (
+                                <View
+                                    key={index}
+                                    style={[
+                                        styles.paginationDot,
+                                        index === currentImageIndex && styles.paginationDotActive
+                                    ]}
+                                />
+                            ))}
+                        </View>
+                    )}
 
-                {/* Overlay avec bouton retour et statut */}
-                <View style={styles.imageOverlay}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={handleBack}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="#fff" />
-                    </TouchableOpacity>
-                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(terrain.terrainDisponibilite) }]}>
-                        <Text style={styles.statusText}>
-                            {getStatusText(terrain.terrainDisponibilite)}
-                        </Text>
+                    {/* Overlay avec bouton retour et statut */}
+                    <View style={styles.imageOverlay}>
+                        <TouchableOpacity
+                            style={styles.backButton}
+                            onPress={handleBack}
+                        >
+                            <Ionicons name="arrow-back" size={24} color="#fff" />
+                        </TouchableOpacity>
+                        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(terrain.terrainDisponibilite) }]}>
+                            <Text style={styles.statusText}>
+                                {getStatusText(terrain.terrainDisponibilite)}
+                            </Text>
+                        </View>
                     </View>
                 </View>
-            </View>
                 {/* Informations principales */}
                 <View style={styles.mainInfo}>
                     <View style={styles.titleRow}>
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.2)',
+        backgroundColor: COLORS.overlayLight,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     backButton: {
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: COLORS.overlay,
         borderRadius: 20,
         padding: 8,
     },
@@ -267,7 +268,7 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: 'rgba(255,255,255,0.5)',
+        backgroundColor: COLORS.whiteOverlayLight,
         marginHorizontal: 4,
     },
     paginationDotActive: {

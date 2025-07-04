@@ -6,7 +6,7 @@ export interface Sport {
     sportId: number;
     sportNom: string;
     sportIcone: string;
-    sportStatus: boolean;
+    sportStatus: number;
     createdAt: string;
     updatedAt: string;
 }
@@ -14,13 +14,13 @@ export interface Sport {
 export interface CreateSportData {
     sportNom: string;
     sportIcone?: string;
-    sportStatus?: boolean;
+    sportStatus?: number;
 }
 
 export interface UpdateSportData {
     sportNom?: string;
     sportIcone?: string;
-    sportStatus?: boolean;
+    sportStatus?: number;
 }
 
 export interface SportsResponse {
@@ -64,8 +64,7 @@ export interface SportsStatistics {
     }>;
 }
 
-// Configuration de l'API pour les requêtes publiques
-const API_URL = 'http://192.168.100.4:50015/v1';
+
 
 export const sportService = {
     /**
@@ -73,7 +72,7 @@ export const sportService = {
      */
     getAllSports: async (): Promise<PaginatedSportsResponse['data']> => {
         try {
-            const response = await api.get<PaginatedSportsResponse>(`/sports/fetchAll`);
+            const response = await api.get<PaginatedSportsResponse>(`/sports/active`);
             return response.data.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des sports:', error);
@@ -100,7 +99,7 @@ export const sportService = {
     getActiveSports: async (): Promise<Sport[]> => {
         try {
             // Utiliser axios directement pour éviter l'authentification automatique
-            const response = await axios.get<SportsResponse>(`${API_URL}/sports/active`);
+            const response = await api.get<SportsResponse>(`/sports/active`);
             return response.data.data;
         } catch (error: any) {
             console.error('Erreur lors de la récupération des sports actifs:', error);

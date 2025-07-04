@@ -7,7 +7,7 @@ interface Sport {
     sportId: number;
     sportNom: string;
     sportIcone: string;
-    sportStatus: boolean;
+    sportStatus: number;
 }
 
 interface SummaryProps {

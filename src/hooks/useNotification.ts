@@ -7,75 +7,103 @@ import {
   setNotificationCount,
 } from '../store/slices/userSlice';
 
-// Interface pour le hook
+/**
+ * Interface définissant le type de retour du hook useNotification
+ * Contient toutes les propriétés et méthodes exposées par le hook
+ */
 interface UseNotificationReturn {
-  notifications: Notification[];
-  isLoading: boolean;
-  error: string | null;
-  hasMoreData: boolean;
-  currentPage: number;
-  notificationCount: number;
-  loadMoreData: () => void;
-  refreshData: () => void;
-  markAsRead: (notificationId: number) => Promise<void>;
-  markAllAsRead: () => Promise<void>;
-  deleteNotification: (notificationId: number) => Promise<void>;
-  handleEndReached: () => void;
-  handleRefresh: () => void;
-  handleNotificationPress: (notification: Notification) => Promise<void>;
-  handleMarkAllAsRead: () => Promise<void>;
+  notifications: Notification[];           // Liste des notifications
+  isLoading: boolean;                      // État de chargement
+  error: string | null;                    // Message d'erreur éventuel
+  hasMoreData: boolean;                    // Indique s'il y a plus de données à charger
+  currentPage: number;                     // Page actuelle pour la pagination
+  notificationCount: number;               // Nombre total de notifications non lues
+  loadMoreData: () => void;                // Fonction pour charger plus de données
+  refreshData: () => void;                 // Fonction pour rafraîchir les données
+  markAsRead: (notificationId: number) => Promise<void>;  // Marquer une notification comme lue
+  markAllAsRead: () => Promise<void>;      // Marquer toutes les notifications comme lues
+  deleteNotification: (notificationId: number) => Promise<void>;  // Supprimer une notification
+  handleEndReached: () => void;            // Gestionnaire pour la fin de liste (infinite scroll)
+  handleRefresh: () => void;               // Gestionnaire pour le pull-to-refresh
+  handleNotificationPress: (notification: Notification) => Promise<void>;  // Gestionnaire de clic sur notification
+  handleMarkAllAsRead: () => Promise<void>; // Gestionnaire pour marquer tout comme lu
 }
 
+/**
+ * Hook personnalisé pour gérer les notifications de l'utilisateur
+ * Fournit une interface complète pour charger, afficher et manipuler les notifications
+ * 
+ * Fonctionnalités principales :
+ * - Chargement paginé des notifications
+ * - Gestion du compteur de notifications non lues
+ * - Marquage comme lu (individuel et global)
+ * - Suppression de notifications
+ * - Support de l'infinite scroll
+ * - Pull-to-refresh
+ * 
+ * @returns {UseNotificationReturn} Objet contenant l'état et les méthodes de gestion
+ */
 export const useNotification = (): UseNotificationReturn => {
+  // Hooks Redux pour accéder au store global
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
   const notificationCount = useAppSelector(selectNotificationCount);
   const utilisateurId = user?.utilisateurId;
 
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMoreData, setHasMoreData] = useState(true);
+  // États locaux du hook
+  const [notifications, setNotifications] = useState<Notification[]>([]);  // Liste des notifications
+  const [isLoading, setIsLoading] = useState(false);                       // État de chargement
+  const [error, setError] = useState<string | null>(null);                 // Message d'erreur
+  const [currentPage, setCurrentPage] = useState(1);                       // Page actuelle
+  const [hasMoreData, setHasMoreData] = useState(true);                    // Indicateur de données supplémentaires
 
-  const ITEMS_PER_PAGE = 10;
+  // Constantes de configuration
+  const ITEMS_PER_PAGE = 10;  // Nombre d'éléments par page pour la pagination
 
-  // Ref pour éviter les appels simultanés
-  const loadingRef = useRef(false);
-  const unreadCountTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Références pour éviter les appels simultanés et gérer les timeouts
+  const loadingRef = useRef(false);  // Évite les appels simultanés de chargement
+  const unreadCountTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);  // Timeout pour le rechargement du compteur
 
   /**
-   * Charge les notifications paginées.
-   * @param page - Numéro de la page.
-   * @param append - Si true, ajoute à la liste existante.
+   * Charge les notifications paginées depuis l'API
+   * @param page - Numéro de la page à charger (défaut: 1)
+   * @param append - Si true, ajoute les nouvelles notifications à la liste existante
+   *                Si false, remplace complètement la liste
    */
   const loadNotifications = useCallback(
     async (page: number = 1, append: boolean = false) => {
+      // Vérifications de sécurité
       if (!utilisateurId || loadingRef.current) return;
 
       try {
+        // Début du chargement
         loadingRef.current = true;
         setIsLoading(true);
         setError(null);
 
+        // Appel à l'API pour récupérer les notifications
         const newNotifications = await notificationService.getNotificationsWithPagination(
           utilisateurId,
           page,
           ITEMS_PER_PAGE
         );
 
+        // Vérification s'il y a plus de données à charger
         if (newNotifications.length < ITEMS_PER_PAGE) {
           setHasMoreData(false);
         }
 
+        // Mise à jour de l'état des notifications
         setNotifications(prev =>
           append ? [...prev, ...newNotifications] : newNotifications
         );
         setCurrentPage(page);
       } catch (err) {
+        // Gestion des erreurs
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
         console.error('Erreur lors du chargement des notifications:', err);
       } finally {
+        // Fin du chargement
         setIsLoading(false);
         loadingRef.current = false;
       }
@@ -84,7 +112,8 @@ export const useNotification = (): UseNotificationReturn => {
   );
 
   /**
-   * Charge le nombre de notifications non lues.
+   * Charge le nombre de notifications non lues depuis l'API
+   * Met à jour le store Redux avec le nouveau compteur
    */
   const loadUnreadCount = useCallback(async () => {
     if (!utilisateurId) return;
@@ -98,7 +127,8 @@ export const useNotification = (): UseNotificationReturn => {
   }, [utilisateurId]);
 
   /**
-   * Charge plus de notifications (pagination).
+   * Charge la page suivante de notifications (pagination)
+   * Utilisée pour l'infinite scroll
    */
   const loadMoreData = useCallback(() => {
     if (!isLoading && hasMoreData && !loadingRef.current) {
@@ -107,14 +137,15 @@ export const useNotification = (): UseNotificationReturn => {
   }, [isLoading, hasMoreData, currentPage, loadNotifications]);
 
   /**
-   * Rafraîchit la liste des notifications et recharge le compteur.
+   * Rafraîchit complètement la liste des notifications
+   * Remet à zéro la pagination et recharge le compteur avec un délai
    */
   const refreshData = useCallback(() => {
     setHasMoreData(true);
     setCurrentPage(1);
     loadNotifications(1, false);
 
-    // Recharger le compteur avec délai pour éviter surcharge
+    // Recharger le compteur avec délai pour éviter la surcharge
     if (unreadCountTimeoutRef.current) {
       clearTimeout(unreadCountTimeoutRef.current);
     }
@@ -124,13 +155,16 @@ export const useNotification = (): UseNotificationReturn => {
   }, [loadNotifications, loadUnreadCount]);
 
   /**
-   * Marque une notification comme lue.
+   * Marque une notification spécifique comme lue
+   * @param notificationId - ID de la notification à marquer comme lue
    */
   const markAsRead = useCallback(
     async (notificationId: number) => {
       try {
+        // Appel à l'API pour marquer comme lu
         await notificationService.markNotificationAsRead(notificationId);
 
+        // Mise à jour locale de l'état
         setNotifications(prev =>
           prev.map(notification =>
             notification.notificationId === notificationId
@@ -139,6 +173,7 @@ export const useNotification = (): UseNotificationReturn => {
           )
         );
 
+        // Rechargement du compteur avec délai
         if (unreadCountTimeoutRef.current) {
           clearTimeout(unreadCountTimeoutRef.current);
         }
@@ -154,18 +189,22 @@ export const useNotification = (): UseNotificationReturn => {
   );
 
   /**
-   * Marque toutes les notifications comme lues.
+   * Marque toutes les notifications de l'utilisateur comme lues
+   * Met à jour le store Redux directement
    */
   const markAllAsRead = useCallback(async () => {
     if (!utilisateurId) return;
 
     try {
+      // Appel à l'API pour marquer toutes les notifications comme lues
       await notificationService.markAllNotificationsAsRead(utilisateurId);
 
+      // Mise à jour locale de toutes les notifications
       setNotifications(prev =>
         prev.map(notification => ({ ...notification, notificationLue: true }))
       );
 
+      // Mise à jour du compteur dans le store Redux
       dispatch(setNotificationCount(0));
     } catch (err) {
       console.error('Erreur lors du marquage global comme lu:', err);
@@ -174,18 +213,24 @@ export const useNotification = (): UseNotificationReturn => {
   }, [utilisateurId]);
 
   /**
-   * Supprime une notification.
+   * Supprime une notification spécifique
+   * @param notificationId - ID de la notification à supprimer
    */
   const deleteNotification = useCallback(
     async (notificationId: number) => {
       try {
+        // Appel à l'API pour supprimer la notification
         await notificationService.deleteNotification(notificationId);
 
+        // Récupération de la notification avant suppression pour vérifier son état
         const toDelete = notifications.find(n => n.notificationId === notificationId);
+        
+        // Suppression de la notification de la liste locale
         setNotifications(prev =>
           prev.filter(notification => notification.notificationId !== notificationId)
         );
 
+        // Mise à jour du compteur si la notification n'était pas lue
         if (toDelete && !toDelete.notificationLue) {
           dispatch(setNotificationCount(notificationCount - 1));
         }
@@ -198,7 +243,8 @@ export const useNotification = (): UseNotificationReturn => {
   );
 
   /**
-   * Gère la fin de liste (infinite scroll).
+   * Gestionnaire pour la fin de liste (infinite scroll)
+   * Appelé quand l'utilisateur atteint la fin de la liste
    */
   const handleEndReached = () => {
     if (hasMoreData && !isLoading) {
@@ -207,14 +253,17 @@ export const useNotification = (): UseNotificationReturn => {
   };
 
   /**
-   * Rafraîchit les données manuellement (pull to refresh).
+   * Gestionnaire pour le pull-to-refresh
+   * Rafraîchit manuellement les données
    */
   const handleRefresh = useCallback(() => {
     refreshData();
   }, [refreshData]);
 
   /**
-   * Gère le clic sur une notification.
+   * Gestionnaire de clic sur une notification
+   * Marque automatiquement la notification comme lue si elle ne l'était pas
+   * @param notification - Notification cliquée
    */
   const handleNotificationPress = useCallback(
     async (notification: Notification) => {
@@ -230,7 +279,8 @@ export const useNotification = (): UseNotificationReturn => {
   );
 
   /**
-   * Gère le bouton "tout marquer comme lu".
+   * Gestionnaire pour le bouton "tout marquer comme lu"
+   * Gère les erreurs et affiche les messages appropriés
    */
   const handleMarkAllAsRead = useCallback(async () => {
     try {
@@ -241,16 +291,20 @@ export const useNotification = (): UseNotificationReturn => {
   }, [markAllAsRead]);
 
   /**
-   * Chargement initial des notifications et du compteur.
+   * Effet pour le chargement initial des données
+   * Se déclenche quand l'utilisateur change ou au montage du composant
    */
   useEffect(() => {
     if (utilisateurId) {
+      // Chargement initial des notifications
       loadNotifications(1, false);
 
+      // Chargement du compteur avec un délai pour éviter la surcharge
       const timer = setTimeout(() => {
         loadUnreadCount();
       }, 500);
 
+      // Nettoyage des timeouts au démontage
       return () => {
         clearTimeout(timer);
         if (unreadCountTimeoutRef.current) {
@@ -261,7 +315,8 @@ export const useNotification = (): UseNotificationReturn => {
   }, [utilisateurId, loadNotifications, loadUnreadCount]);
 
   /**
-   * Nettoyage des timeouts au démontage.
+   * Effet de nettoyage pour les timeouts
+   * S'assure que tous les timeouts sont nettoyés au démontage du composant
    */
   useEffect(() => {
     return () => {
@@ -271,6 +326,7 @@ export const useNotification = (): UseNotificationReturn => {
     };
   }, []);
 
+  // Retour de toutes les propriétés et méthodes du hook
   return {
     notifications,
     isLoading,

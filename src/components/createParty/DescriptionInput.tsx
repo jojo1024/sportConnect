@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     descriptionInput: {
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.whiteOverlayMedium,
         padding: 16,
         borderRadius: 12,
         borderWidth: 1,

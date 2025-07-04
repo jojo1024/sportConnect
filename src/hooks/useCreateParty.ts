@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CreateMatchData, matchService } from '../services/matchService';
 import { Terrain, terrainService } from '../services/terrainService';
 import { useSport } from './useSport';
@@ -6,151 +6,166 @@ import { store } from '../store';
 import { useApiError } from './useApiError';
 import { useCustomAlert } from './useCustomAlert';
 import { PARTICIPANTS_LIMITS } from '../utils/constant';
+import { formatDateForMySQL } from '../utils/functions';
 
 // Types
-export interface Field {
-    id: string;
-    name: string;
-    location: string;
-    schedule: string;
-    pricePerHour: number;
-    image: string;
-}
+// export interface TerrainOption {
+//     id: string;
+//     name: string;
+//     location: string;
+//     schedule: string;
+//     pricePerHour: number;
+//     image: string;
+// }
 
 export interface CreatePartyFormData {
-    selectedFieldId: string;
-    selectedFieldName: string;
-    date: Date;
-    duration: number;
-    numberOfParticipants: number;
+    selectedTerrainId: string;
+    selectedTerrainName: string;
+    selectedDate: Date;
+    durationHours: number;
+    participantCount: number;
     description: string;
-    sportId: number | null;
+    selectedSportId: number | null;
 }
 
-export interface CreatePartyValidation {
+export interface FormValidationResult {
     isValid: boolean;
-    errors: string[];
+    errorMessages: string[];
 }
-
 
 // Validation functions
-const validateForm = (formData: CreatePartyFormData): CreatePartyValidation => {
-    const errors: string[] = [];
+const validateCreatePartyForm = (formData: CreatePartyFormData): FormValidationResult => {
+    const errorMessages: string[] = [];
 
-    if (!formData.selectedFieldId) {
-        errors.push('Veuillez sélectionner un terrain');
+    if (!formData.selectedTerrainId) {
+        errorMessages.push('Veuillez sélectionner un terrain');
     }
 
-    if (!formData.sportId) {
-        errors.push('Veuillez sélectionner un sport');
+    if (!formData.selectedSportId) {
+        errorMessages.push('Veuillez sélectionner un sport');
     }
 
-    if (!formData.date) {
-        errors.push('Veuillez sélectionner une date');
+    if (!formData.selectedDate) {
+        errorMessages.push('Veuillez sélectionner une date');
     } else {
-        const now = new Date();
-        const selectedDate = new Date(formData.date);
+        const currentDate = new Date();
+        const selectedDate = new Date(formData.selectedDate);
         
         // Vérifier que la date est dans le futur
-        if (selectedDate <= now) {
-            errors.push('La date doit être dans le futur');
+        if (selectedDate <= currentDate) {
+            errorMessages.push('La date doit être dans le futur');
         }
         
         // Vérifier que la date n'est pas trop éloignée (max 3 mois)
-        const threeMonthsFromNow = new Date();
-        threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
-        if (selectedDate > threeMonthsFromNow) {
-            errors.push('La date ne peut pas être plus de 3 mois dans le futur');
+        const maxAllowedDate = new Date();
+        maxAllowedDate.setMonth(maxAllowedDate.getMonth() + 3);
+        if (selectedDate > maxAllowedDate) {
+            errorMessages.push('La date ne peut pas être plus de 3 mois dans le futur');
         }
     }
 
-    if (formData.duration < 1) {
-        errors.push('La durée doit être d\'au moins 1 heure');
+    if (formData.durationHours < 1) {
+        errorMessages.push('La durée doit être d\'au moins 1 heure');
     }
 
-    if (formData.duration > 24) {
-        errors.push('La durée ne peut pas dépasser 24 heures');
+    if (formData.durationHours > 24) {
+        errorMessages.push('La durée ne peut pas dépasser 24 heures');
     }
 
-    if (formData.numberOfParticipants < PARTICIPANTS_LIMITS.MIN || 
-        formData.numberOfParticipants > PARTICIPANTS_LIMITS.MAX) {
-        errors.push(`Le nombre de participants doit être entre ${PARTICIPANTS_LIMITS.MIN} et ${PARTICIPANTS_LIMITS.MAX}`);
+    if (formData.participantCount < PARTICIPANTS_LIMITS.MIN || 
+        formData.participantCount > PARTICIPANTS_LIMITS.MAX) {
+        errorMessages.push(`Le nombre de participants doit être entre ${PARTICIPANTS_LIMITS.MIN} et ${PARTICIPANTS_LIMITS.MAX}`);
     }
 
     if (formData.description.length > 170) {
-        errors.push('La description ne peut pas dépasser 170 caractères');
+        errorMessages.push('La description ne peut pas dépasser 170 caractères');
     }
 
     return {
-        isValid: errors.length === 0,
-        errors,
+        isValid: errorMessages.length === 0,
+        errorMessages,
     };
 };
 
 // Hook principal
 export const useCreateParty = () => {
-    const { handleApiError, requiresReconnection } = useApiError();
-    const { showError, showSuccess, showWarning } = useCustomAlert();
-    const { activeSports, loading: loadingSports, error: sportError, fetchActiveSports } = useSport();
+    const { handleApiError } = useApiError();
+    const { showError } = useCustomAlert();
+    const { 
+        activeSports, 
+        loading: isLoadingSports, 
+        error: sportsError, 
+        fetchActiveSports 
+    } = useSport();
 
-    // State principal
+    // Refs pour les bottom sheets
+    const terrainBottomSheetRef = useRef<any>(null);
+    const sportBottomSheetRef = useRef<any>(null);
+
+    // État principal du formulaire
     const [formData, setFormData] = useState<CreatePartyFormData>({
-        selectedFieldId: '',
-        selectedFieldName: '',
-        date: new Date(),
-        duration: 1,
-        numberOfParticipants: PARTICIPANTS_LIMITS.DEFAULT,
+        selectedTerrainId: '',
+        selectedTerrainName: '',
+        selectedDate: new Date(),
+        durationHours: 1,
+        participantCount: PARTICIPANTS_LIMITS.DEFAULT,
         description: '',
-        sportId: null,
+        selectedSportId: null,
     });
 
-    // State UI
-    const [searchQuery, setSearchQuery] = useState('');
-    const [sportSearchQuery, setSportSearchQuery] = useState('');
-    const [showDatePicker, setShowDatePicker] = useState(false);
-    const [showTimePicker, setShowTimePicker] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    // État de l'interface utilisateur
+    const [terrainSearchTerm, setTerrainSearchTerm] = useState('');
+    const [sportSearchTerm, setSportSearchTerm] = useState('');
+    const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
+    const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
+    const [isSubmittingForm, setIsSubmittingForm] = useState(false);
     const [isLoadingTerrains, setIsLoadingTerrains] = useState(false);
-    const [terrains, setTerrains] = useState<Terrain[]>([]);
-    const [error, setError] = useState<string | null>(null);
+    const [availableTerrains, setAvailableTerrains] = useState<Terrain[]>([]);
+    const [formError, setFormError] = useState<string | null>(null);
 
-    // State pour le modal de succès
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [createdMatch, setCreatedMatch] = useState<any>(null);
+    // État du modal de succès
+    const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+    const [createdMatchData, setCreatedMatchData] = useState<any>(null);
 
-    // Computed values
-    const filteredFields = terrains.filter(terrain =>
-        terrain.terrainNom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        terrain.terrainLocalisation.toLowerCase().includes(searchQuery.toLowerCase())
-    ).map(terrain => ({
-        id: terrain.terrainId.toString(),
-        name: terrain.terrainNom,
-        location: terrain.terrainLocalisation,
-        schedule: terrain.terrainHoraires,
-        pricePerHour: terrain.terrainPrixParHeure,
-        image: terrain.terrainImages?.[0] || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=500',
-    }));
+    // Valeurs calculées
+    const filteredTerrains = availableTerrains
+        .filter(terrain =>
+            terrain.terrainNom.toLowerCase().includes(terrainSearchTerm.toLowerCase()) ||
+            terrain.terrainLocalisation.toLowerCase().includes(terrainSearchTerm.toLowerCase())
+        )
+        // .map(terrain => ({
+        //     id: terrain.terrainId.toString(),
+        //     name: terrain.terrainNom,
+        //     location: terrain.terrainLocalisation,
+        //     schedule: terrain.terrainHoraires,
+        //     pricePerHour: terrain.terrainPrixParHeure,
+        //     image: terrain.terrainImages?.[0] || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=500',
+        // }));
 
     const filteredSports = activeSports.filter(sport =>
-        sport.sportNom.toLowerCase().includes(sportSearchQuery.toLowerCase())
+        sport.sportNom.toLowerCase().includes(sportSearchTerm.toLowerCase())
     );
 
-    const validation = validateForm(formData);
+    const formValidation = validateCreatePartyForm(formData);
 
-    const selectedField = terrains.find(terrain => terrain.terrainId.toString() === formData.selectedFieldId);
-    const selectedSport = activeSports.find(sport => sport.sportId === formData.sportId);
+    const selectedTerrain = availableTerrains.find(
+        terrain => terrain.terrainId.toString() === formData.selectedTerrainId
+    );
+    const selectedSport = activeSports.find(
+        sport => sport.sportId === formData.selectedSportId
+    );
 
     // Charger les terrains depuis l'API
-    const loadTerrains = useCallback(async () => {
+    const loadAvailableTerrains = useCallback(async () => {
         try {
             setIsLoadingTerrains(true);
-            setError(null);
+            setFormError(null);
             const terrainsData = await terrainService.getAllTerrains("confirme");
-            setTerrains(terrainsData);
-        } catch (err: any) {
-            const errorResult = handleApiError(err);
-            setError(errorResult.message);
-            console.error('Erreur lors du chargement des terrains:', err);
+            setAvailableTerrains(terrainsData);
+        } catch (error: any) {
+            const errorResult = handleApiError(error);
+            setFormError(errorResult.message);
+            console.error('Erreur lors du chargement des terrains:', error);
         } finally {
             setIsLoadingTerrains(false);
         }
@@ -158,8 +173,8 @@ export const useCreateParty = () => {
 
     // Fonction de retry pour charger les terrains
     const retryLoadTerrains = useCallback(() => {
-        loadTerrains();
-    }, [loadTerrains]);
+        loadAvailableTerrains();
+    }, [loadAvailableTerrains]);
 
     // Fonction de retry pour charger les sports
     const retryLoadSports = useCallback(() => {
@@ -168,288 +183,285 @@ export const useCreateParty = () => {
 
     // Charger les terrains au montage du composant
     useEffect(() => {
-        loadTerrains();
-    }, [loadTerrains]);
+        loadAvailableTerrains();
+    }, [loadAvailableTerrains]);
 
     // Charger les sports actifs au montage du composant
     useEffect(() => {
         fetchActiveSports();
     }, []);
 
-    // Form update handlers
+    // Gestionnaires de mise à jour du formulaire
     const updateFormData = useCallback((updates: Partial<CreatePartyFormData>) => {
         setFormData(prev => ({ ...prev, ...updates }));
     }, []);
 
-    const setSelectedField = useCallback((field: Field) => {
+    const selectTerrain = useCallback((terrain: Terrain) => {
         updateFormData({
-            selectedFieldId: field.id,
-            selectedFieldName: field.name,
+            selectedTerrainId: terrain?.terrainId.toString(),
+            selectedTerrainName: terrain.terrainNom,
         });
     }, [updateFormData]);
 
-    const setSport = useCallback((sport: any) => {
-        updateFormData({ sportId: sport.sportId });
+    const selectSport = useCallback((sport: any) => {
+        updateFormData({ selectedSportId: sport.sportId });
     }, [updateFormData]);
 
-    const setDate = useCallback((date: Date) => {
-        updateFormData({ date });
+    const updateSelectedDate = useCallback((date: Date) => {
+        updateFormData({ selectedDate: date });
     }, [updateFormData]);
 
-    const setDuration = useCallback((duration: number) => {
-        updateFormData({ duration });
+    const updateDurationHours = useCallback((durationHours: number) => {
+        updateFormData({ durationHours });
     }, [updateFormData]);
 
-    const setNumberOfParticipants = useCallback((numberOfParticipants: number) => {
-        updateFormData({ numberOfParticipants });
+    const updateParticipantCount = useCallback((participantCount: number) => {
+        updateFormData({ participantCount });
     }, [updateFormData]);
 
-    const setDescription = useCallback((description: string) => {
+    const updateDescription = useCallback((description: string) => {
         updateFormData({ description });
     }, [updateFormData]);
 
-    // Participants handlers
-    const increaseParticipants = useCallback(() => {
+    // Gestionnaires des participants
+    const incrementParticipantCount = useCallback(() => {
         setFormData(prev => {
-            if (prev.numberOfParticipants < PARTICIPANTS_LIMITS.MAX) {
-                return { ...prev, numberOfParticipants: prev.numberOfParticipants + 1 };
+            if (prev.participantCount < PARTICIPANTS_LIMITS.MAX) {
+                return { ...prev, participantCount: prev.participantCount + 1 };
             }
             return prev;
         });
     }, []);
 
-    const decreaseParticipants = useCallback(() => {
+    const decrementParticipantCount = useCallback(() => {
         setFormData(prev => {
-            if (prev.numberOfParticipants > PARTICIPANTS_LIMITS.MIN) {
-                return { ...prev, numberOfParticipants: prev.numberOfParticipants - 1 };
+            if (prev.participantCount > PARTICIPANTS_LIMITS.MIN) {
+                return { ...prev, participantCount: prev.participantCount - 1 };
             }
             return prev;
         });
     }, []);
 
-    // Date/Time handlers
-    const handleDateChange = useCallback((event: any, selectedDate?: Date) => {
-        setShowDatePicker(false);
-        setShowTimePicker(false);
+    // Gestionnaires de date/heure
+    const handleDateTimeChange = useCallback((event: any, selectedDate?: Date) => {
+        setIsDatePickerVisible(false);
+        setIsTimePickerVisible(false);
         if (selectedDate) {
-            setDate(selectedDate);
+            updateSelectedDate(selectedDate);
         }
-    }, [setDate]);
+    }, [updateSelectedDate]);
 
-    const openDatePicker = useCallback(() => {
-        setShowDatePicker(true);
+    const showDatePicker = useCallback(() => {
+        setIsDatePickerVisible(true);
     }, []);
 
-    const openTimePicker = useCallback(() => {
-        setShowTimePicker(true);
+    const showTimePicker = useCallback(() => {
+        setIsTimePickerVisible(true);
     }, []);
 
-    // Search handlers
-    const updateSearchQuery = useCallback((query: string) => {
-        setSearchQuery(query);
+    // Gestionnaires de recherche
+    const updateTerrainSearchTerm = useCallback((searchTerm: string) => {
+        setTerrainSearchTerm(searchTerm);
     }, []);
 
-    const updateSportSearchQuery = useCallback((query: string) => {
-        setSportSearchQuery(query);
+    const updateSportSearchTerm = useCallback((searchTerm: string) => {
+        setSportSearchTerm(searchTerm);
     }, []);
 
-    // Formater les dates au format attendu par MySQL (YYYY-MM-DD HH:MM:SS)
-    const formatDateForMySQL = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    };
+    // Gestionnaires des bottom sheets
+    const openTerrainSelector = useCallback(() => {
+        terrainBottomSheetRef.current?.open();
+    }, []);
 
-    // Submit handler
-    const handleSubmit = useCallback(async () => {
-        console.log('🚀 handleSubmit appelé');
-        console.log('🚀 validation.isValid:', validation.isValid);
+    const closeTerrainSelector = useCallback(() => {
+        terrainBottomSheetRef.current?.close();
+    }, []);
+
+    const openSportSelector = useCallback(() => {
+        sportBottomSheetRef.current?.open();
+    }, []);
+
+    const closeSportSelector = useCallback(() => {
+        sportBottomSheetRef.current?.close();
+    }, []);
+
+    // Gestionnaires de sélection
+    const handleTerrainSelection = useCallback((terrain: Terrain) => {
+        selectTerrain(terrain);
+        closeTerrainSelector();
+    }, [selectTerrain, closeTerrainSelector]);
+
+    const handleSportSelection = useCallback((sport: any) => {
+        selectSport(sport);
+        closeSportSelector();
+    }, [selectSport, closeSportSelector]);
+
+    // Gestionnaire de soumission
+    const submitCreatePartyForm = useCallback(async () => {
+        console.log('🚀 submitCreatePartyForm appelé');
+        console.log('🚀 formValidation.isValid:', formValidation.isValid);
         
-        if (!validation.isValid) {
+        if (!formValidation.isValid) {
             showError('Erreur de validation', 'Veuillez corriger les erreurs dans le formulaire');
             return;
         }
 
         try {
-            setIsSubmitting(true);
-            setError(null);
+            setIsSubmittingForm(true);
+            setFormError(null);
 
-            const user = store.getState().user.user;
-            if (!user) {
+            const currentUser = store.getState().user.user;
+            if (!currentUser) {
                 showError('Erreur d\'authentification', 'Utilisateur non connecté');
                 return;
             }
 
             // Calculer les dates de début et fin
-            const dateDebut = new Date(formData.date);
-            const dateFin = new Date(dateDebut.getTime() + formData.duration * 60 * 60 * 1000);
+            const startDate = new Date(formData.selectedDate);
+            const endDate = new Date(startDate.getTime() + formData.durationHours * 60 * 60 * 1000);
 
             // Préparer les données pour l'API
-            const matchData: CreateMatchData = {
-                terrainId: parseInt(formData.selectedFieldId),
-                matchDateDebut: formatDateForMySQL(dateDebut),
-                matchDateFin: formatDateForMySQL(dateFin),
-                matchDuree: formData.duration,
+            const matchCreationData: CreateMatchData = {
+                terrainId: parseInt(formData.selectedTerrainId),
+                matchDateDebut: formatDateForMySQL(startDate),
+                matchDateFin: formatDateForMySQL(endDate),
+                matchDuree: formData.durationHours,
                 matchDescription: formData.description,
-                matchNbreParticipant: formData.numberOfParticipants,
-                capoId: user.utilisateurId,
-                sportId: formData.sportId!, // On sait que sportId n'est pas null grâce à la validation
+                matchNbreParticipant: formData.participantCount,
+                capoId: currentUser.utilisateurId,
+                sportId: formData.selectedSportId!, // On sait que selectedSportId n'est pas null grâce à la validation
             };
 
-            console.log('🚀 ~ Données envoyées au backend:', matchData);
+            console.log('🚀 ~ Données envoyées au backend:', matchCreationData);
 
             // Appel API pour créer le match
-            const createdMatch = await matchService.createMatch(matchData);
+            const newMatch = await matchService.createMatch(matchCreationData);
             
             // Sauvegarder les détails du match créé pour le modal
-            setCreatedMatch(createdMatch);
-            setShowSuccessModal(true);
+            setCreatedMatchData(newMatch);
+            setIsSuccessModalVisible(true);
 
             // Reset du formulaire après succès
             setFormData({
-                selectedFieldId: '',
-                selectedFieldName: '',
-                date: new Date(),
-                duration: 1,
-                numberOfParticipants: PARTICIPANTS_LIMITS.DEFAULT,
+                selectedTerrainId: '',
+                selectedTerrainName: '',
+                selectedDate: new Date(),
+                durationHours: 1,
+                participantCount: PARTICIPANTS_LIMITS.DEFAULT,
                 description: '',
-                sportId: null,
+                selectedSportId: null,
             });
 
-        } catch (err: any) {
-            console.error('Erreur lors de la création du match:', err);
+        } catch (error: any) {
+            console.error('Erreur lors de la création du match:', error);
             
             // Gestion spécifique des erreurs de disponibilité de terrain
-            if (err?.response?.status === 400) {
-                const errorMessage = err?.response?.data?.message || 'Erreur lors de la création du match';
+            if (error?.response?.status === 400) {
+                const errorMessage = error?.response?.data?.message || 'Erreur lors de la création du match';
                 console.log('🚀 ~ Message d\'erreur de terrain:', errorMessage);
-                setError(errorMessage);
+                setFormError(errorMessage);
             } else {
-                const errorResult = handleApiError(err);
-                setError(errorResult.message);
+                const errorResult = handleApiError(error);
+                setFormError(errorResult.message);
             }
         } finally {
-            setIsSubmitting(false);
+            setIsSubmittingForm(false);
         }
     }, [
-        validation.isValid,
+        formValidation.isValid,
         formData,
         showError,
         handleApiError,
         setFormData,
-        setCreatedMatch,
-        setShowSuccessModal,
-        setError
+        setCreatedMatchData,
+        setIsSuccessModalVisible,
+        setFormError
     ]);
 
-    // Reset handler
-    const resetForm = useCallback(() => {
-        setFormData({
-            selectedFieldId: '',
-            selectedFieldName: '',
-            date: new Date(),
-            duration: 1,
-            numberOfParticipants: PARTICIPANTS_LIMITS.DEFAULT,
-            description: '',
-            sportId: null,
-        });
-        setSearchQuery('');
-        setShowDatePicker(false);
-        setShowTimePicker(false);
-    }, []);
 
-    // Utility functions
-    const formatDate = useCallback((date: Date) => {
-        return date.toLocaleDateString('fr-FR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-        });
-    }, []);
 
-    const formatTime = useCallback((date: Date) => {
-        return date.toLocaleTimeString('fr-FR', {
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    }, []);
+    // Valeurs calculées pour l'interface
+    const isMinParticipantCountReached = formData.participantCount <= PARTICIPANTS_LIMITS.MIN;
+    const isMaxParticipantCountReached = formData.participantCount >= PARTICIPANTS_LIMITS.MAX;
 
-    const isMinParticipantsReached = formData.numberOfParticipants <= PARTICIPANTS_LIMITS.MIN;
-    const isMaxParticipantsReached = formData.numberOfParticipants >= PARTICIPANTS_LIMITS.MAX;
-
-    // Modal handlers
-    const closeSuccessModal = useCallback(() => {
-        setShowSuccessModal(false);
-        setCreatedMatch(null);
+    // Gestionnaires du modal
+    const hideSuccessModal = useCallback(() => {
+        setIsSuccessModalVisible(false);
+        setCreatedMatchData(null);
     }, []);
 
     return {
-        // State
+        // Refs
+        terrainBottomSheetRef,
+        sportBottomSheetRef,
+
+        // État du formulaire
         formData,
-        searchQuery,
-        sportSearchQuery,
-        showDatePicker,
-        showTimePicker,
-        isSubmitting,
+        terrainSearchTerm,
+        sportSearchTerm,
+        isDatePickerVisible,
+        isTimePickerVisible,
+        isSubmittingForm,
         isLoadingTerrains,
-        error,
-        showSuccessModal,
-        createdMatch,
+        formError,
+        isSuccessModalVisible,
+        createdMatchData,
         
-        // Sports state
+        // État des sports
         activeSports,
-        loadingSports,
-        sportError,
+        isLoadingSports,
+        sportsError,
         selectedSport,
         
-        // Computed values
-        filteredFields,
+        // Valeurs calculées
+        filteredTerrains,
         filteredSports,
-        validation,
-        selectedField,
-        isMinParticipantsReached,
-        isMaxParticipantsReached,
+        formValidation,
+        selectedTerrain,
+        isMinParticipantCountReached,
+        isMaxParticipantCountReached,
         
-        // Form handlers
+        // Gestionnaires du formulaire
         updateFormData,
-        setSelectedField,
-        setSport,
-        setDate,
-        setDuration,
-        setNumberOfParticipants,
-        setDescription,
+        selectTerrain,
+        selectSport,
+        updateSelectedDate,
+        updateDurationHours,
+        updateParticipantCount,
+        updateDescription,
         
-        // Participants handlers
-        increaseParticipants,
-        decreaseParticipants,
+        // Gestionnaires des participants
+        incrementParticipantCount,
+        decrementParticipantCount,
         
-        // Date/Time handlers
-        handleDateChange,
-        openDatePicker,
-        openTimePicker,
+        // Gestionnaires de date/heure
+        handleDateTimeChange,
+        showDatePicker,
+        showTimePicker,
         
-        // Search handlers
-        updateSearchQuery,
-        updateSportSearchQuery,
+        // Gestionnaires de recherche
+        updateTerrainSearchTerm,
+        updateSportSearchTerm,
+
+        // Gestionnaires des bottom sheets
+        openTerrainSelector,
+        closeTerrainSelector,
+        openSportSelector,
+        closeSportSelector,
+
+        // Gestionnaires de sélection
+        handleTerrainSelection,
+        handleSportSelection,
         
-        // Submit handlers
-        handleSubmit,
-        resetForm,
-        
-        // Utility functions
-        formatDate,
-        formatTime,
-        
-        // Data loading
-        loadTerrains,
+        // Gestionnaires de soumission
+        submitCreatePartyForm,
+
+        // Chargement des données
+        loadAvailableTerrains,
         retryLoadTerrains,
         retryLoadSports,
         
-        // Modal handlers
-        closeSuccessModal,
+        // Gestionnaires du modal
+        hideSuccessModal,
     };
 }; 

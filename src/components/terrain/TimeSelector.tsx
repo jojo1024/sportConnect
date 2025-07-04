@@ -22,20 +22,20 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.gray[100],
         padding: 12,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#e9ecef',
+        borderColor: COLORS.gray[200],
     },
     timeSelectorLabel: {
         fontSize: 14,
-        color: '#666',
+        color: COLORS.darkGray,
     },
     timeSelectorValue: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#333',
+        color: COLORS.darkestGray,
     },
 });
 

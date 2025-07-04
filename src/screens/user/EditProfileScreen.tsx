@@ -18,7 +18,7 @@ const EditProfileScreen: React.FC = () => {
             </View>
             <View style={styles.card}>
                 <View style={styles.row}>
-                    <MaterialIcons name="person" size={20} color="#888" />
+                    <MaterialIcons name="person" size={20} color={COLORS.gray[500]} />
                     <TextInput
                         style={styles.input}
                         value={name}
@@ -27,7 +27,7 @@ const EditProfileScreen: React.FC = () => {
                     />
                 </View>
                 <View style={styles.row}>
-                    <MaterialIcons name="email" size={20} color="#888" />
+                    <MaterialIcons name="email" size={20} color={COLORS.gray[500]} />
                     <TextInput
                         style={styles.input}
                         value={email}
@@ -37,7 +37,7 @@ const EditProfileScreen: React.FC = () => {
                     />
                 </View>
                 <View style={styles.row}>
-                    <MaterialCommunityIcons name="city" size={20} color="#888" />
+                    <MaterialCommunityIcons name="city" size={20} color={COLORS.gray[500]} />
                     <TextInput
                         style={styles.input}
                         value={city}
@@ -46,7 +46,7 @@ const EditProfileScreen: React.FC = () => {
                     />
                 </View>
                 <View style={styles.row}>
-                    <FontAwesome5 name="birthday-cake" size={18} color="#888" />
+                    <FontAwesome5 name="birthday-cake" size={18} color={COLORS.gray[500]} />
                     <TextInput
                         style={styles.input}
                         value={birthday}
@@ -55,7 +55,7 @@ const EditProfileScreen: React.FC = () => {
                     />
                 </View>
                 <View style={styles.row}>
-                    <MaterialIcons name="male" size={20} color="#888" />
+                    <MaterialIcons name="male" size={20} color={COLORS.gray[500]} />
                     <TextInput
                         style={styles.input}
                         value={gender}
@@ -72,13 +72,13 @@ const EditProfileScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flexGrow: 1, backgroundColor: '#FFF', alignItems: 'center', padding: 24 },
+    container: { flexGrow: 1, backgroundColor: COLORS.backgroundWhite, alignItems: 'center', padding: 24 },
     avatarContainer: { alignItems: 'center', marginBottom: 16 },
-    avatar: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#7CFB00', marginBottom: 8 },
-    name: { fontSize: 20, fontWeight: 'bold', color: '#222' },
-    card: { width: '100%', backgroundColor: '#FFF', borderRadius: 12, padding: 16, elevation: 2, marginBottom: 32 },
-    row: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#EEE', marginBottom: 12, paddingBottom: 6 },
-    input: { flex: 1, marginLeft: 12, fontSize: 16, color: '#222' },
+    avatar: { width: 90, height: 90, borderRadius: 45, backgroundColor: COLORS.primary, marginBottom: 8 },
+    name: { fontSize: 20, fontWeight: 'bold', color: COLORS.veryDarkGray },
+    card: { width: '100%', backgroundColor: COLORS.backgroundWhite, borderRadius: 12, padding: 16, elevation: 2, marginBottom: 32 },
+    row: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: COLORS.gray[200], marginBottom: 12, paddingBottom: 6 },
+    input: { flex: 1, marginLeft: 12, fontSize: 16, color: COLORS.veryDarkGray },
     logoutButton: { marginTop: 24, alignSelf: 'center' },
     logoutText: { color:COLORS.primary, fontWeight: 'bold', fontSize: 16 },
 });

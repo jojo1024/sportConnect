@@ -1,41 +1,41 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '../../theme/colors';
-import { Field } from '../../hooks/useCreateParty';
 import { BASE_URL_IMAGES } from '../../services/api';
+import { Terrain } from '../../services/terrainService';
 import { getTerrainImage } from '../../utils/functions';
 
 interface FieldCardProps {
-    field: Field;
+    terrain: Terrain;
     isSelected: boolean;
-    onSelect: (field: Field) => void;
+    onSelect: (terrain: Terrain) => void;
 }
 
-export const FieldCard: React.FC<FieldCardProps> = ({ field, isSelected, onSelect }) => (
+export const FieldCard: React.FC<FieldCardProps> = ({ terrain, isSelected, onSelect }) => (
     <TouchableOpacity
         style={[styles.fieldCard, isSelected && styles.fieldCardSelected]}
-        onPress={() => onSelect(field)}
+        onPress={() => onSelect(terrain)}
     >
         <Image
-            source={{ uri: `${BASE_URL_IMAGES}/${field.image}` }}
+            source={{ uri: `${BASE_URL_IMAGES}/${getTerrainImage(terrain.terrainImages)}` }}
             style={styles.fieldImage} />
         <View style={styles.fieldInfo}>
             <View style={styles.fieldHeader}>
-                <Text style={styles.fieldName}>{field.name}</Text>
+                <Text style={styles.fieldName}>{terrain.terrainNom}</Text>
                 {isSelected && (
                     <View style={styles.selectedIndicator}>
                         <Text style={styles.selectedIndicatorText}>✓</Text>
                     </View>
                 )}
             </View>
-            <Text style={styles.fieldLocation}>{field.location}</Text>
+            <Text style={styles.fieldLocation}>{terrain.terrainLocalisation}</Text>
             <View style={styles.fieldDetails}>
-                <Text style={styles.fieldSchedule}>Horaires: 11:00 - 12:00</Text>
+                <Text style={styles.fieldSchedule}>Horaires: {terrain.terrainHoraires}</Text>
                 {/* <Text style={styles.fieldPrice}>{field.pricePerHour} XOF/heure</Text> */}
             </View>
             <View style={styles.fieldDetails}>
                 <Text style={styles.fieldSchedule}>.</Text>
-                <Text style={styles.fieldPrice}>{field.pricePerHour} XOF/heure</Text>
+                <Text style={styles.fieldPrice}>{terrain.terrainPrixParHeure} XOF/heure</Text>
             </View>
         </View>
     </TouchableOpacity>

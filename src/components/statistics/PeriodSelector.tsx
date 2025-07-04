@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.backgroundWhite,
     marginRight: 8,
     minWidth: 80,
     alignItems: 'center',
@@ -75,12 +75,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   periodButtonText: {
-    color: '#6B7280',
+    color: COLORS.gray[600],
     fontWeight: '500',
     fontSize: 14,
   },
   periodButtonTextActive: {
-    color: '#fff',
+    color: COLORS.white,
   },
 });
 

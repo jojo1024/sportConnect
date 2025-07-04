@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     summaryTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#333',
+        color: COLORS.darkestGray,
         marginBottom: 12,
     },
     summaryCard: {
@@ -93,13 +93,13 @@ const styles = StyleSheet.create({
     },
     summaryLabel: {
         fontSize: 14,
-        color: '#666',
+        color: COLORS.darkGray,
         fontWeight: '500',
         flex: 1,
     },
     summaryValue: {
         fontSize: 14,
-        color: '#333',
+        color: COLORS.darkestGray,
         fontWeight: '600',
         flex: 2,
         textAlign: 'right',

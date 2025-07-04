@@ -49,13 +49,13 @@ const KPICard: React.FC<KPICardProps> = ({
                     <Ionicons name={icon} size={20} color={color} />
                 </View>
                 {trend && (
-                    <View style={[styles.trendContainer, { backgroundColor: trend.isPositive ? '#10B981' + '20' : '#EF4444' + '20' }]}>
+                    <View style={[styles.trendContainer, { backgroundColor: trend.isPositive ? COLORS.successGreen + '20' : COLORS.danger + '20' }]}>
                         <Ionicons
                             name={trend.isPositive ? 'trending-up' : 'trending-down'}
                             size={12}
-                            color={trend.isPositive ? '#10B981' : '#EF4444'}
+                            color={trend.isPositive ? COLORS.successGreen : COLORS.danger}
                         />
-                        <Text style={[styles.trendText, { color: trend.isPositive ? '#10B981' : '#EF4444' }]}>
+                        <Text style={[styles.trendText, { color: trend.isPositive ? COLORS.successGreen : COLORS.danger }]}>
                             {trend.isPositive ? '+' : ''}{trend.value.toFixed(1)}%
                         </Text>
                     </View>
@@ -72,11 +72,11 @@ const KPICard: React.FC<KPICardProps> = ({
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.backgroundWhite,
         borderRadius: 16,
         padding: 16,
         marginBottom: 16,
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
@@ -112,39 +112,39 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 14,
-        color: '#6B7280',
+        color: COLORS.gray[600],
         fontWeight: '500',
         marginBottom: 4,
     },
     value: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#1F2937',
+        color: COLORS.almostBlack,
         marginBottom: 2,
     },
     subtitle: {
         fontSize: 12,
-        color: '#9CA3AF',
+        color: COLORS.gray[400],
         fontWeight: '400',
     },
     // Styles pour le loading
     loadingTitle: {
         height: 14,
-        backgroundColor: '#E5E7EB',
+        backgroundColor: COLORS.gray[300],
         borderRadius: 4,
         marginBottom: 8,
         width: '60%',
     },
     loadingValue: {
         height: 24,
-        backgroundColor: '#E5E7EB',
+        backgroundColor: COLORS.gray[300],
         borderRadius: 4,
         marginBottom: 4,
         width: '80%',
     },
     loadingSubtitle: {
         height: 12,
-        backgroundColor: '#E5E7EB',
+        backgroundColor: COLORS.gray[300],
         borderRadius: 4,
         width: '40%',
     },

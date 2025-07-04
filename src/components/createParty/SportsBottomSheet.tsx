@@ -34,7 +34,7 @@ export const SportsBottomSheet: React.FC<SportsBottomSheetProps> = ({
         closeOnPressMask={true}
         height={SIZES.height - 200}
         customStyles={{
-            wrapper: { backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+            wrapper: { backgroundColor: COLORS.overlay },
             draggableIcon: { backgroundColor: '#000' },
             container: {
                 borderTopLeftRadius: 20,

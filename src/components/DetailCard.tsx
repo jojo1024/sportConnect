@@ -8,7 +8,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 
-interface DetailRowProps {
+interface InfoItemRowProps {
     icon: string;
     label: string;
     value: string;
@@ -17,13 +17,13 @@ interface DetailRowProps {
     iconColor?: string;
 }
 
-interface DetailCardProps {
+interface InfoSectionCardProps {
     title: string;
     children: React.ReactNode;
     style?: any;
 }
 
-export const DetailRow: React.FC<DetailRowProps> = ({
+export const InfoItemRow: React.FC<InfoItemRowProps> = ({
     icon,
     label,
     value,
@@ -31,13 +31,13 @@ export const DetailRow: React.FC<DetailRowProps> = ({
     copied = false,
     iconColor = COLORS.primary
 }) => (
-    <View style={styles.detailRow}>
-        <View style={styles.detailIcon}>
+    <View style={styles.infoItemRow}>
+        <View style={styles.infoItemIcon}>
             <Ionicons name={icon as any} size={20} color={iconColor} />
         </View>
-        <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>{label}</Text>
-            <Text style={styles.detailValue}>{value}</Text>
+        <View style={styles.infoItemContent}>
+            <Text style={styles.infoItemLabel}>{label}</Text>
+            <Text style={styles.infoItemValue}>{value}</Text>
         </View>
         {onCopy && (
             <TouchableOpacity
@@ -54,17 +54,17 @@ export const DetailRow: React.FC<DetailRowProps> = ({
     </View>
 );
 
-const DetailCard: React.FC<DetailCardProps> = ({ title, children, style }) => (
-    <View style={[styles.detailsSection, style]}>
+const InfoSectionCard: React.FC<InfoSectionCardProps> = ({ title, children, style }) => (
+    <View style={[styles.infoSection, style]}>
         <Text style={styles.sectionTitle}>{title}</Text>
-        <View style={styles.detailCard}>
+        <View style={styles.infoSectionCard}>
             {children}
         </View>
     </View>
 );
 
 const styles = StyleSheet.create({
-    detailsSection: {
+    infoSection: {
         paddingHorizontal: 20,
         marginBottom: 20,
     },
@@ -74,17 +74,17 @@ const styles = StyleSheet.create({
         color: '#1a1a1a',
         marginBottom: 12,
     },
-    detailCard: {
+    infoSectionCard: {
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 16,
     },
-    detailRow: {
+    infoItemRow: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 16,
     },
-    detailIcon: {
+    infoItemIcon: {
         width: 40,
         height: 40,
         borderRadius: 20,
@@ -93,15 +93,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 12,
     },
-    detailContent: {
+    infoItemContent: {
         flex: 1,
     },
-    detailLabel: {
+    infoItemLabel: {
         fontSize: 14,
         color: '#666',
         marginBottom: 2,
     },
-    detailValue: {
+    infoItemValue: {
         fontSize: 16,
         fontWeight: '600',
         color: '#1a1a1a',
@@ -115,4 +115,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default DetailCard; 
+export default InfoSectionCard; 

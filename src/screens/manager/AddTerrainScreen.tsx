@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: -8,
         right: -8,
-        backgroundColor: 'rgba(0,0,0,0.7)',
+        backgroundColor: COLORS.overlayDark,
         borderRadius: 12,
     },
     addImageButton: {

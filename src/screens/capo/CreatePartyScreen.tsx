@@ -1,162 +1,118 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
-import React, { useRef } from 'react';
+import React from 'react';
 import {
     SafeAreaView,
     ScrollView,
     StyleSheet,
-    View,
-    ActivityIndicator,
     Text,
-    TouchableOpacity
+    View
 } from 'react-native';
+import CompactErrorCard from '../../components/CompactErrorCard';
 import {
-    useCreateParty,
-    type Field
-} from '../../hooks/useCreateParty';
-import {
-    Header,
     Card,
-    FieldSelector,
     DateTimeSelector,
-    DurationSelector,
-    ParticipantsSelector,
-    FieldsBottomSheet,
     DescriptionInput,
-    Summary,
-    SportSelector
+    DurationSelector,
+    FieldSelector,
+    Header,
+    ParticipantsSelector,
+    Summary
 } from '../../components/createParty';
 import { SportsBottomSheet } from '../../components/createParty/SportsBottomSheet';
 import { SportSelectorBottomSheet } from '../../components/createParty/SportSelectorBottomSheet';
-import { Sport } from '../../components/createParty/SportCard';
-import { COLORS } from '../../theme/colors';
-import { useApiError } from '../../hooks/useApiError';
-import { useCustomAlert } from '../../hooks/useCustomAlert';
-import CustomAlert from '../../components/CustomAlert';
-import CompactErrorCard from '../../components/CompactErrorCard';
+import { TerrainsBottomSheet } from '../../components/createParty/TerrainsBottomSheet';
 import { SuccessModal } from '../../components/SuccessModal';
+import { useCreateParty } from '../../hooks/useCreateParty';
+import { COLORS } from '../../theme/colors';
+import { formatDate, formatTime } from '../../utils/functions';
 
 // Main component
 const CreatePartyScreen: React.FC = () => {
-    const bottomSheetRef = useRef<any>(null);
-    const sportBottomSheetRef = useRef<any>(null);
-    const { allowsRetry } = useApiError();
-    const { alertConfig } = useCustomAlert();
-
     const {
-        // State
-        formData,
-        searchQuery,
-        sportSearchQuery,
-        showDatePicker,
-        showTimePicker,
-        isSubmitting,
-        isLoadingTerrains,
-        error,
-        showSuccessModal,
-        createdMatch,
+        // Refs
+        terrainBottomSheetRef,
+        sportBottomSheetRef,
 
-        // Sports state
-        activeSports,
-        loadingSports,
-        sportError,
+        // État du formulaire
+        formData,
+        terrainSearchTerm,
+        sportSearchTerm,
+        isDatePickerVisible,
+        isTimePickerVisible,
+        isSubmittingForm,
+        isLoadingTerrains,
+        formError,
+        isSuccessModalVisible,
+        createdMatchData,
+
+        // État des sports
+        isLoadingSports,
+        sportsError,
         selectedSport,
 
-        // Computed values
-        filteredFields,
+        // Valeurs calculées
+        filteredTerrains,
         filteredSports,
-        validation,
-        selectedField,
-        isMinParticipantsReached,
-        isMaxParticipantsReached,
+        formValidation,
+        selectedTerrain,
+        isMinParticipantCountReached,
+        isMaxParticipantCountReached,
 
-        // Form handlers
-        setSelectedField,
-        setSport,
-        setDuration,
-        setDescription,
+        // Gestionnaires du formulaire
+        updateDurationHours,
+        updateDescription,
 
-        // Participants handlers
-        increaseParticipants,
-        decreaseParticipants,
+        // Gestionnaires des participants
+        incrementParticipantCount,
+        decrementParticipantCount,
 
-        // Date/Time handlers
-        handleDateChange,
-        openDatePicker,
-        openTimePicker,
-        formatDate,
-        formatTime,
+        // Gestionnaires de date/heure
+        handleDateTimeChange,
+        showDatePicker,
+        showTimePicker,
 
-        // Search handlers
-        updateSearchQuery,
-        updateSportSearchQuery,
+        // Gestionnaires de recherche
+        updateTerrainSearchTerm,
+        updateSportSearchTerm,
 
-        // Submit handlers
-        handleSubmit,
+        // Gestionnaires des bottom sheets
+        openTerrainSelector,
+        openSportSelector,
 
-        // Modal handlers
-        closeSuccessModal,
+        // Gestionnaires de sélection
+        handleTerrainSelection,
+        handleSportSelection,
 
-        // Data loading
+        // Gestionnaires de soumission
+        submitCreatePartyForm,
+
+        // Gestionnaires du modal
+        hideSuccessModal,
+
+        // Chargement des données
         retryLoadTerrains,
         retryLoadSports,
     } = useCreateParty();
 
-    const openFieldSelector = () => {
-        bottomSheetRef.current?.open();
-    };
-
-    const handleFieldSelection = (field: Field) => {
-        setSelectedField(field);
-        bottomSheetRef.current?.close();
-    };
-
-    const openSportSelector = () => {
-        sportBottomSheetRef.current?.open();
-    };
-
-    const handleSportSelection = (sport: Sport) => {
-        setSport(sport);
-        sportBottomSheetRef.current?.close();
-    };
-
     // Vérifier si le formulaire est prêt à être soumis
-    const isFormReady = validation.isValid && !isSubmitting && !isLoadingTerrains && !loadingSports;
-
-    // Debug: Log de l'état du formulaire
-    console.log('🔍 Debug isFormReady:', {
-        validationIsValid: validation.isValid,
-        validationErrors: validation.errors,
-        isSubmitting,
-        isLoadingTerrains,
-        loadingSports,
-        isFormReady,
-        formData: {
-            selectedFieldId: formData.selectedFieldId,
-            selectedFieldName: formData.selectedFieldName,
-            sportId: formData.sportId,
-            date: formData.date,
-            duration: formData.duration,
-            numberOfParticipants: formData.numberOfParticipants,
-            description: formData.description
-        }
-    });
+    const isFormReady = formValidation.isValid && !isSubmittingForm && !isLoadingTerrains && !isLoadingSports;
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <Header onCreate={handleSubmit} isSubmitting={isSubmitting} isFormReady={isFormReady} />
+            <Header onCreate={submitCreatePartyForm} isSubmitting={isSubmittingForm} isFormReady={isFormReady} />
 
             {/* Affichage de l'erreur compacte pour les terrains */}
-            {error && (
+            {formError && (
                 <CompactErrorCard
-                    message={error}
+                    message={formError}
                     onRetry={retryLoadTerrains}
                 />
             )}
 
             {/* Affichage de l'erreur compacte pour les sports */}
-            {sportError && (
+            {sportsError && (
                 <CompactErrorCard
-                    message={sportError}
+                    message={sportsError}
                     onRetry={retryLoadSports}
                 />
             )}
@@ -173,10 +129,10 @@ const CreatePartyScreen: React.FC = () => {
 
                     <Card icon="location" title="Terrain">
                         <FieldSelector
-                            selectedField={formData.selectedFieldName}
+                            selectedField={formData.selectedTerrainName}
                             loading={isLoadingTerrains}
-                            error={error}
-                            onPress={openFieldSelector}
+                            error={formError}
+                            onPress={openTerrainSelector}
                             onRetry={retryLoadTerrains}
                         />
                     </Card>
@@ -184,8 +140,8 @@ const CreatePartyScreen: React.FC = () => {
                     <Card icon="football" title="Sport">
                         <SportSelectorBottomSheet
                             selectedSport={selectedSport}
-                            loading={loadingSports}
-                            error={sportError}
+                            loading={isLoadingSports}
+                            error={sportsError}
                             onPress={openSportSelector}
                             onRetry={retryLoadSports}
                         />
@@ -193,9 +149,9 @@ const CreatePartyScreen: React.FC = () => {
 
                     <Card icon="calendar" title="Date et heure">
                         <DateTimeSelector
-                            date={formData.date}
-                            onDatePress={openDatePicker}
-                            onTimePress={openTimePicker}
+                            date={formData.selectedDate}
+                            onDatePress={showDatePicker}
+                            onTimePress={showTimePicker}
                             formatDate={formatDate}
                             formatTime={formatTime}
                         />
@@ -203,34 +159,34 @@ const CreatePartyScreen: React.FC = () => {
 
                     <Card icon="hourglass" title="Durée">
                         <DurationSelector
-                            duration={formData.duration}
-                            onDurationChange={setDuration}
+                            duration={formData.durationHours}
+                            onDurationChange={updateDurationHours}
                         />
                     </Card>
 
                     <Card icon="people" title="Nombre de participants">
                         <ParticipantsSelector
-                            numberOfParticipants={formData.numberOfParticipants}
-                            onIncrease={increaseParticipants}
-                            onDecrease={decreaseParticipants}
-                            isMinReached={isMinParticipantsReached}
-                            isMaxReached={isMaxParticipantsReached}
+                            numberOfParticipants={formData.participantCount}
+                            onIncrease={incrementParticipantCount}
+                            onDecrease={decrementParticipantCount}
+                            isMinReached={isMinParticipantCountReached}
+                            isMaxReached={isMaxParticipantCountReached}
                         />
                     </Card>
 
                     <Card icon="chatbubble" title="Message aux participants">
                         <DescriptionInput
                             value={formData.description}
-                            onChangeText={setDescription}
+                            onChangeText={updateDescription}
                         />
                     </Card>
 
                     {/* Résumé de la partie */}
                     <Summary
-                        selectedField={selectedField}
-                        date={formData.date}
-                        duration={formData.duration}
-                        numberOfParticipants={formData.numberOfParticipants}
+                        selectedField={selectedTerrain}
+                        date={formData.selectedDate}
+                        duration={formData.durationHours}
+                        numberOfParticipants={formData.participantCount}
                         description={formData.description}
                         formatDate={formatDate}
                         formatTime={formatTime}
@@ -238,12 +194,12 @@ const CreatePartyScreen: React.FC = () => {
                     />
 
                     {/* Messages de validation */}
-                    {!validation.isValid && validation.errors.length > 0 && (
+                    {!formValidation.isValid && formValidation.errorMessages.length > 0 && (
                         <View style={styles.validationSection}>
                             <Text style={styles.validationTitle}>Veuillez corriger les erreurs suivantes:</Text>
-                            {validation.errors.map((error, index) => (
+                            {formValidation.errorMessages.map((errorMessage: string, index: number) => (
                                 <Text key={index} style={styles.validationError}>
-                                    • {error}
+                                    • {errorMessage}
                                 </Text>
                             ))}
                         </View>
@@ -252,57 +208,57 @@ const CreatePartyScreen: React.FC = () => {
                 <View style={{ height: 60 }} />
             </ScrollView>
 
-            <FieldsBottomSheet
-                bottomSheetRef={bottomSheetRef}
-                searchQuery={searchQuery}
-                onSearchChange={updateSearchQuery}
-                filteredFields={filteredFields}
-                selectedFieldId={formData.selectedFieldId}
-                onFieldSelect={handleFieldSelection}
+            <TerrainsBottomSheet
+                bottomSheetRef={terrainBottomSheetRef}
+                searchQuery={terrainSearchTerm}
+                onSearchChange={updateTerrainSearchTerm}
+                filteredFields={filteredTerrains}
+                selectedFieldId={formData.selectedTerrainId}
+                onFieldSelect={handleTerrainSelection}
             />
 
             <SportsBottomSheet
                 bottomSheetRef={sportBottomSheetRef}
-                searchQuery={sportSearchQuery}
-                onSearchChange={updateSportSearchQuery}
+                searchQuery={sportSearchTerm}
+                onSearchChange={updateSportSearchTerm}
                 filteredSports={filteredSports}
-                selectedSportId={formData.sportId}
+                selectedSportId={formData.selectedSportId}
                 onSportSelect={handleSportSelection}
             />
 
-            {showDatePicker && (
+            {isDatePickerVisible && (
                 <DateTimePicker
-                    value={formData.date}
+                    value={formData.selectedDate}
                     mode="date"
                     display="default"
-                    onChange={handleDateChange}
+                    onChange={handleDateTimeChange}
                     minimumDate={new Date()}
                 />
             )}
 
-            {showTimePicker && (
+            {isTimePickerVisible && (
                 <DateTimePicker
-                    value={formData.date}
+                    value={formData.selectedDate}
                     mode="time"
                     display="default"
-                    onChange={handleDateChange}
+                    onChange={handleDateTimeChange}
                 />
             )}
 
             {/* Modal de succès */}
-            {createdMatch && (
+            {createdMatchData && (
                 <SuccessModal
-                    visible={showSuccessModal}
-                    onClose={closeSuccessModal}
-                    matchCode={createdMatch.codeMatch}
+                    visible={isSuccessModalVisible}
+                    onClose={hideSuccessModal}
+                    matchCode={createdMatchData.codeMatch}
                     matchDetails={{
-                        terrainName: createdMatch.terrainNom || formData.selectedFieldName,
-                        date: formatDate(new Date(createdMatch.matchDateDebut)),
-                        time: formatTime(new Date(createdMatch.matchDateDebut)),
-                        duration: createdMatch.matchDuree,
-                        participants: createdMatch.matchNbreParticipant,
-                        matchPrixParJoueur: createdMatch.matchPrixParJoueur,
-                        sportName: createdMatch?.sportNom || 'Sport non spécifié',
+                        terrainName: createdMatchData.terrainNom || formData.selectedTerrainName,
+                        date: formatDate(new Date(createdMatchData.matchDateDebut)),
+                        time: formatTime(new Date(createdMatchData.matchDateDebut)),
+                        duration: createdMatchData.matchDuree,
+                        participants: createdMatchData.matchNbreParticipant,
+                        matchPrixParJoueur: createdMatchData.matchPrixParJoueur,
+                        sportName: createdMatchData?.sportNom || 'Sport non spécifié',
                     }}
                 />
             )}

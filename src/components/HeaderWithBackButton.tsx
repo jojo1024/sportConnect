@@ -48,7 +48,7 @@ const HeaderWithBackButton: React.FC<HeaderWithBackButtonProps> = ({
     if (showGradient) {
         return (
             <LinearGradient
-                colors={['rgba(0,0,0,0.7)', 'transparent']}
+                colors={[COLORS.overlayDark, 'transparent']}
                 style={styles.headerGradient}
             >
                 <HeaderContent />
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     backButtonInner: {
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: COLORS.overlayDark,
         borderRadius: 20,
         padding: 8,
         width: 36,
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: COLORS.white,
-        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowColor: COLORS.overlay,
         textShadowOffset: { width: 0, height: 1 },
         textShadowRadius: 3,
     },

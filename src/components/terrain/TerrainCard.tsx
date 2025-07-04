@@ -4,6 +4,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BASE_URL_IMAGES } from '../../services/api';
 import { Terrain } from '../../services/terrainService';
 import { formatHoraires, getStatusColor, getStatusText, getTerrainImage } from '../../utils/functions';
+import { COLORS } from '../../theme/colors';
 
 export interface TerrainCardProps {
     terrain: Terrain;
@@ -27,7 +28,7 @@ const TerrainCard: React.FC<TerrainCardProps> = ({ terrain, onPress }) => {
                 <View style={[styles.statusBadge, { backgroundColor: getStatusColor(terrain.terrainDisponibilite) }]}>
                     <Text style={[
                         styles.statusText,
-                        { color: '#fff' }
+                        { color: COLORS.white }
                     ]}>
                         {getStatusText(terrain.terrainDisponibilite)}
                     </Text>
@@ -36,22 +37,22 @@ const TerrainCard: React.FC<TerrainCardProps> = ({ terrain, onPress }) => {
             <View style={styles.terrainInfo}>
                 <Text style={styles.terrainName}>{terrain.terrainNom}</Text>
                 <View style={styles.locationContainer}>
-                    <Ionicons name="location" size={16} color="#666" />
+                    <Ionicons name="location" size={16} color={COLORS.darkGray} />
                     <Text style={styles.terrainLocation}>{terrain.terrainLocalisation}</Text>
                 </View>
                 <View style={styles.detailsContainer}>
                     <View style={styles.detailRow}>
                         <View style={styles.detailItem}>
-                            <Ionicons name="time-outline" size={16} color="#666" />
+                            <Ionicons name="time-outline" size={16} color={COLORS.darkGray} />
                             <Text style={styles.detailValue}>{formatHoraires(terrain.terrainHoraires)}</Text>
                         </View>
                         <View style={styles.detailItem}>
-                            <Ionicons name="people-outline" size={16} color="#666" />
+                            <Ionicons name="people-outline" size={16} color={COLORS.darkGray} />
                             <Text style={styles.detailValue}>0 réservations</Text>
                         </View>
                     </View>
                     <View style={styles.priceContainer}>
-                        <Ionicons name="cash-outline" size={16} color="#666" />
+                        <Ionicons name="cash-outline" size={16} color={COLORS.darkGray} />
                         <Text style={styles.priceText}>{terrain.terrainPrixParHeure} XOF/heure</Text>
                     </View>
                 </View>
@@ -62,12 +63,12 @@ const TerrainCard: React.FC<TerrainCardProps> = ({ terrain, onPress }) => {
 
 const styles = StyleSheet.create({
     terrainCard: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.backgroundWhite,
         borderRadius: 16,
         marginBottom: 16,
         overflow: 'hidden',
         elevation: 3,
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     statusText: {
-        color: '#fff',
+        color: COLORS.white,
         fontWeight: '600',
         fontSize: 12,
     },
@@ -99,7 +100,7 @@ const styles = StyleSheet.create({
     terrainName: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#1a1a1a',
+        color: COLORS.almostBlack,
         marginBottom: 8,
     },
     locationContainer: {
@@ -109,11 +110,11 @@ const styles = StyleSheet.create({
     },
     terrainLocation: {
         fontSize: 14,
-        color: '#666',
+        color: COLORS.darkGray,
         marginLeft: 4,
     },
     detailsContainer: {
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.gray[100],
         padding: 12,
         borderRadius: 12,
     },
@@ -128,13 +129,13 @@ const styles = StyleSheet.create({
     },
     detailValue: {
         fontSize: 14,
-        color: '#1a1a1a',
+        color: COLORS.almostBlack,
         marginLeft: 6,
     },
     priceContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#e9ecef',
+        backgroundColor: COLORS.gray[200],
         padding: 8,
         borderRadius: 8,
         alignSelf: 'flex-start',
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
     priceText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#1a1a1a',
+        color: COLORS.almostBlack,
         marginLeft: 6,
     },
 });
