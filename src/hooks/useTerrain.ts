@@ -12,6 +12,7 @@ import { ErrorType } from '../services/api';
 interface UseTerrainReturn {
   terrains: Terrain[];
   isLoading: boolean;
+  isLoadingMore: boolean;
   error: string | null;
   errorType: ErrorType | null;
   hasMoreData: boolean;
@@ -56,6 +57,7 @@ export const useTerrain = (): UseTerrainReturn => {
   const [errorType, setErrorType] = useState<ErrorType | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreData, setHasMoreData] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   const user = useAppSelector(selectUser);
   console.log("🚀 ~ useTerrain ~ user:", user)
@@ -137,8 +139,13 @@ export const useTerrain = (): UseTerrainReturn => {
   /**
    * Charge les données de la page suivante (pagination côté client).
    */
-  const loadMoreData = useCallback(() => {
-    if (!isLoading && hasMoreData) {
+  const loadMoreData = useCallback(async () => {
+    if (!isLoading && !isLoadingMore && hasMoreData) {
+      setIsLoadingMore(true);
+      
+      // Simuler un délai de chargement pour l'UX
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const nextPage = currentPage + 1;
       const startIndex = (nextPage - 1) * ITEMS_PER_PAGE;
       const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -149,8 +156,10 @@ export const useTerrain = (): UseTerrainReturn => {
       
       // Vérifier s'il y a encore plus de données
       setHasMoreData(endIndex < allTerrains.length);
+      
+      setIsLoadingMore(false);
     }
-  }, [isLoading, hasMoreData, currentPage, allTerrains]);
+  }, [isLoading, isLoadingMore, hasMoreData, currentPage, allTerrains]);
 
   /**
    * Rafraîchit les données (reset à la première page).
@@ -174,7 +183,7 @@ export const useTerrain = (): UseTerrainReturn => {
    * Appelé lorsque l'utilisateur atteint la fin de la liste.
    */
   const handleEndReached = () => {
-    if (hasMoreData && !isLoading) {
+    if (hasMoreData && !isLoading && !isLoadingMore) {
       loadMoreData();
     }
   };
@@ -261,6 +270,7 @@ const handleAddTerrain = useCallback(() => {
   return {
     terrains,
     isLoading,
+    isLoadingMore,
     error,
     errorType,
     hasMoreData,

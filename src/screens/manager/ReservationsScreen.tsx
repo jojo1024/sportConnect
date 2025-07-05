@@ -1,13 +1,13 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
-import { useReservationsInfinite } from '../../hooks/useReservationsInfinite';
+import React, { useCallback, useMemo } from 'react';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 import { ReservationsHeader } from '../../components/reservation/ReservationsHeader';
-import { ReservationsTabContent } from '../../components/reservation/ReservationsTabContent';
 import { ReservationsMessages } from '../../components/reservation/ReservationsMessages';
+import { ReservationsTabContent } from '../../components/reservation/ReservationsTabContent';
+import { useReservationsInfinite } from '../../hooks/useReservationsInfinite';
+import { useReservationsTabs } from '../../hooks/useReservationsTabs';
 import { COLORS } from '../../theme/colors';
 import { TAB_CONFIG } from '../../utils/constant';
-import { useReservationsTabs } from '../../hooks/useReservationsTabs';
 
 const initialLayout = { width: Dimensions.get('window').width };
 
@@ -39,10 +39,45 @@ const ReservationsScreen: React.FC = () => {
         refreshForStatus
     );
 
+    // Calcul des compteurs pour chaque onglet
+    const getTabCounts = useMemo(() => {
+        const pendingCount = reservationsByStatus['en_attente']?.reservations?.length || 0;
+        const confirmedCount = reservationsByStatus['confirme']?.reservations?.length || 0;
+        const cancelledCount = reservationsByStatus['annule']?.reservations?.length || 0;
 
+        return {
+            pending: pendingCount,
+            confirmed: confirmedCount,
+            cancelled: cancelledCount
+        };
+    }, [reservationsByStatus]);
 
-    // Configuration des onglets avec données dynamiques
-    const routes = useMemo(() => TAB_CONFIG, []);
+    // Configuration des onglets avec données dynamiques et compteurs
+    const routes = useMemo(() => TAB_CONFIG.map(tab => ({
+        ...tab,
+        title: `${tab.title} \n (${getTabCounts[tab.key as keyof typeof getTabCounts]})`
+    })), [getTabCounts]);
+
+    // Rendu personnalisé du TabBar avec compteurs
+    const renderTabBar = useCallback((props: any) => (
+        <TabBar
+            {...props}
+            indicatorStyle={styles.tabIndicator}
+            style={styles.tabBar}
+            activeColor={COLORS.veryDarkGray}
+            inactiveColor={COLORS.gray[600]}
+            renderLabel={({ route, focused }: { route: any; focused: boolean }) => (
+                <View style={styles.tabLabelContainer}>
+                    <Text style={[
+                        styles.tabLabel,
+                        focused ? styles.tabLabelActive : styles.tabLabelInactive
+                    ]}>
+                        {route.title}
+                    </Text>
+                </View>
+            )}
+        />
+    ), []);
 
     // Rendu des scènes avec composants séparés
     const renderScene = useMemo(() => SceneMap({
@@ -127,15 +162,7 @@ const ReservationsScreen: React.FC = () => {
                 renderScene={renderScene}
                 onIndexChange={setIndex}
                 initialLayout={initialLayout}
-                renderTabBar={props => (
-                    <TabBar
-                        {...props}
-                        indicatorStyle={styles.tabIndicator}
-                        style={styles.tabBar}
-                        activeColor={COLORS.veryDarkGray}
-                        inactiveColor={COLORS.gray[600]}
-                    />
-                )}
+                renderTabBar={renderTabBar}
             />
 
             <View style={styles.bottomSpacer} />
@@ -157,7 +184,22 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
         marginBottom: 8,
     },
-
+    tabLabelContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    tabLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    tabLabelActive: {
+        color: COLORS.veryDarkGray,
+    },
+    tabLabelInactive: {
+        color: COLORS.gray[600],
+    },
     bottomSpacer: {
         height: 70,
     },

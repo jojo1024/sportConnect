@@ -13,6 +13,7 @@ const TerrainsScreen: React.FC = () => {
     const {
         terrains,
         isLoading,
+        isLoadingMore,
         error,
         errorType,
         refreshData,
@@ -65,7 +66,7 @@ const TerrainsScreen: React.FC = () => {
                 }
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={0.1}
-                ListFooterComponent={<LoadingFooter loading={isLoading} />}
+                ListFooterComponent={<LoadingFooter loading={isLoadingMore} />}
                 ListEmptyComponent={
                     !isLoading ? (
                         <View style={styles.emptyState}>
