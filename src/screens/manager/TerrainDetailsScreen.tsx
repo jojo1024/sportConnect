@@ -9,13 +9,13 @@ import {
     SafeAreaView
 } from 'react-native';
 import { useTerrain } from '../../hooks/useTerrain';
-import { PRIMARY_COLOR } from '../../utils/constant';
 import { formatHoraires } from '../../utils/functions';
 import { useNavigation } from '@react-navigation/native';
 import ImageGallery from '../../components/ImageGallery';
 import HeaderWithBackButton from '../../components/HeaderWithBackButton';
 import InfoSectionCard, { InfoItemRow } from '../../components/DetailCard';
 import MainInfoCard from '../../components/MainInfoCard';
+import { COLORS } from '../../theme/colors';
 
 const TerrainDetailsScreen: React.FC = () => {
 
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     actionButton: {
-        backgroundColor: PRIMARY_COLOR,
+        backgroundColor: COLORS.primary,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     errorBackButton: {
-        backgroundColor: PRIMARY_COLOR,
+        backgroundColor: COLORS.primary,
         padding: 12,
         borderRadius: 20,
     },

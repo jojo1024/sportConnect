@@ -14,6 +14,13 @@
         {
           "launchMode": "most-recent"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "L'application a besoin d'accéder à vos photos pour vous permettre de modifier votre photo de profil.",
+          "cameraPermission": "L'application a besoin d'accéder à votre caméra pour vous permettre de prendre une photo de profil."
+        }
       ]
     ],
     "splash": {
@@ -24,7 +31,18 @@
     "android": {
       "package": "com.joelitho.sportConnect",
       "foregroundImage": "./assets/images/ibori.jpeg",
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#FFFFFF",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "ios": {
+      "infoPlist": {
+        "NSCameraUsageDescription": "L'application a besoin d'accéder à votre caméra pour vous permettre de prendre une photo de profil.",
+        "NSPhotoLibraryUsageDescription": "L'application a besoin d'accéder à vos photos pour vous permettre de modifier votre photo de profil."
+      }
     },
     "extra": {
       "projectId": "2e55ba75-f69f-4d16-80e7-0b241fdc5155",

@@ -1,3 +1,6 @@
+import { BASE_URL_IMAGES, BASE_URL_AVATARS } from '../services/api';
+import { Match } from '../services/matchService';
+
 export const formatDate = (date: Date | string | null) => {
     if (!date) return '';
     const dateObj = new Date(date);
@@ -119,7 +122,7 @@ export const formatNotificationDate = (dateString: string): string => {
     }
   
     if (diffInSeconds < 10) {
-      return "À l’instant";
+      return "À l'instant";
     }
   
     if (diffInSeconds < 60) {
@@ -221,3 +224,77 @@ export    const formatDateForMySQL = (date: Date) => {
         const seconds = String(date.getSeconds()).padStart(2, '0');
         return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     };
+
+        // Fonction pour calculer l'âge à partir d'une date de naissance
+        export const calculateAge = (birthDate: Date): number => {
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+            // Ajuster l'âge si l'anniversaire n'est pas encore passé cette année
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+    
+            return age;
+        };
+    
+        // Fonction pour générer le texte d'affichage de l'âge
+        export const getAgeDisplay = (dateString: string): string => {
+            if (!dateString) return '';
+    
+            try {
+                const birthDate = new Date(dateString);
+                if (!isNaN(birthDate.getTime())) {
+                    const age = calculateAge(birthDate);
+                    return `Âge: ${age} ans`;
+                }
+            } catch (error) {
+                // Ignorer les erreurs de calcul d'âge
+            }
+            return 'Date valide';
+        };
+
+// Fonction pour obtenir l'URL de l'avatar utilisateur
+export const getUserAvatar = (avatarPath: string | null | undefined): string => {
+    if (!avatarPath) {
+        // Avatar par défaut si aucun avatar n'est défini
+        return 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face';
+    }
+
+    // Si c'est déjà une URL complète (http/https), on la retourne telle quelle
+    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+        return avatarPath;
+    }
+
+    // Sinon, on construit l'URL avec le serveur
+    return `${BASE_URL_AVATARS}/${avatarPath}`;
+};
+
+export type ModalType = 'confirm' | 'cancel' | null;
+
+export const getModalConfig = (modalType: ModalType, item: Match) => {
+    switch (modalType) {
+        case 'confirm':
+            return {
+                title: "Confirmer la réservation",
+                message: `Êtes-vous sûr de vouloir confirmer cette réservation pour le terrain "${item.terrainNom}" ?\n\nCette action ne peut pas être annulée.`,
+                confirmText: "Confirmer",
+                cancelText: "Annuler"
+            };
+        case 'cancel':
+            return {
+                title: "Annuler la réservation",
+                message: `Êtes-vous sûr de vouloir annuler cette réservation pour le terrain "${item.terrainNom}" ?\n\nCette action ne peut pas être annulée.`,
+                confirmText: "Annuler",
+                cancelText: "Retour"
+            };
+        default:
+            return {
+                title: "",
+                message: "",
+                confirmText: "",
+                cancelText: ""
+            };
+    }
+};

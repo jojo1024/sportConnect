@@ -10,6 +10,9 @@ import RegisterScreen from "../screens/RegisterScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import MatchDetailsScreen from "../screens/user/MatchDetailsScreen";
 import MatchSummaryScreen from "../screens/user/MatchSummaryScreen";
+import EditProfileScreen from "../screens/user/EditProfileScreen";
+import ProfileOptionsScreen from "../screens/user/ProfileOptionsScreen";
+import EditPasswordScreen from "../screens/user/EditPasswordScreen";
 import { useAppSelector, useAuthInitialization } from "../store/hooks/hooks";
 import { selectIsAuthenticated, selectUser } from "../store/slices/userSlice";
 import { BottomTabs } from "./BottomTabs";
@@ -49,6 +52,9 @@ const RootNavigator = () => {
                             <Stack.Screen name="TerrainDetails" component={TerrainDetailsScreen} />
                             <Stack.Screen name="MatchDetails" component={MatchDetailsScreen} />
                             <Stack.Screen name="MatchSummary" component={MatchSummaryScreen} />
+                            <Stack.Screen name="ProfileOptions" component={ProfileOptionsScreen} />
+                            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                            <Stack.Screen name="EditPassword" component={EditPasswordScreen} />
                         </>
                     )}
                 </Stack.Navigator>

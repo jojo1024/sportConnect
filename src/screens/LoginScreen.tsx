@@ -1,33 +1,13 @@
-import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Keyboard, SafeAreaView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { ScreenNavigationProps } from '../navigation/types';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import CustomTextInput from '../components/CustomTextInput';
 import CustomButton from '../components/CustomButton';
 import PhoneInput from '../components/PhoneInput';
 import { useLoginForm } from '../hooks/useLoginForm';
-import { useAppSelector } from '../store/hooks/hooks';
-import { selectError, selectIsLoading } from '../store/slices/userSlice';
 import { COLORS } from '../theme/colors';
 
 export default function LoginScreen() {
-    const navigation = useNavigation<ScreenNavigationProps>();
-    const passwordInputRef = useRef<any>(null);
     const [formState, formHandlers] = useLoginForm();
-
-    // Récupérer les états du store
-    const isLoading = useAppSelector(selectIsLoading);
-    const error = useAppSelector(selectError);
-
-    const handleLogin = async () => {
-        Keyboard.dismiss();
-        try {
-            await formHandlers.handleLogin();
-        } catch (error) {
-            // L'erreur est déjà gérée dans le hook
-            console.log('Erreur de connexion:', error);
-        }
-    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -35,12 +15,10 @@ export default function LoginScreen() {
             <PhoneInput
                 label="Numéro de téléphone"
                 value={formState.phone}
-                onChangeText={(text) => {
-                    formHandlers.handlePhoneChange(text);
-                }}
+                onChangeText={formHandlers.handlePhoneChange}
                 placeholder="06 12 34 56 78"
                 returnKeyType="next"
-                onSubmitEditing={() => passwordInputRef.current?.focus()}
+                onSubmitEditing={() => formHandlers.passwordInputRef.current?.focus()}
             />
 
             <CustomTextInput
@@ -49,40 +27,45 @@ export default function LoginScreen() {
                 onChangeText={formHandlers.handlePasswordChange}
                 placeholder="••••••••"
                 isPassword
-                refInput={passwordInputRef}
+                refInput={formHandlers.passwordInputRef}
                 returnKeyType="done"
-                onSubmitEditing={handleLogin}
+                onSubmitEditing={formHandlers.handleLogin}
             />
 
             {/* Affichage des erreurs */}
-            {error && (
+            {formHandlers.error && (
                 <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{error}</Text>
+                    <Text style={styles.errorText}>{formHandlers.error}</Text>
                 </View>
             )}
 
-            <TouchableOpacity disabled={isLoading}>
-                <Text style={[styles.forgot, isLoading && styles.disabledText]}>Mot de passe oublié</Text>
+            <TouchableOpacity
+                onPress={formHandlers.handleForgotPassword}
+                disabled={formHandlers.isLoading}
+            >
+                <Text style={[styles.forgot, formHandlers.isLoading && styles.disabledText]}>
+                    Mot de passe oublié
+                </Text>
             </TouchableOpacity>
 
             <CustomButton
                 title={"Se connecter"}
-                onPress={handleLogin}
-                loading={isLoading}
+                onPress={formHandlers.handleLogin}
+                loading={formHandlers.isLoading}
             />
 
             <View style={styles.signupContainer}>
-                <Text style={[styles.signupText, isLoading && styles.disabledText]}>
+                <Text style={[styles.signupText, formHandlers.isLoading && styles.disabledText]}>
                     Vous n'avez pas de compte ?
                 </Text>
                 <TouchableOpacity
-                    onPress={() => navigation.navigate('Register')}
-                    disabled={isLoading}
+                    onPress={formHandlers.handleSignUp}
+                    disabled={formHandlers.isLoading}
                 >
                     <Text style={[
                         styles.signupText,
                         { color: "#000", textDecorationLine: 'underline' },
-                        isLoading && styles.disabledText
+                        formHandlers.isLoading && styles.disabledText
                     ]}>
                         S'inscrire
                     </Text>

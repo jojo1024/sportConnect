@@ -17,7 +17,7 @@ export const useReservationsTabs = (
     loadMoreForStatus: LoadMoreFunction,
     refreshForStatus: RefreshFunction
 ): UseReservationsTabsReturn => {
-    
+
     // Mapping des types d'onglets vers les statuts de réservation
     const tabToStatusMap = {
         pending: 'en_attente',

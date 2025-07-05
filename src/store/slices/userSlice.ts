@@ -8,10 +8,51 @@ export interface User {
     utilisateurNom: string;
     utilisateurTelephone: string;
     utilisateurCommune: string;
-    utilisateurDateNaiss: Date;
+    utilisateurDateNaiss: string;
     utilisateurSexe: 'Homme' | 'Femme';
     utilisateurRole: UserRole;
     utilisateurAvatar?: string;
+}
+
+export interface UserStatistics {
+    totalMatchs: number;
+    totalTerrains: number;
+    totalHeures: number;
+    statsParSport: Array<{
+        sportId: number;
+        sportNom: string;
+        sportIcone: string;
+        nombreMatchs: number;
+        heuresTotales: number;
+    }>;
+}
+
+export interface UserActivity {
+    matchId: number;
+    matchDateDebut: string;
+    matchDateFin: string;
+    matchDuree: number;
+    matchDescription: string;
+    matchNbreParticipant: number;
+    matchStatus: string;
+    codeMatch: string;
+    matchDateCreation: string;
+    matchPrixParJoueur: number;
+    sportId: number;
+    sportNom: string;
+    sportIcone: string;
+    capoNomUtilisateur: string;
+    capoTelephone: string;
+    capoCommune: string;
+    terrainNom: string;
+    terrainLocalisation: string;
+    terrainDescription: string;
+    terrainContact: string;
+    terrainPrixParHeure: number;
+    terrainHoraires: string;
+    terrainImages: string;
+    dateParticipation: string;
+    statutParticipation: string;
 }
 
 interface UserState {
@@ -22,6 +63,11 @@ interface UserState {
     refreshToken: string | null;
     isLoading: boolean;
     error: string | null;
+    statistics: UserStatistics | null;
+    recentActivities: UserActivity[];
+    profileDataLoading: boolean;
+    profileDataError: string | null;
+    lastProfileDataUpdate: number | null;
 }
 
 const initialState: UserState = {
@@ -32,6 +78,11 @@ const initialState: UserState = {
     refreshToken: null,
     isLoading: false,
     error: null,
+    statistics: null,
+    recentActivities: [],
+    profileDataLoading: false,
+    profileDataError: null,
+    lastProfileDataUpdate: null,
 };
 
 const userSlice = createSlice({
@@ -101,6 +152,11 @@ const userSlice = createSlice({
             state.refreshToken = null;
             state.error = null;
             state.isLoading = false;
+            state.notificationCount = 0;
+            state.statistics = null;
+            state.recentActivities = [];
+            state.profileDataError = null;
+            state.lastProfileDataUpdate = null;
         },
         
         // Action pour mettre à jour les données utilisateur
@@ -111,7 +167,54 @@ const userSlice = createSlice({
         },
         setNotificationCount: (state, action: PayloadAction<number>) => {
             state.notificationCount = action.payload;
-        }
+        },
+        
+        // Nouvelles actions pour les données du profil
+        startProfileDataLoading: (state) => {
+            state.profileDataLoading = true;
+            state.profileDataError = null;
+        },
+        
+        stopProfileDataLoading: (state) => {
+            state.profileDataLoading = false;
+        },
+        
+        setProfileDataError: (state, action: PayloadAction<string>) => {
+            state.profileDataError = action.payload;
+            state.profileDataLoading = false;
+        },
+        
+        clearProfileDataError: (state) => {
+            state.profileDataError = null;
+        },
+        
+        setUserStatistics: (state, action: PayloadAction<UserStatistics>) => {
+            state.statistics = action.payload;
+            state.lastProfileDataUpdate = Date.now();
+        },
+        
+        setUserRecentActivities: (state, action: PayloadAction<UserActivity[]>) => {
+            state.recentActivities = action.payload;
+            state.lastProfileDataUpdate = Date.now();
+        },
+        
+        setProfileData: (state, action: PayloadAction<{
+            statistics: UserStatistics;
+            recentActivities: UserActivity[];
+        }>) => {
+            state.statistics = action.payload.statistics;
+            state.recentActivities = action.payload.recentActivities;
+            state.lastProfileDataUpdate = Date.now();
+            state.profileDataLoading = false;
+            state.profileDataError = null;
+        },
+        
+        clearProfileData: (state) => {
+            state.statistics = null;
+            state.recentActivities = [];
+            state.profileDataError = null;
+            state.lastProfileDataUpdate = null;
+        },
     },
 });
 
@@ -125,7 +228,15 @@ export const {
     clearUser,
     logout,
     updateUser,
-    setNotificationCount
+    setNotificationCount,
+    startProfileDataLoading,
+    stopProfileDataLoading,
+    setProfileDataError,
+    clearProfileDataError,
+    setUserStatistics,
+    setUserRecentActivities,
+    setProfileData,
+    clearProfileData
 } = userSlice.actions;
 
 export const selectUser = (state: RootState) => state.user.user;
@@ -135,5 +246,10 @@ export const selectRefreshToken = (state: RootState) => state.user.refreshToken;
 export const selectIsLoading = (state: RootState) => state.user.isLoading;
 export const selectError = (state: RootState) => state.user.error;
 export const selectNotificationCount = (state: RootState) => state.user.notificationCount;
+export const selectUserStatistics = (state: RootState) => state.user.statistics;
+export const selectUserRecentActivities = (state: RootState) => state.user.recentActivities;
+export const selectProfileDataLoading = (state: RootState) => state.user.profileDataLoading;
+export const selectProfileDataError = (state: RootState) => state.user.profileDataError;
+export const selectLastProfileDataUpdate = (state: RootState) => state.user.lastProfileDataUpdate;
 
 export default userSlice.reducer; 

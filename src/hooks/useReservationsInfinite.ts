@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { matchService, Match, PaginationInfo } from '../services/matchService';
 import { useCustomAlert } from './useCustomAlert';
+import { RESERVATION_STATUSES } from '../utils/constant';
 
 export interface ReservationFilters {
     searchQuery?: string;
@@ -16,7 +17,24 @@ export interface ReservationsByStatus {
     };
 }
 
+/**
+ * Hook personnalisé pour gérer les réservations avec pagination infinie
+ * Fournit une interface complète pour charger, gérer et filtrer les réservations
+ * par statut (en attente, confirmées, annulées)
+ * 
+ * Fonctionnalités principales :
+ * - Chargement paginé des réservations par statut
+ * - Confirmation et annulation de réservations
+ * - Filtrage par recherche
+ * - Gestion des états de chargement et d'erreur
+ * - Support de l'infinite scroll
+ * 
+ * @returns {Object} Objet contenant l'état et les méthodes de gestion des réservations
+ */
 export const useReservationsInfinite = () => {
+
+    const [index, setIndex] = useState(0);
+    const [searchQuery, setSearchQuery] = useState('');
     const [reservationsByStatus, setReservationsByStatus] = useState<ReservationsByStatus>({
         en_attente: { reservations: [], pagination: {} as PaginationInfo, loading: false, refreshing: false, hasMore: true },
         confirme: { reservations: [], pagination: {} as PaginationInfo, loading: false, refreshing: false, hasMore: true },
@@ -30,7 +48,12 @@ export const useReservationsInfinite = () => {
     const { showError } = useCustomAlert();
     const loadingRef = useRef(false);
 
-    // Charger les réservations pour un statut spécifique
+    /**
+     * Charge les réservations pour un statut spécifique avec pagination
+     * @param status - Statut des réservations ('en_attente', 'confirme', 'annule')
+     * @param page - Numéro de la page à charger
+     * @param isRefresh - Si true, remplace les données existantes
+     */
     const loadReservationsForStatus = useCallback(async (status: string, page: number = 1, isRefresh: boolean = false) => {
         if (loadingRef.current) return;
         
@@ -78,7 +101,10 @@ export const useReservationsInfinite = () => {
         }
     }, [setErrorMessage]);
 
-    // Charger la page suivante pour un statut
+    /**
+     * Charge la page suivante pour un statut donné (infinite scroll)
+     * @param status - Statut des réservations
+     */
     const loadMoreForStatus = useCallback((status: string) => {
         const currentStatus = reservationsByStatus[status];
         if (currentStatus.loading || !currentStatus.hasMore) return;
@@ -87,12 +113,19 @@ export const useReservationsInfinite = () => {
         loadReservationsForStatus(status, nextPage);
     }, [reservationsByStatus, loadReservationsForStatus]);
 
-    // Rafraîchir les données pour un statut
+    /**
+     * Rafraîchit les données pour un statut donné (pull-to-refresh)
+     * @param status - Statut des réservations
+     */
     const refreshForStatus = useCallback((status: string) => {
         loadReservationsForStatus(status, 1, true);
     }, [loadReservationsForStatus]);
 
-    // Confirmer une réservation
+    /**
+     * Confirme une réservation et recharge les données
+     * @param matchId - ID du match à confirmer
+     * @param gerantId - ID du gérant qui confirme
+     */
     const confirmReservation = useCallback(async (matchId: number, gerantId: number) => {
         try {
             setConfirmingMatchId(matchId);
@@ -113,7 +146,11 @@ export const useReservationsInfinite = () => {
         }
     }, [refreshForStatus, setSuccessMessage, setErrorMessage]);
 
-    // Annuler une réservation
+    /**
+     * Annule une réservation et recharge les données
+     * @param matchId - ID du match à annuler
+     * @param raison - Raison de l'annulation (optionnel)
+     */
     const cancelReservation = useCallback(async (matchId: number, raison?: string) => {
         try {
             setCancellingMatchId(matchId);
@@ -135,7 +172,11 @@ export const useReservationsInfinite = () => {
         }
     }, [refreshForStatus, setSuccessMessage, setErrorMessage]);
 
-    // Filtrer les réservations par recherche
+    /**
+     * Filtre les réservations par recherche textuelle
+     * @param status - Statut des réservations à filtrer
+     * @returns {Match[]} Liste des réservations filtrées
+     */
     const getFilteredReservations = useCallback((status: string) => {
         const reservations = reservationsByStatus[status]?.reservations || [];
         
@@ -150,11 +191,19 @@ export const useReservationsInfinite = () => {
         );
     }, [reservationsByStatus, filters.searchQuery]);
 
-    // Handlers de nettoyage des messages
+    /**
+     * Efface le message de succès
+     */
     const clearSuccessMessage = useCallback(() => setSuccessMessage(null), []);
+    
+    /**
+     * Efface le message d'erreur
+     */
     const clearErrorMessage = useCallback(() => setErrorMessage(null), []);
 
-    // Charger les données initiales
+    /**
+     * Charge les données initiales au montage du composant
+     */
     useEffect(() => {
         const loadInitialData = async () => {
             console.log("🚀 ~ loadInitialData ~ loadInitialData:")
@@ -168,8 +217,33 @@ export const useReservationsInfinite = () => {
         loadInitialData();
     }, [loadReservationsForStatus]);
 
+        // Mettre à jour les filtres quand la recherche change
+        useEffect(() => {
+            setFilters({ searchQuery });
+        }, [searchQuery, setFilters]);
+    
+        const handleConfirm = useCallback((matchId: number, gerantId: number) => {
+            confirmReservation(matchId, gerantId);
+        }, [confirmReservation]);
+    
+        const handleCancel = useCallback((matchId: number, raison?: string) => {
+            cancelReservation(matchId, raison);
+        }, [cancelReservation]);
+    
+        const handleRetry = useCallback(() => {
+            clearErrorMessage();
+            // Recharger toutes les réservations
+            Object.values(RESERVATION_STATUSES).forEach(status => {
+                refreshForStatus(status);
+            });
+        }, [clearErrorMessage, refreshForStatus]);
+
     return {
         reservationsByStatus,
+        index,
+        searchQuery,
+        setIndex,
+        setSearchQuery,
         filters,
         setFilters,
         successMessage,
@@ -183,5 +257,8 @@ export const useReservationsInfinite = () => {
         getFilteredReservations,
         clearSuccessMessage,
         clearErrorMessage,
+        handleConfirm,
+        handleCancel,
+        handleRetry
     };
 }; 

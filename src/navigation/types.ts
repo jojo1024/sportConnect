@@ -24,6 +24,9 @@ export type RootStackParamList = {
     MatchSummary: {
         match: any;
     };
+    EditProfile: undefined;
+    ProfileOptions: undefined;
+    EditPassword: undefined;
 }
 
 export interface INavigationProps {

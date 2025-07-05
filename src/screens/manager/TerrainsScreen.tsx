@@ -6,7 +6,6 @@ import { RetryComponent } from '../../components/UtilsComponent';
 import { TerrainCard } from '../../components/terrain';
 import { useTerrain } from '../../hooks/useTerrain';
 import { Terrain } from '../../services/terrainService';
-import { PRIMARY_COLOR } from '../../utils/constant';
 import { COLORS } from '../../theme/colors';
 
 const TerrainsScreen: React.FC = () => {
@@ -15,6 +14,7 @@ const TerrainsScreen: React.FC = () => {
         terrains,
         isLoading,
         error,
+        errorType,
         refreshData,
         handleEndReached,
         handleRefresh,
@@ -25,7 +25,11 @@ const TerrainsScreen: React.FC = () => {
     // Afficher l'erreur si elle existe
     if (error) {
         return (
-            <RetryComponent onRetry={refreshData} />
+            <RetryComponent
+                onRetry={refreshData}
+                errorType={errorType || undefined}
+                customMessage={error}
+            />
         );
     }
 
@@ -41,7 +45,7 @@ const TerrainsScreen: React.FC = () => {
                     style={styles.addButton}
                     onPress={handleAddTerrain}
                 >
-                    <Ionicons name="add-circle" size={16} color={PRIMARY_COLOR} />
+                    <Ionicons name="add-circle" size={16} color={COLORS.primary} />
                     <Text style={styles.addButtonText}>Ajouter</Text>
                 </TouchableOpacity>
             </View>
@@ -56,7 +60,7 @@ const TerrainsScreen: React.FC = () => {
                     <RefreshControl
                         refreshing={isLoading && terrains.length === 0}
                         onRefresh={handleRefresh}
-                        colors={[PRIMARY_COLOR]}
+                        colors={[COLORS.primary]}
                     />
                 }
                 onEndReached={handleEndReached}
@@ -83,18 +87,18 @@ const TerrainsScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.background,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e9ecef',
+        borderBottomColor: COLORS.gray[200],
         elevation: 2,
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 3,
@@ -102,20 +106,20 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#1a1a1a',
+        color: COLORS.almostBlack,
     },
     addButton: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 6,
         borderRadius: 40,
         borderWidth: 1,
-        borderColor: PRIMARY_COLOR,
+        borderColor: COLORS.primary,
     },
     addButtonText: {
-        color: PRIMARY_COLOR,
+        color: COLORS.primary,
         fontWeight: '600',
         marginLeft: 8,
         fontSize: 12,
@@ -132,24 +136,24 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#666',
+        color: COLORS.darkGray,
         marginTop: 16,
         marginBottom: 8,
     },
     emptyText: {
         fontSize: 14,
-        color: '#999',
+        color: COLORS.gray[500],
         textAlign: 'center',
         marginBottom: 24,
     },
     emptyButton: {
-        backgroundColor: PRIMARY_COLOR,
+        backgroundColor: COLORS.primary,
         paddingHorizontal: 24,
         paddingVertical: 12,
         borderRadius: 25,
     },
     emptyButtonText: {
-        color: '#fff',
+        color: COLORS.white,
         fontSize: 14,
         fontWeight: '600',
     },

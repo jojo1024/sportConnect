@@ -86,6 +86,59 @@ export interface ReservationsResponse {
     pagination: PaginationInfo;
 }
 
+// Nouvelles interfaces pour les statistiques et activités
+export interface UserStatistics {
+    totalMatchs: number;
+    totalTerrains: number;
+    totalHeures: number;
+    statsParSport: Array<{
+        sportId: number;
+        sportNom: string;
+        sportIcone: string;
+        nombreMatchs: number;
+        heuresTotales: number;
+    }>;
+}
+
+export interface UserActivity {
+    matchId: number;
+    matchDateDebut: string;
+    matchDateFin: string;
+    matchDuree: number;
+    matchDescription: string;
+    matchNbreParticipant: number;
+    matchStatus: string;
+    codeMatch: string;
+    matchDateCreation: string;
+    matchPrixParJoueur: number;
+    sportId: number;
+    sportNom: string;
+    sportIcone: string;
+    capoNomUtilisateur: string;
+    capoTelephone: string;
+    capoCommune: string;
+    terrainNom: string;
+    terrainLocalisation: string;
+    terrainDescription: string;
+    terrainContact: string;
+    terrainPrixParHeure: number;
+    terrainHoraires: string;
+    terrainImages: string;
+    dateParticipation: string;
+    statutParticipation: string;
+}
+
+export interface ProfileData {
+    statistics: UserStatistics;
+    recentActivities: UserActivity[];
+}
+
+export interface ProfileDataResponse {
+    success: boolean;
+    message: string;
+    data: ProfileData;
+}
+
 export const matchService = {
     getMatches: async (): Promise<Match[]> => {
         try {
@@ -247,6 +300,39 @@ export const matchService = {
             return response.data.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des réservations:', error);
+            throw error;
+        }
+    },
+
+    // Récupérer les statistiques d'un utilisateur
+    getUserStatistics: async (): Promise<UserStatistics> => {
+        try {
+            const response = await api.get<{ success: boolean; message: string; data: UserStatistics }>('/matchs/user-statistics');
+            return response.data.data;
+        } catch (error) {
+            console.error('Erreur lors de la récupération des statistiques:', error);
+            throw error;
+        }
+    },
+
+    // Récupérer les activités récentes d'un utilisateur
+    getUserRecentActivities: async (limit: number = 5): Promise<UserActivity[]> => {
+        try {
+            const response = await api.get<{ success: boolean; message: string; data: UserActivity[] }>(`/matchs/user-activities?limit=${limit}`);
+            return response.data.data;
+        } catch (error) {
+            console.error('Erreur lors de la récupération des activités récentes:', error);
+            throw error;
+        }
+    },
+
+    // Récupérer les données complètes du profil utilisateur
+    getUserProfileData: async (): Promise<ProfileData> => {
+        try {
+            const response = await api.get<ProfileDataResponse>('/matchs/user-profile-data');
+            return response.data.data;
+        } catch (error) {
+            console.error('Erreur lors de la récupération des données du profil:', error);
             throw error;
         }
     },

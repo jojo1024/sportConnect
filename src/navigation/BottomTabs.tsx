@@ -13,14 +13,7 @@ import { COLORS } from '../theme/colors';
 
 const Tab = createBottomTabNavigator();
 
-// Wrapper pour passer la navigation aux écrans
-const TchinTchinsScreenWrapper = ({ navigation }: any) => (
-    <TchinTchinsScreen navigation={navigation} />
-);
-
-const TchinTchinsCapoScreenWrapper = ({ navigation }: any) => (
-    <TchinTchinsCapoScreen navigation={navigation} />
-);
+// Les composants TchinTchins n'ont pas besoin de navigation en prop
 
 interface BottomTabsProps {
     userRole: UserRole;
@@ -38,7 +31,7 @@ export const BottomTabs: React.FC<BottomTabsProps> = ({ userRole }) => {
                     <>
                         <Tab.Screen
                             name="TchinTchins"
-                            component={TchinTchinsScreenWrapper}
+                            component={TchinTchinsScreen}
                             options={{
                                 tabBarIcon: ({ color, size }) => (
                                     <Ionicons name="football-outline" size={size} color={color} />
@@ -74,7 +67,7 @@ export const BottomTabs: React.FC<BottomTabsProps> = ({ userRole }) => {
                     <>
                         <Tab.Screen
                             name="TchinTchins"
-                            component={TchinTchinsCapoScreenWrapper}
+                            component={TchinTchinsCapoScreen}
                             options={{
                                 tabBarIcon: ({ color, size }) => (
                                     <Ionicons name="football-outline" size={size} color={color} />

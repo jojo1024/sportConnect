@@ -1,75 +1,117 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View, RefreshControl } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import ProfileStats from '../../components/profile/ProfileStats';
-import CreditBalance from '../../components/profile/CreditBalance';
+import ProfileActivities from '../../components/profile/ProfileActivities';
 import { useAppSelector, useAuthLogout } from '../../store/hooks/hooks';
 import { selectUser } from '../../store/slices/userSlice';
 import { COLORS } from '../../theme/colors';
-
-const activities = [
-    { id: 1, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 2 jours', points: 9 },
-    { id: 2, label: 'a joué une partie à Sportcenter Academy', date: 'Il y a 4 jours', points: 9 },
-];
+import { useProfileData } from '../../hooks/useProfileData';
 
 const ProfileScreen: React.FC = () => {
+    const navigation = useNavigation();
     const { logout } = useAuthLogout();
-
     const utilisateur = useAppSelector(selectUser);
+    const { statistics, recentActivities, loading, error, refreshData, hasData } = useProfileData();
 
     const handleLogout = () => {
         logout();
     };
 
+    const handleEditProfile = () => {
+        navigation.navigate('ProfileOptions' as never);
+    };
 
-
-    return (
-        <FlatList
-            style={styles.bg}
-            contentContainerStyle={{ paddingBottom: 32 }}
-            data={activities}
-            keyExtractor={item => item.id.toString()}
-            ListHeaderComponent={
+    const renderContent = () => {
+        // Si on a des données (même en cache), on les affiche
+        if (hasData) {
+            return (
                 <>
                     <View style={styles.headerContainer}>
                         <ProfileHeader
                             name={utilisateur?.utilisateurNom || ''}
                             city={utilisateur?.utilisateurCommune || ''}
-                            onEdit={() => { }}
+                            onEdit={handleEditProfile}
                         />
                     </View>
-                    <View >
-                        <ProfileStats games={21} fields={3} hours={26.5} />
+
+                    <View>
+                        <ProfileStats
+                            games={statistics?.totalMatchs || 0}
+                            fields={statistics?.totalTerrains || 0}
+                            hours={statistics?.totalHeures || 0}
+                        />
                     </View>
-                    <Text style={styles.activityTitle}>Activité</Text>
+
+                    <ProfileActivities
+                        activities={recentActivities || []}
+                        loading={loading}
+                    />
                 </>
-            }
-            renderItem={({ item }) => (
-                <View style={styles.activityItemContainer}>
-                    <Image style={styles.image} source={{ uri: 'https://via.placeholder.com/40' }} />
-                    <View style={styles.info}>
-                        <Text style={styles.label}>{item.label}</Text>
-                        <View style={styles.row}>
-                            <MaterialCommunityIcons name="star-circle" size={16} color={COLORS.primary} />
-                            <Text style={styles.points}>+{item.points}</Text>
-                            <Text style={styles.date}>{item.date}</Text>
-                        </View>
-                    </View>
+            );
+        }
+
+        // Si on a une erreur et pas de données
+        if (error && !hasData) {
+            return (
+                <View style={styles.errorContainer}>
+                    <MaterialCommunityIcons name="alert-circle" size={48} color={COLORS.danger} />
+                    <Text style={styles.errorText}>Erreur de chargement</Text>
+                    <Text style={styles.errorSubtext}>{error}</Text>
+                    <TouchableOpacity style={styles.retryButton} onPress={refreshData}>
+                        <Text style={styles.retryText}>Réessayer</Text>
+                    </TouchableOpacity>
                 </View>
-            )}
-            ListFooterComponent={<TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <Text style={styles.logoutText}>Déconnexion</Text>
-            </TouchableOpacity>}
-        />
+            );
+        }
+    };
+
+    return (
+        <View style={styles.container}>
+            <FlatList
+                style={styles.bg}
+                contentContainerStyle={{ paddingBottom: 32 }}
+                data={[]}
+                renderItem={() => null}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={loading}
+                        onRefresh={refreshData}
+                        colors={[COLORS.primary]}
+                        tintColor={COLORS.primary}
+                    />
+                }
+                ListHeaderComponent={renderContent()}
+                // ListFooterComponent={
+                //     <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                //         <Text style={styles.logoutText}>Déconnexion</Text>
+                //     </TouchableOpacity>
+                // }
+                showsVerticalScrollIndicator={false}
+            />
+            <View style={{ marginBottom: 20 }}></View>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
-    bg: { flex: 1, backgroundColor: COLORS.background },
-    headerContainer: { backgroundColor: COLORS.background, paddingTop: 32, paddingBottom: 8 },
+    container: {
+        flex: 1,
+        backgroundColor: COLORS.background,
+    },
+    bg: {
+        flex: 1,
+        backgroundColor: COLORS.background
+    },
+    headerContainer: {
+        backgroundColor: COLORS.background,
+        paddingTop: 32,
+        paddingBottom: 8
+    },
     logoutButton: {
-        marginTop: 0,
+        marginTop: 20,
         marginBottom: 0,
         paddingVertical: 12,
         backgroundColor: 'transparent',
@@ -82,34 +124,47 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-    activityTitle: {
-        marginTop: 24,
-        marginBottom: 12,
-        marginHorizontal: 16,
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 40,
+    },
+    loadingText: {
+        color: COLORS.gray[500],
+        fontSize: 16,
+        marginTop: 12,
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 40,
+    },
+    errorText: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: COLORS.veryDarkGray,
+        color: COLORS.danger,
+        marginTop: 12,
+        marginBottom: 4,
     },
-    activityItemContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginHorizontal: 16,
-        marginBottom: 18,
-        backgroundColor: COLORS.backgroundWhite,
-        borderRadius: 12,
-        padding: 12,
-        shadowColor: COLORS.shadow,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 1,
+    errorSubtext: {
+        fontSize: 14,
+        color: COLORS.gray[600],
+        textAlign: 'center',
+        marginBottom: 20,
     },
-    image: { width: 40, height: 40, borderRadius: 20, marginRight: 12, backgroundColor: COLORS.gray[200] },
-    info: { flex: 1 },
-    label: { fontSize: 15, color: COLORS.veryDarkGray, marginBottom: 4 },
-    row: { flexDirection: 'row', alignItems: 'center' },
-    points: { color: COLORS.primary, fontWeight: 'bold', marginLeft: 4, marginRight: 10 },
-    date: { color: COLORS.gray[500], fontSize: 13 },
+    retryButton: {
+        backgroundColor: COLORS.primary,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 8,
+    },
+    retryText: {
+        color: COLORS.white,
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
 });
 
 export default ProfileScreen; 

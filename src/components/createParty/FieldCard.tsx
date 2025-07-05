@@ -3,7 +3,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '../../theme/colors';
 import { BASE_URL_IMAGES } from '../../services/api';
 import { Terrain } from '../../services/terrainService';
-import { getTerrainImage } from '../../utils/functions';
+import { getTerrainImage, formatHoraires } from '../../utils/functions';
 
 interface FieldCardProps {
     terrain: Terrain;
@@ -30,7 +30,7 @@ export const FieldCard: React.FC<FieldCardProps> = ({ terrain, isSelected, onSel
             </View>
             <Text style={styles.fieldLocation}>{terrain.terrainLocalisation}</Text>
             <View style={styles.fieldDetails}>
-                <Text style={styles.fieldSchedule}>Horaires: {terrain.terrainHoraires}</Text>
+                <Text style={styles.fieldSchedule}>Horaires: {formatHoraires(terrain.terrainHoraires)}</Text>
                 {/* <Text style={styles.fieldPrice}>{field.pricePerHour} XOF/heure</Text> */}
             </View>
             <View style={styles.fieldDetails}>

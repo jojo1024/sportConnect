@@ -48,7 +48,7 @@ const TerrainCard: React.FC<TerrainCardProps> = ({ terrain, onPress }) => {
                         </View>
                         <View style={styles.detailItem}>
                             <Ionicons name="people-outline" size={16} color={COLORS.darkGray} />
-                            <Text style={styles.detailValue}>0 réservations</Text>
+                            <Text style={styles.detailValue}>{terrain?.reservationsEnAttenteCount || 0} réservations</Text>
                         </View>
                     </View>
                     <View style={styles.priceContainer}>

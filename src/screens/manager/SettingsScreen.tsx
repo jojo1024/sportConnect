@@ -5,15 +5,13 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAppSelector, useAuthLogout } from '../../store/hooks/hooks';
 import { ScreenNavigationProps } from '../../navigation/types';
 import { selectUser } from '../../store/slices/userSlice';
+import { getUserAvatar } from '../../utils/functions';
 
 const SettingsScreen: React.FC = () => {
     const { logout } = useAuthLogout();
     const utilisateur = useAppSelector(selectUser);
 
     const navigation = useNavigation<ScreenNavigationProps>();
-    const [notifications, setNotifications] = React.useState(true);
-    const [emailNotifications, setEmailNotifications] = React.useState(true);
-    const [darkMode, setDarkMode] = React.useState(false);
 
     const handleLogout = async () => {
         await logout();
@@ -29,7 +27,7 @@ const SettingsScreen: React.FC = () => {
             <View style={styles.header}>
                 <View style={styles.avatarContainer}>
                     <Image
-                        source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
+                        source={{ uri: getUserAvatar(utilisateur?.utilisateurAvatar) }}
                         style={styles.avatar}
                     />
                 </View>

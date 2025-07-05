@@ -2,6 +2,9 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../../theme/colors';
+import { getUserAvatar } from '../../utils/functions';
+import { useAppSelector } from '../../store/hooks/hooks';
+import { selectUser } from '../../store/slices/userSlice';
 
 interface ProfileHeaderProps {
     name: string;
@@ -9,19 +12,23 @@ interface ProfileHeaderProps {
     onEdit: () => void;
 }
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({ name, city, onEdit }) => (
-    <View style={styles.header}>
-        <Image style={styles.avatar}
-            source={{ uri: 'https://randomuser.me/api/portraits/men/30.jpg' }}
-        />
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.city}>{city}</Text>
-        <TouchableOpacity style={styles.editButton} onPress={onEdit}>
-            <MaterialIcons name="edit" size={18} color={COLORS.primary} />
-            <Text style={styles.editText}>Modifier le profil</Text>
-        </TouchableOpacity>
-    </View>
-);
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ name, city, onEdit }) => {
+    const user = useAppSelector(selectUser);
+
+    return (
+        <View style={styles.header}>
+            <Image style={styles.avatar}
+                source={{ uri: getUserAvatar(user?.utilisateurAvatar) }}
+            />
+            <Text style={styles.name}>{name}</Text>
+            <Text style={styles.city}>{city}</Text>
+            <TouchableOpacity style={styles.editButton} onPress={onEdit}>
+                <MaterialIcons name="edit" size={18} color={COLORS.primary} />
+                <Text style={styles.editText}>Modifier le profil</Text>
+            </TouchableOpacity>
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
     header: { alignItems: 'center', padding: 24, backgroundColor: '#F3F7FA' },

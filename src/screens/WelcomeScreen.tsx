@@ -6,7 +6,7 @@ import { COLORS } from '../theme/colors';
 
 const WelcomeScreen = () => {
 
-    const { handleGetStarted, handleLogin } = useWelcome();
+    const { handleRegister, handleLogin } = useWelcome();
 
     return (
         <SafeAreaView style={styles.container}>
@@ -21,7 +21,7 @@ const WelcomeScreen = () => {
             </Text>
             <TouchableOpacity
                 style={styles.button}
-                onPress={handleGetStarted}
+                onPress={handleRegister}
             >
                 <Text style={styles.buttonText}>Créer un compte</Text>
             </TouchableOpacity>

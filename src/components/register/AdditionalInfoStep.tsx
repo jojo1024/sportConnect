@@ -1,20 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomButton from '../CustomButton';
+import DateOfBirthInput from '../DateOfBirthInput';
 import { COLORS } from '../../theme/colors';
 
 interface AdditionalInfoStepProps {
     formState: any;
     handlers: any;
-    showDatePicker: boolean;
-    setShowDatePicker: (show: boolean) => void;
     setGlobalError: (error: string) => void;
     validateStep: (step: number) => boolean;
-    onDateChange: (event: any, selectedDate?: Date) => void;
-    confirmDateSelection: () => void;
-    formatDisplayDate: (dateString: string) => string;
     onNext: () => void;
     onPrev: () => void;
 }
@@ -22,13 +17,8 @@ interface AdditionalInfoStepProps {
 export default function AdditionalInfoStep({
     formState,
     handlers,
-    showDatePicker,
-    setShowDatePicker,
     setGlobalError,
     validateStep,
-    onDateChange,
-    confirmDateSelection,
-    formatDisplayDate,
     onNext,
     onPrev
 }: AdditionalInfoStepProps) {
@@ -36,73 +26,17 @@ export default function AdditionalInfoStep({
         <>
             {/* <Text style={styles.stepTitle}>Informations complémentaires</Text> */}
 
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Date de naissance</Text>
-                <TouchableOpacity
-                    style={[styles.input, handlers.errors.dateNaiss && styles.inputError]}
-                    onPress={() => setShowDatePicker(true)}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.inputText}>
-                        {formatDisplayDate(formState.dateNaiss)}
-                    </Text>
-                    <Ionicons name="calendar-outline" size={24} color={COLORS.textLight} />
-                </TouchableOpacity>
-                {!!handlers.errors.dateNaiss && formState.dateNaiss && <Text style={styles.error}>{handlers.errors.dateNaiss}</Text>}
-                {formState.dateNaiss && !handlers.errors.dateNaiss && (
-                    <View style={styles.validIndicator}>
-                        <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
-                        <Text style={styles.validText}>
-                            {(() => {
-                                try {
-                                    const today = new Date();
-                                    const birth = new Date(formState.dateNaiss);
-                                    if (!isNaN(birth.getTime())) {
-                                        let age = today.getFullYear() - birth.getFullYear();
-                                        const monthDiff = today.getMonth() - birth.getMonth();
-                                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-                                            age--;
-                                        }
-                                        return `Âge: ${age} ans`;
-                                    }
-                                } catch (error) {
-                                    // Ignorer les erreurs de calcul d'âge
-                                }
-                                return 'Date valide';
-                            })()}
-                        </Text>
-                    </View>
-                )}
-            </View>
-
-            {showDatePicker && (
-                <>
-                    <DateTimePicker
-                        value={formState.dateNaiss ? new Date(formState.dateNaiss) : new Date()}
-                        mode="date"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={onDateChange}
-                        locale="fr-FR"
-                        style={Platform.OS === 'ios' ? { width: '100%' } : undefined}
-                    />
-                    {Platform.OS === 'ios' && (
-                        <View style={styles.datePickerButtons}>
-                            <TouchableOpacity
-                                style={styles.datePickerButton}
-                                onPress={() => setShowDatePicker(false)}
-                            >
-                                <Text style={styles.datePickerButtonText}>Annuler</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.datePickerButton, styles.datePickerButtonConfirm]}
-                                onPress={confirmDateSelection}
-                            >
-                                <Text style={styles.datePickerButtonTextConfirm}>Confirmer</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                </>
-            )}
+            <DateOfBirthInput
+                label="Date de naissance"
+                value={formState.dateNaiss}
+                onChangeText={(value) => {
+                    handlers.handleDateNaissChange(value);
+                    setGlobalError('');
+                }}
+                error={handlers.errors.dateNaiss}
+                onErrorChange={(error) => handlers.setFieldError('dateNaiss', error)}
+                placeholder="Sélectionner votre date de naissance"
+            />
 
             <View style={styles.inputContainer}>
                 <Text style={styles.label}>Sexe</Text>
@@ -202,11 +136,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 4,
     },
-    validText: {
-        color: COLORS.textLight,
-        fontSize: 14,
-        marginLeft: 4,
-    },
     sexeButtons: {
         flexDirection: 'row',
         gap: 10,
@@ -224,7 +153,6 @@ const styles = StyleSheet.create({
         borderColor: COLORS.primary,
     },
     sexeButtonText: {
-        // ...typography.body1,
         fontSize: 16,
         fontWeight: 'bold',
         color: COLORS.textLight,
@@ -246,28 +174,5 @@ const styles = StyleSheet.create({
         padding: 10,
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    datePickerButtons: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        paddingTop: 10,
-        borderTopWidth: 1,
-        borderTopColor: '#eee',
-    },
-    datePickerButton: {
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        marginLeft: 10,
-    },
-    datePickerButtonConfirm: {
-        backgroundColor: COLORS.primary,
-        borderRadius: 5,
-    },
-    datePickerButtonText: {
-        color: COLORS.textLight,
-        fontSize: 16,
-    },
-    datePickerButtonTextConfirm: {
-        color: COLORS.white,
     },
 }); 

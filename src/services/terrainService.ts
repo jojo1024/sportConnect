@@ -11,6 +11,8 @@ export interface Terrain {
     terrainImages: string[];
     terrainStatus: number;
     terrainDisponibilite: "confirme" | "en_attente";
+    reservationsEnAttenteCount?: number;
+    reservationsConfirmeCount?: number;
 }
 
 export interface CreateTerrainData {

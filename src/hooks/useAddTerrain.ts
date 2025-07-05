@@ -23,17 +23,35 @@ const TIME_FORMAT_OPTIONS = {
     minute: '2-digit' as const,
 };
 
-
+/**
+ * Objet contenant les fonctions de validation pour chaque type de champ
+ */
 const validateField = {
+    /**
+     * Valide qu'un champ requis n'est pas vide
+     * @param value - Valeur à valider
+     * @param fieldName - Nom du champ pour le message d'erreur
+     * @returns {string | null} Message d'erreur ou null si valide
+     */
     required: (value: string, fieldName: string): string | null => 
         !value.trim() ? `${fieldName} est requis` : null,
     
+    /**
+     * Valide un numéro de téléphone
+     * @param value - Numéro de téléphone à valider
+     * @returns {string | null} Message d'erreur ou null si valide
+     */
     phone: (value: string): string | null => {
         if (!value.trim()) return 'Le contact est requis';
         const phoneError = validatePhoneNumber(value);
         return phoneError || null;
     },
     
+    /**
+     * Valide un prix (nombre positif)
+     * @param value - Prix à valider
+     * @returns {string | null} Message d'erreur ou null si valide
+     */
     price: (value: string): string | null => {
         if (!value.trim()) return 'Le prix par heure est requis';
         if (isNaN(Number(value))) return 'Le prix doit être un nombre valide';
@@ -41,11 +59,20 @@ const validateField = {
         return null;
     },
     
+    /**
+     * Valide qu'au moins une image est sélectionnée
+     * @param images - Liste des images
+     * @returns {string | null} Message d'erreur ou null si valide
+     */
     images: (images: string[]): string | null => 
         images.length === 0 ? 'Au moins une photo de couverture est requise' : null,
 };
 
-// Image processing helpers
+/**
+ * Traite un asset d'image et le convertit en base64
+ * @param asset - Asset d'image à traiter
+ * @returns {Promise<string>} Image en format base64 ou URI
+ */
 const processImageAsset = async (asset: ImagePicker.ImagePickerAsset): Promise<string> => {
     if (asset.base64) {
         return `data:image/jpeg;base64,${asset.base64}`;
@@ -66,6 +93,21 @@ const processImageAsset = async (asset: ImagePicker.ImagePickerAsset): Promise<s
     throw new Error('Format d\'image non supporté');
 };
 
+/**
+ * Hook personnalisé pour gérer l'ajout de terrains
+ * Fournit une interface complète pour créer des terrains avec gestion d'images,
+ * validation et soumission
+ * 
+ * Fonctionnalités principales :
+ * - Gestion du formulaire d'ajout de terrain
+ * - Sélection et traitement d'images multiples
+ * - Validation en temps réel des champs
+ * - Gestion des horaires d'ouverture/fermeture
+ * - Soumission du formulaire avec gestion d'erreur
+ * - Optimisations avec useCallback et useMemo
+ * 
+ * @returns {UseAddTerrainReturn} Objet contenant l'état et les méthodes de gestion
+ */
 export const useAddTerrain = (): UseAddTerrainReturn => {
     const user = useAppSelector(selectUser);
     
@@ -78,7 +120,12 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    // Handlers de formulaire optimisés avec useCallback
+    /**
+     * Crée un handler générique pour les champs de formulaire
+     * Met à jour la valeur et efface l'erreur correspondante
+     * @param field - Nom du champ à gérer
+     * @returns {Function} Handler pour le champ spécifié
+     */
     const createFieldHandler = useCallback((field: keyof FormData) => {
         return (value: string) => {
             setFormData(prev => ({ ...prev, [field]: value }));
@@ -95,7 +142,13 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
     const setTerrainContact = createFieldHandler('terrainContact');
     const setTerrainPrixParHeure = createFieldHandler('terrainPrixParHeure');
 
-    // Handlers de temps optimisés
+    /**
+     * Crée un handler générique pour les champs de temps
+     * Gère la sélection d'heure et met à jour le formulaire
+     * @param timeField - Type de champ de temps ('ouverture' ou 'fermeture')
+     * @param setShowPicker - Fonction pour afficher/masquer le picker
+     * @returns {Function} Handler pour le champ de temps
+     */
     const createTimeHandler = useCallback((timeField: 'ouverture' | 'fermeture', setShowPicker: (show: boolean) => void) => {
         return (event: any, selectedDate?: Date) => {
             setShowPicker(false);
@@ -114,7 +167,10 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
     const handleStartTimeChange = createTimeHandler('ouverture', setShowStartTimePicker);
     const handleEndTimeChange = createTimeHandler('fermeture', setShowEndTimePicker);
 
-    // Handler d'images optimisé
+    /**
+     * Sélectionne une image depuis la galerie
+     * Vérifie les limites et traite l'image sélectionnée
+     */
     const pickImage = useCallback(async () => {
         if (formData.terrainImages.length >= MAX_IMAGES) {
             setErrorMessage(`Limite de ${MAX_IMAGES} images atteinte`);
@@ -143,6 +199,10 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
         }
     }, [formData.terrainImages.length, errors.terrainImages]);
 
+    /**
+     * Supprime une image de la liste
+     * @param index - Index de l'image à supprimer
+     */
     const removeImage = useCallback((index: number) => {
         setFormData(prev => ({
             ...prev,
@@ -150,7 +210,10 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
         }));
     }, []);
 
-    // Validation optimisée avec useMemo
+    /**
+     * Valide tous les champs du formulaire
+     * @returns {boolean} True si le formulaire est valide
+     */
     const validateForm = useCallback(() => {
         const newErrors: ValidationErrors = {};
 
@@ -174,7 +237,10 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
         return Object.keys(newErrors).length === 0;
     }, [formData]);
 
-    // État du formulaire calculé avec useMemo
+    /**
+     * Vérifie si le formulaire est prêt à être soumis
+     * Calculé avec useMemo pour optimiser les performances
+     */
     const isFormReady = useMemo(() => {
         return Object.keys(errors).length === 0 && 
             formData.terrainNom.trim() !== '' && 
@@ -184,7 +250,10 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
             formData.terrainImages.length > 0;
     }, [errors, formData]);
 
-    // Handler de soumission optimisé
+    /**
+     * Soumet le formulaire et crée le terrain
+     * Valide les données et appelle l'API de création
+     */
     const handleSubmit = useCallback(async () => {
         if (!validateForm() || !user?.utilisateurId) {
             return;
@@ -221,8 +290,14 @@ export const useAddTerrain = (): UseAddTerrainReturn => {
         }
     }, [formData, validateForm, user?.utilisateurId]);
 
-    // Handlers de nettoyage
+    /**
+     * Efface le message de succès
+     */
     const clearSuccessMessage = useCallback(() => setSuccessMessage(null), []);
+    
+    /**
+     * Efface le message d'erreur
+     */
     const clearErrorMessage = useCallback(() => setErrorMessage(null), []);
 
     return {

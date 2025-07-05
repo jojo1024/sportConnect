@@ -6,7 +6,7 @@ import { COLORS } from '../../theme/colors';
 import { useAppSelector } from '../../store/hooks/hooks';
 import { selectUser } from '../../store/slices/userSlice';
 import CustomAlert from '../CustomAlert';
-import { formatDate, formatTime, getStatusColor, getStatusText } from '../../utils/functions';
+import { formatDate, formatTime, getModalConfig, getStatusColor, getStatusText } from '../../utils/functions';
 
 interface ReservationCardProps {
     item: Match;
@@ -52,46 +52,10 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
         setModalType(null);
     };
 
-    const getModalConfig = () => {
-        switch (modalType) {
-            case 'confirm':
-                return {
-                    title: "Confirmer la réservation",
-                    message: `Êtes-vous sûr de vouloir confirmer cette réservation pour le terrain "${item.terrainNom}" ?\n\nCette action ne peut pas être annulée.`,
-                    confirmText: "Confirmer",
-                    cancelText: "Annuler"
-                };
-            case 'cancel':
-                return {
-                    title: "Annuler la réservation",
-                    message: `Êtes-vous sûr de vouloir annuler cette réservation pour le terrain "${item.terrainNom}" ?\n\nCette action ne peut pas être annulée.`,
-                    confirmText: "Annuler",
-                    cancelText: "Retour"
-                };
-            default:
-                return {
-                    title: "",
-                    message: "",
-                    confirmText: "",
-                    cancelText: ""
-                };
-        }
-    };
 
-    const modalConfig = getModalConfig();
 
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'confirme':
-                return 'checkmark-circle';
-            case 'en_attente':
-                return 'time';
-            case 'annule':
-                return 'close-circle';
-            default:
-                return 'help-circle';
-        }
-    };
+    const modalConfig = getModalConfig(modalType, item);
+
 
     return (
         <>
@@ -106,11 +70,6 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
                         styles.statusBadge,
                         { backgroundColor: getStatusColor(item.matchStatus as "confirme" | "en_attente" | "annule") + '20' }
                     ]}>
-                        {/* <Ionicons
-                            name={getStatusIcon(item.matchStatus)}
-                            size={14}
-                            color={getStatusColor(item.matchStatus as "confirme" | "en_attente" | "annule")}
-                        /> */}
                         <Text style={[
                             styles.statusText,
                             { color: getStatusColor(item.matchStatus as "confirme" | "en_attente" | "annule") }
@@ -124,11 +83,11 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
                 <View style={styles.infoSection}>
                     <View style={styles.infoRow}>
                         <View style={styles.infoItem}>
-                            <Ionicons name="calendar" size={16} color="#666" style={styles.infoIcon} />
+                            <Ionicons name="calendar" size={16} color={COLORS.darkGray} style={styles.infoIcon} />
                             <Text style={styles.dateText}>{formatDate(item.matchDateDebut)}</Text>
                         </View>
                         <View style={styles.infoItem}>
-                            <Ionicons name="time" size={16} color={COLORS.primary} style={styles.infoIcon} />
+                            <Ionicons name="time" size={16} color={COLORS.darkGray} style={styles.infoIcon} />
                             <Text style={styles.timeText}>
                                 {formatTime(item.matchDateDebut)} - {formatTime(item.matchDateFin)}
                             </Text>
@@ -137,13 +96,13 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
 
                     <View style={styles.infoRow}>
                         <View style={styles.infoItem}>
-                            <Ionicons name="people" size={16} color="#666" style={styles.infoIcon} />
+                            <Ionicons name="people" size={16} color={COLORS.darkGray} style={styles.infoIcon} />
                             <Text style={styles.joueursText}>
                                 {item.nbreJoueursInscrits}/{item.joueurxMax} joueurs
                             </Text>
                         </View>
                         <View style={styles.infoItem}>
-                            <Ionicons name="person" size={16} color="#666" style={styles.infoIcon} />
+                            <Ionicons name="person" size={16} color={COLORS.darkGray} style={styles.infoIcon} />
                             <Text style={styles.capoText}>{item.capoNomUtilisateur}</Text>
                         </View>
                     </View>
@@ -152,7 +111,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
                 {/* Description avec icône */}
                 {item.matchDescription && (
                     <View style={styles.descriptionSection}>
-                        <Ionicons name="chatbubble-ellipses" size={14} color="#888" style={styles.descriptionIcon} />
+                        <Ionicons name="chatbubble-ellipses" size={14} color={COLORS.gray[500]} style={styles.descriptionIcon} />
                         <Text style={styles.descriptionText} numberOfLines={2}>
                             {item.matchDescription}
                         </Text>
@@ -172,11 +131,11 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
                             disabled={isConfirming || isCancelling}
                         >
                             {isConfirming ? (
-                                    <ActivityIndicator size="small" color={COLORS.success} />
-                                ) : (
-                                    <>
-                                        <Ionicons name="checkmark" size={16} color={COLORS.success} style={styles.buttonIcon} />
-                                    <Text style={{...styles.actionButtonText, color: COLORS.success}}>Confirmer</Text>
+                                <ActivityIndicator size="small" color={COLORS.success} />
+                            ) : (
+                                <>
+                                    <Ionicons name="checkmark" size={16} color={COLORS.success} style={styles.buttonIcon} />
+                                    <Text style={{ ...styles.actionButtonText, color: COLORS.success }}>Confirmer</Text>
                                 </>
                             )}
                         </TouchableOpacity>
@@ -220,18 +179,18 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
 
 const styles = StyleSheet.create({
     reservationCard: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         borderRadius: 12,
         padding: 16,
         marginHorizontal: 16,
         marginVertical: 8,
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow,
         shadowOpacity: 0.08,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 2 },
         elevation: 4,
         borderWidth: 1,
-        borderColor: '#f0f0f0',
+        borderColor: COLORS.borderLight,
     },
     header: {
         flexDirection: 'row',
@@ -250,7 +209,7 @@ const styles = StyleSheet.create({
     terrainName: {
         fontSize: 17,
         fontWeight: '600',
-        color: '#1a1a1a',
+        color: COLORS.almostBlack,
         flex: 1,
     },
     statusBadge: {
@@ -283,21 +242,21 @@ const styles = StyleSheet.create({
     },
     dateText: {
         fontSize: 14,
-        color: '#666',
+        color: COLORS.darkGray,
         fontWeight: '500',
     },
     timeText: {
         fontSize: 14,
-        color: COLORS.primary,
+        color: COLORS.darkGray,
         fontWeight: '600',
     },
     joueursText: {
         fontSize: 13,
-        color: '#666',
+        color: COLORS.darkGray,
     },
     capoText: {
         fontSize: 13,
-        color: '#666',
+        color: COLORS.darkGray,
     },
     descriptionSection: {
         flexDirection: 'row',
@@ -305,7 +264,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         paddingTop: 8,
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
+        borderTopColor: COLORS.borderLight,
     },
     descriptionIcon: {
         marginRight: 6,
@@ -313,7 +272,7 @@ const styles = StyleSheet.create({
     },
     descriptionText: {
         fontSize: 13,
-        color: '#666',
+        color: COLORS.darkGray,
         fontStyle: 'italic',
         flex: 1,
         lineHeight: 18,
@@ -324,7 +283,7 @@ const styles = StyleSheet.create({
         gap: 10,
         paddingTop: 8,
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
+        borderTopColor: COLORS.borderLight,
     },
     actionButton: {
         flex: 1,
@@ -334,7 +293,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 16,
         borderRadius: 6,
-        shadowColor: '#000',
+        shadowColor: COLORS.shadow,
         shadowOpacity: 0.05,
         shadowRadius: 2,
         shadowOffset: { width: 0, height: 1 },
@@ -342,12 +301,12 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     acceptButton: {
-        backgroundColor: '#fff',
-        borderColor: '#e2e8f0',
+        backgroundColor: COLORS.white,
+        borderColor: COLORS.borderLight,
     },
     rejectButton: {
-        backgroundColor: '#fff',
-        borderColor: '#e2e8f0',
+        backgroundColor: COLORS.white,
+        borderColor: COLORS.borderLight,
     },
     disabledButton: {
         opacity: 0.6,
@@ -356,7 +315,7 @@ const styles = StyleSheet.create({
         marginRight: 6,
     },
     actionButtonText: {
-        color:COLORS.red,
+        color: COLORS.red,
         fontSize: 13,
         fontWeight: '600',
     },

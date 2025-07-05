@@ -6,7 +6,11 @@ import { startLoading, setError, clearError } from '../store/slices/userSlice';
 import { authService } from '../services/authService';
 import { RootState } from '../store';
 import { useAuthLogin } from '../store/hooks/hooks';
+import { Keyboard } from 'react-native';
 
+/**
+ * Interface définissant la structure de l'état du formulaire d'inscription
+ */
 interface RegisterFormState {
     nom: string;
     telephone: string;
@@ -17,6 +21,9 @@ interface RegisterFormState {
     confirmerMotDePasse: string;
 }
 
+/**
+ * Interface définissant les fonctions de gestion du formulaire d'inscription
+ */
 interface RegisterFormHandlers {
     handleNomChange: (text: string) => void;
     handleTelephoneChange: (text: string) => void;
@@ -31,13 +38,28 @@ interface RegisterFormHandlers {
     validateField: (field: keyof RegisterFormState) => string;
 }
 
+/**
+ * Hook personnalisé pour gérer le formulaire d'inscription utilisateur.
+ * 
+ * Ce hook gère :
+ * - L'état du formulaire d'inscription
+ * - La validation des champs en temps réel
+ * - La gestion des erreurs
+ * - La soumission du formulaire
+ * - La connexion automatique après inscription
+ * 
+ * @returns {[RegisterFormState, RegisterFormHandlers]} Tuple contenant l'état du formulaire et les handlers
+ */
 export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => {
     const dispatch = useDispatch();
     const navigation = useNavigation<ScreenNavigationProps>();
+    
+    // Récupération des états du store Redux
     const isLoading = useSelector((state: RootState) => state.user.isLoading);
     const error = useSelector((state: RootState) => state.user.error);
     const { login } = useAuthLogin();
     
+    // État local du formulaire d'inscription
     const [formState, setFormState] = useState<RegisterFormState>({
         nom: '',
         telephone: '',
@@ -48,14 +70,22 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
         confirmerMotDePasse: '',
     });
 
+    // État local pour les erreurs de validation
     const [errors, setErrors] = useState<Record<string, string>>({});
 
+    /**
+     * Valide un champ spécifique du formulaire
+     * 
+     * @param {keyof RegisterFormState} field - Le champ à valider
+     * @returns {string} Message d'erreur (vide si valide)
+     */
     const validateField = (field: keyof RegisterFormState): string => {
         const value = formState[field];
         let errorMessage = '';
         
         switch (field) {
             case 'nom':
+                // Validation du nom utilisateur
                 if (!value.trim()) {
                     errorMessage = 'Le nom est requis';
                 } else if (value.trim().length < 2) {
@@ -68,12 +98,14 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
                 break;
                 
             case 'telephone':
+                // Validation du numéro de téléphone
                 if (!value.trim()) {
                     errorMessage = 'Le numéro de téléphone est requis';
                 } else {
-                    // Nettoyer le numéro de téléphone (supprimer espaces, tirets, etc.)
+                    // Nettoyer le numéro de téléphone (supprimer espaces, tirets, parenthèses)
                     const cleanPhone = value.replace(/[\s\-\(\)]/g, '');
                     
+                    // Vérifier le format (exactement 10 chiffres)
                     if (!/^[0-9]{10}$/.test(cleanPhone)) {
                         errorMessage = 'Le numéro de téléphone doit contenir exactement 10 chiffres';
                     }
@@ -81,12 +113,14 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
                 break;
                 
             case 'commune':
+                // Validation de la commune
                 if (!value.trim()) {
                     errorMessage = 'La commune est requise';
                 }
                 break;
                 
             case 'dateNaiss':
+                // Validation de la date de naissance
                 if (!value) {
                     errorMessage = 'La date de naissance est requise';
                 } else {
@@ -106,6 +140,7 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
                 break;
                 
             case 'motDePasse':
+                // Validation du mot de passe
                 if (!value) {
                     errorMessage = 'Le mot de passe est requis';
                 } else if (value.length < 4) {
@@ -116,6 +151,7 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
                 break;
                 
             case 'confirmerMotDePasse':
+                // Validation de la confirmation du mot de passe
                 if (!value) {
                     errorMessage = 'La confirmation du mot de passe est requise';
                 } else if (formState.motDePasse !== value) {
@@ -124,7 +160,7 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
                 break;
         }
         
-        // Mettre à jour l'erreur dans l'état
+        // Mettre à jour l'erreur dans l'état local
         setErrors(prev => ({
             ...prev,
             [field]: errorMessage
@@ -133,11 +169,18 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
         return errorMessage;
     };
 
+    /**
+     * Valide l'ensemble du formulaire
+     * 
+     * @returns {Record<string, string>} Objet contenant toutes les erreurs de validation
+     */
     const validateForm = (): Record<string, string> => {
         const newErrors: Record<string, string> = {};
         
+        // Liste des champs obligatoires à valider
         const fields: (keyof RegisterFormState)[] = ['nom', 'telephone', 'commune', 'dateNaiss', 'motDePasse', 'confirmerMotDePasse'];
         
+        // Valider chaque champ
         fields.forEach(field => {
             const error = validateField(field);
             if (error) {
@@ -149,80 +192,145 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
         return newErrors;
     };
 
+    /**
+     * Gère le changement de valeur du champ nom
+     * 
+     * @param {string} text - Nouvelle valeur du nom
+     */
     const handleNomChange = (text: string) => {
         setFormState(prev => ({ ...prev, nom: text }));
+        // Effacer l'erreur locale si elle existe
         if (errors.nom) {
             setErrors(prev => ({ ...prev, nom: '' }));
         }
+        // Effacer l'erreur globale du store
         if (error) {
             dispatch(clearError());
         }
     };
 
+    /**
+     * Gère le changement de valeur du champ téléphone
+     * 
+     * @param {string} text - Nouvelle valeur du téléphone
+     */
     const handleTelephoneChange = (text: string) => {
         setFormState(prev => ({ ...prev, telephone: text }));
+        // Effacer l'erreur locale si elle existe
         if (errors.telephone) {
             setErrors(prev => ({ ...prev, telephone: '' }));
         }
+        // Effacer l'erreur globale du store
         if (error) {
             dispatch(clearError());
         }
     };
 
+    /**
+     * Gère le changement de valeur du champ commune
+     * 
+     * @param {string} text - Nouvelle valeur de la commune
+     */
     const handleCommuneChange = (text: string) => {
         setFormState(prev => ({ ...prev, commune: text }));
+        // Effacer l'erreur locale si elle existe
         if (errors.commune) {
             setErrors(prev => ({ ...prev, commune: '' }));
         }
+        // Effacer l'erreur globale du store
         if (error) {
             dispatch(clearError());
         }
     };
 
+    /**
+     * Gère le changement de valeur du champ date de naissance
+     * 
+     * @param {string} text - Nouvelle valeur de la date de naissance
+     */
     const handleDateNaissChange = (text: string) => {
         setFormState(prev => ({ ...prev, dateNaiss: text }));
         // Effacer l'erreur immédiatement quand une date est sélectionnée
         setErrors(prev => ({ ...prev, dateNaiss: '' }));
+        // Effacer l'erreur globale du store
         if (error) {
             dispatch(clearError());
         }
     };
 
+    /**
+     * Gère le changement de valeur du champ sexe
+     * 
+     * @param {('Homme' | 'Femme')} sexe - Nouvelle valeur du sexe
+     */
     const handleSexeChange = (sexe: 'Homme' | 'Femme') => {
         setFormState(prev => ({ ...prev, sexe }));
+        // Effacer l'erreur globale du store
         if (error) {
             dispatch(clearError());
         }
     };
 
+    /**
+     * Gère le changement de valeur du champ mot de passe
+     * 
+     * @param {string} text - Nouvelle valeur du mot de passe
+     */
     const handleMotDePasseChange = (text: string) => {
         setFormState(prev => ({ ...prev, motDePasse: text }));
+        // Effacer l'erreur locale si elle existe
         if (errors.motDePasse) {
             setErrors(prev => ({ ...prev, motDePasse: '' }));
         }
+        // Re-valider la confirmation du mot de passe si elle a déjà été saisie
         if (errors.confirmerMotDePasse && formState.confirmerMotDePasse) {
-            // Re-validate confirm password when password changes
             const confirmError = validateField('confirmerMotDePasse');
             setErrors(prev => ({ ...prev, confirmerMotDePasse: confirmError }));
         }
+        // Effacer l'erreur globale du store
         if (error) {
             dispatch(clearError());
         }
     };
 
+    /**
+     * Gère le changement de valeur du champ confirmation du mot de passe
+     * 
+     * @param {string} text - Nouvelle valeur de la confirmation du mot de passe
+     */
     const handleConfirmerMotDePasseChange = (text: string) => {
         setFormState(prev => ({ ...prev, confirmerMotDePasse: text }));
+        // Effacer l'erreur locale si elle existe
         if (errors.confirmerMotDePasse) {
             setErrors(prev => ({ ...prev, confirmerMotDePasse: '' }));
         }
+        // Effacer l'erreur globale du store
         if (error) {
             dispatch(clearError());
         }
     };
 
+    /**
+     * Gère la soumission du formulaire d'inscription
+     * 
+     * Processus :
+     * 1. Masquer le clavier
+     * 2. Vérifier si un chargement est en cours
+     * 3. Valider le formulaire
+     * 4. Envoyer la requête d'inscription
+     * 5. Connecter automatiquement l'utilisateur
+     * 6. Naviguer vers l'écran principal
+     * 
+     * @throws {Error} En cas d'erreur de validation ou d'inscription
+     */
     const handleRegister = async () => {
+        // Masquer le clavier
+        Keyboard.dismiss();
+
+        // Éviter les soumissions multiples
         if (isLoading) return;
 
+        // Valider le formulaire avant soumission
         const validationErrors = validateForm();
         if (Object.keys(validationErrors).length > 0) {
             // Afficher les erreurs de validation
@@ -234,11 +342,13 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
         }
 
         try {
+            // Démarrer le chargement
             dispatch(startLoading());
 
+            // Envoyer la requête d'inscription
             const response = await authService.register({
                 utilisateurNom: formState.nom,
-                utilisateurTelephone: formState.telephone.replaceAll(' ', ''),
+                utilisateurTelephone: formState.telephone.replaceAll(' ', ''), // Nettoyer le téléphone
                 utilisateurCommune: formState.commune,
                 utilisateurDateNaiss: formState.dateNaiss,
                 utilisateurSexe: formState.sexe,
@@ -252,7 +362,7 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
                 refreshToken: response.refreshToken
             });
 
-            // Navigation vers l'écran principal
+            // Navigation vers l'écran principal en réinitialisant la pile de navigation
             navigation.reset({
                 index: 0,
                 routes: [{ name: 'MainTabs' }],
@@ -260,6 +370,7 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
         } catch (error: any) {
             console.log("🚀 ~ handleRegister ~ error:", error);
             
+            // Gestion des différents types d'erreurs
             let errorMessage = 'Erreur d\'inscription. Veuillez réessayer.';
             
             if (error.message) {
@@ -270,22 +381,25 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
                 errorMessage = 'Ce numéro de téléphone est déjà utilisé';
             }
             
+            // Mettre à jour l'erreur dans le store
             dispatch(setError(errorMessage));
             throw new Error(errorMessage);
         }
     };
 
-    // Calculer isFormValid en temps réel
+    // Calculer la validité du formulaire en temps réel
+    // Le formulaire est valide si tous les champs requis sont correctement remplis
     const isFormValid = 
-        formState.nom.trim().length >= 2 &&
-        /^[0-9]{10}$/.test(formState.telephone.replace(/\s/g, '')) &&
-        formState.commune.trim().length > 0 &&
-        formState.dateNaiss.length > 0 &&
-        formState.motDePasse.length >= 4 &&
-        formState.confirmerMotDePasse.length > 0 &&
-        formState.motDePasse === formState.confirmerMotDePasse &&
-        !isLoading;
+        formState.nom.trim().length >= 2 && // Nom d'au moins 2 caractères
+        /^[0-9]{10}$/.test(formState.telephone.replace(/\s/g, '')) && // Téléphone de 10 chiffres
+        formState.commune.trim().length > 0 && // Commune non vide
+        formState.dateNaiss.length > 0 && // Date de naissance renseignée
+        formState.motDePasse.length >= 4 && // Mot de passe d'au moins 4 caractères
+        formState.confirmerMotDePasse.length > 0 && // Confirmation non vide
+        formState.motDePasse === formState.confirmerMotDePasse && // Mots de passe identiques
+        !isLoading; // Pas de chargement en cours
 
+    // Retourner l'état du formulaire et les handlers
     return [
         formState,
         {

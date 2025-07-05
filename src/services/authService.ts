@@ -5,7 +5,7 @@ export interface User {
     utilisateurNom: string;
     utilisateurTelephone: string;
     utilisateurCommune: string;
-    utilisateurDateNaiss: Date;
+    utilisateurDateNaiss: string;
     utilisateurSexe: 'Homme' | 'Femme';
     utilisateurRole: 'lambda' | 'capo' | 'gerant';
     utilisateurAvatar?: string;
@@ -30,6 +30,11 @@ export interface RegisterData {
 export interface LoginData {
     utilisateurTelephone: string;
     utilisateurMotDePasse: string;
+}
+
+export interface ChangePasswordData {
+    ancienMotDePasse: string;
+    nouveauMotDePasse: string;
 }
 
 export interface ApiResponse<T> {
@@ -124,5 +129,42 @@ export const authService = {
             
             throw new Error('Erreur de rafraîchissement du token');
         }
+    },
+
+    // Changement de mot de passe
+    changePassword: async (data: ChangePasswordData): Promise<{ success: boolean; message?: string }> => {
+        try {
+            console.log('🚀 ~ Tentative de changement de mot de passe...');
+            const response = await api.post<ApiResponse<{ success: boolean; message?: string }>>('/auth/change-password', data);
+            
+            console.log('🚀 ~ Réponse du changement de mot de passe:', response.data);
+            
+            if (response.data.status === 'error') {
+                throw new Error(response.data.message || 'Erreur lors du changement de mot de passe');
+            }
+            
+            return {
+                success: true,
+                message: response.data.message || 'Mot de passe modifié avec succès'
+            };
+        } catch (error: any) {
+            console.log('🚀 ~ Erreur lors du changement de mot de passe:', error);
+            console.log('🚀 ~ Détails de l\'erreur:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                headers: error.response?.headers
+            });
+            
+            if (error.response?.data?.message) {
+                throw new Error(error.response.data.message);
+            }
+            throw new Error('Erreur lors du changement de mot de passe. Veuillez réessayer.');
+        }
     }
 };
+
+// Export direct de la fonction changePassword pour faciliter l'utilisation
+export const changePassword = authService.changePassword;
+
+export default authService;

@@ -82,7 +82,7 @@ export const ReservationsTabContent: React.FC<ReservationsTabContentProps> = ({
                 ListEmptyComponent={
                     <EmptyStateCard message={emptyMessage} />
                 }
-                showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator={true}
             />
         </View>
     );

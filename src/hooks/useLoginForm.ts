@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { Keyboard } from 'react-native';
 import { ScreenNavigationProps } from '../navigation/types';
-import { startLoading, setError, clearError, UserRole } from '../store/slices/userSlice';
+import { startLoading, setError, clearError, UserRole, selectError, selectIsLoading } from '../store/slices/userSlice';
 import { authService } from '../services/authService';
 import { RootState } from '../store';
 import { useAuthLogin } from '../store/hooks/hooks';
@@ -23,6 +24,11 @@ interface LoginFormHandlers {
   handleLogin: () => Promise<void>;
   setSelectedRole: (role: UserRole) => void;
   isFormValid: boolean;
+  passwordInputRef: React.RefObject<any>;
+  isLoading: boolean;
+  error: string | null;
+  handleForgotPassword: () => void;
+  handleSignUp: () => void;
 }
 
 /**
@@ -31,8 +37,11 @@ interface LoginFormHandlers {
 export const useLoginForm = (): [LoginFormState, LoginFormHandlers] => {
   const dispatch = useDispatch();
   const navigation = useNavigation<ScreenNavigationProps>();
-  const isLoading = useSelector((state: RootState) => state.user.isLoading);
-  const error = useSelector((state: RootState) => state.user.error);
+  const passwordInputRef = useRef<any>(null);
+  
+  // Récupérer les états du store
+  const isLoading = useSelector(selectIsLoading);
+  const error = useSelector(selectError);
   const { login } = useAuthLogin();
 
   // État local du formulaire
@@ -62,6 +71,7 @@ export const useLoginForm = (): [LoginFormState, LoginFormHandlers] => {
    * Gère la tentative de connexion utilisateur.
    */
   const handleLogin = async () => {
+    Keyboard.dismiss();
     if (isLoading) return;
 
     try {
@@ -71,7 +81,6 @@ export const useLoginForm = (): [LoginFormState, LoginFormHandlers] => {
         utilisateurTelephone: formState.phone.replaceAll(' ', ''),
         utilisateurMotDePasse: formState.password,
       });
-
 
       await login(response.user, {
         accessToken: response.accessToken,
@@ -86,7 +95,7 @@ export const useLoginForm = (): [LoginFormState, LoginFormHandlers] => {
     } catch (error: any) {
       console.log('🚀 ~ handleLogin ~ error:', error);
 
-      // Gestion des messages d’erreur
+      // Gestion des messages d'erreur
       let errorMessage = 'Erreur de connexion. Veuillez réessayer.';
 
       if (error.message) {
@@ -111,6 +120,21 @@ export const useLoginForm = (): [LoginFormState, LoginFormHandlers] => {
   };
 
   /**
+   * Gère la navigation vers la page de mot de passe oublié.
+   */
+  const handleForgotPassword = () => {
+    // TODO: Implémenter la navigation vers la page de mot de passe oublié
+    console.log('Navigation vers mot de passe oublié');
+  };
+
+  /**
+   * Gère la navigation vers la page d'inscription.
+   */
+  const handleSignUp = () => {
+    navigation.navigate('Register');
+  };
+
+  /**
    * Vérifie si le formulaire est prêt à être soumis.
    */
   const isFormValid =
@@ -126,6 +150,11 @@ export const useLoginForm = (): [LoginFormState, LoginFormHandlers] => {
       handleLogin,
       setSelectedRole,
       isFormValid,
+      passwordInputRef,
+      isLoading,
+      error,
+      handleForgotPassword,
+      handleSignUp,
     },
   ];
 };

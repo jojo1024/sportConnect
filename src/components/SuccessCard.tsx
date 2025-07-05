@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     },
     successText: {
         fontSize: 14,
-        color: COLORS.successGreen,
+        color: COLORS.white,
         fontWeight: '500',
         lineHeight: 20,
     },

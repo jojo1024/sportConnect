@@ -6,12 +6,14 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { ScreenNavigationProps, ScreenRouteProps } from '../navigation/types';
 import * as Clipboard from 'expo-clipboard';
 import { Alert } from 'react-native';
+import { ErrorType } from '../services/api';
 
 // Interface de retour du hook
 interface UseTerrainReturn {
   terrains: Terrain[];
   isLoading: boolean;
   error: string | null;
+  errorType: ErrorType | null;
   hasMoreData: boolean;
   currentPage: number;
   loadMoreData: () => void;
@@ -51,6 +53,7 @@ export const useTerrain = (): UseTerrainReturn => {
   const [terrains, setTerrains] = useState<Terrain[]>([]); // Terrains affichés (paginated)
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<ErrorType | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreData, setHasMoreData] = useState(true);
   
@@ -66,6 +69,7 @@ export const useTerrain = (): UseTerrainReturn => {
     try {
       setIsLoading(true);
       setError(null);
+      setErrorType(null);
 
       let newTerrains: Terrain[] = [];
       
@@ -86,8 +90,44 @@ export const useTerrain = (): UseTerrainReturn => {
       
       // Vérifier s'il y a plus de données
       setHasMoreData(newTerrains.length > ITEMS_PER_PAGE);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+    } catch (err: any) {
+      // Analyser le type d'erreur
+      let errorTypeToSet = ErrorType.UNKNOWN;
+      let errorMessage = 'Une erreur inattendue est survenue';
+      
+      // Vérifier si c'est une erreur réseau
+      if (err?.message?.includes('Network Error') || err?.code === 'NETWORK_ERROR' || !err?.response) {
+        errorTypeToSet = ErrorType.NETWORK;
+        errorMessage = 'Pas de connexion internet. Vérifiez votre réseau et réessayez.';
+      }
+      // Vérifier si c'est une erreur de timeout
+      else if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+        errorTypeToSet = ErrorType.TIMEOUT;
+        errorMessage = 'Délai d\'attente dépassé. Vérifiez votre connexion et réessayez.';
+      }
+      // Vérifier les erreurs HTTP
+      else if (err?.response?.status === 401) {
+        errorTypeToSet = ErrorType.SESSION_EXPIRED;
+        errorMessage = 'Votre session a expiré. Veuillez vous reconnecter.';
+      }
+      else if (err?.response?.status === 400) {
+        errorTypeToSet = ErrorType.VALIDATION;
+        errorMessage = err?.response?.data?.message || 'Données invalides';
+      }
+      else if (err?.response?.status >= 500) {
+        errorTypeToSet = ErrorType.SERVER;
+        errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
+      }
+      else if (err?.response?.status === 403) {
+        errorTypeToSet = ErrorType.FORBIDDEN;
+        errorMessage = 'Accès interdit. Vous n\'avez pas les permissions nécessaires.';
+      }
+      else {
+        errorMessage = err?.response?.data?.message || err?.message || 'Une erreur inattendue est survenue.';
+      }
+      
+      setError(errorMessage);
+      setErrorType(errorTypeToSet);
       console.error('Erreur lors du chargement des terrains:', err);
     } finally {
       setIsLoading(false);
@@ -222,6 +262,7 @@ const handleAddTerrain = useCallback(() => {
     terrains,
     isLoading,
     error,
+    errorType,
     hasMoreData,
     currentPage,
     loadMoreData,

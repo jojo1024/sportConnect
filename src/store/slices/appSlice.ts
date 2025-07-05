@@ -8,7 +8,7 @@ export interface IAppState {
 export const appSlice = createSlice({
     name: "app",
     initialState: <IAppState>{
-        displayWelcomeScreen: false,
+        displayWelcomeScreen: true,
     },
     reducers: {
         setDisplayWelcomeScreen: (state, action: PayloadAction<boolean>) => {

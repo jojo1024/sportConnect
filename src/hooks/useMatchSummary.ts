@@ -16,6 +16,21 @@ interface SuccessData {
     prixPaye: number;
 }
 
+/**
+ * Hook personnalisé pour gérer le résumé et la finalisation d'un match
+ * Fournit une interface pour gérer le processus de paiement et de participation
+ * 
+ * Fonctionnalités principales :
+ * - Validation de l'authentification utilisateur
+ * - Gestion de l'acceptation des conditions
+ * - Traitement du paiement et participation
+ * - Affichage des données de succès
+ * - Gestion des erreurs de paiement
+ * 
+ * @param match - Objet match contenant les informations du match
+ * @param navigation - Objet de navigation React Navigation
+ * @returns {Object} Objet contenant l'état et les méthodes de gestion
+ */
 export const useMatchSummary = ({ match, navigation }: UseMatchSummaryProps) => {
     const [acceptedTerms, setAcceptedTerms] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -25,6 +40,10 @@ export const useMatchSummary = ({ match, navigation }: UseMatchSummaryProps) => 
     
     const user = useAppSelector(selectUser);
 
+    /**
+     * Valide que l'utilisateur est bien authentifié
+     * @returns {boolean} True si l'utilisateur est connecté
+     */
     const validateUserAuthentication = (): boolean => {
         if (!user?.utilisateurId) {
             Alert.alert('Erreur', 'Utilisateur non connecté.');
@@ -33,6 +52,10 @@ export const useMatchSummary = ({ match, navigation }: UseMatchSummaryProps) => 
         return true;
     };
 
+    /**
+     * Valide que l'utilisateur a accepté les conditions
+     * @returns {boolean} True si les conditions sont acceptées
+     */
     const validateTermsAcceptance = (): boolean => {
         if (!acceptedTerms) {
             Alert.alert('Conditions requises', 'Veuillez accepter les termes et conditions pour continuer.');
@@ -41,6 +64,10 @@ export const useMatchSummary = ({ match, navigation }: UseMatchSummaryProps) => 
         return true;
     };
 
+    /**
+     * Gère le processus de paiement et de participation au match
+     * Valide les conditions et effectue l'appel API
+     */
     const handlePayment = async (): Promise<void> => {
         if (!validateTermsAcceptance() || !validateUserAuthentication()) {
             return;
@@ -68,21 +95,34 @@ export const useMatchSummary = ({ match, navigation }: UseMatchSummaryProps) => 
         }
     };
 
+    /**
+     * Gère la fermeture de l'écran de succès
+     * Navigue vers l'écran principal et efface les messages d'erreur
+     */
     const handleSuccessClose = (): void => {
         setShowSuccessCard(false);
         setErrorMessage(null);
         navigation.navigate('MainTabs');
     };
 
+    /**
+     * Réessaie le processus de paiement en cas d'erreur
+     */
     const handleRetry = (): void => {
         setErrorMessage(null);
         handlePayment();
     };
 
+    /**
+     * Bascule l'état d'acceptation des conditions
+     */
     const toggleTermsAcceptance = (): void => {
         setAcceptedTerms(!acceptedTerms);
     };
 
+    /**
+     * Efface le message d'erreur affiché
+     */
     const clearError = (): void => {
         setErrorMessage(null);
     };

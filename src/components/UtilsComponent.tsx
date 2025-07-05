@@ -162,7 +162,7 @@ export const DebugTokenInfo: React.FC<DebugTokenProps> = ({ visible = false }) =
 // Composant de démonstration pour tester les erreurs (à supprimer en production)
 export const ErrorDemoComponent = () => {
     const [currentErrorType, setCurrentErrorType] = useState<ErrorType>(ErrorType.NETWORK);
-    
+
     const errorTypes = [
         { type: ErrorType.NETWORK, label: 'Erreur Réseau' },
         { type: ErrorType.TIMEOUT, label: 'Timeout' },
@@ -177,7 +177,7 @@ export const ErrorDemoComponent = () => {
     return (
         <View style={styles.demoContainer}>
             <Text style={styles.demoTitle}>Démonstration des Messages d'Erreur</Text>
-            
+
             {/* Boutons pour changer le type d'erreur */}
             <View style={styles.demoButtons}>
                 {errorTypes.map(({ type, label }) => (

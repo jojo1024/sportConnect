@@ -33,7 +33,13 @@ export interface FormValidationResult {
     errorMessages: string[];
 }
 
-// Validation functions
+/**
+ * Valide les données du formulaire de création de partie
+ * Vérifie tous les champs requis et leurs contraintes
+ * 
+ * @param formData - Données du formulaire à valider
+ * @returns {FormValidationResult} Résultat de la validation avec messages d'erreur
+ */
 const validateCreatePartyForm = (formData: CreatePartyFormData): FormValidationResult => {
     const errorMessages: string[] = [];
 
@@ -87,7 +93,21 @@ const validateCreatePartyForm = (formData: CreatePartyFormData): FormValidationR
     };
 };
 
-// Hook principal
+/**
+ * Hook personnalisé pour gérer la création de parties/matches
+ * Fournit une interface complète pour créer des parties avec sélection de terrain,
+ * sport, date, durée et participants
+ * 
+ * Fonctionnalités principales :
+ * - Gestion du formulaire de création de partie
+ * - Sélection de terrain et sport avec recherche
+ * - Validation des données du formulaire
+ * - Gestion des états de chargement et d'erreur
+ * - Soumission du formulaire et création du match
+ * - Interface utilisateur avec bottom sheets et pickers
+ * 
+ * @returns {Object} Objet contenant l'état et les méthodes de gestion du formulaire
+ */
 export const useCreateParty = () => {
     const { handleApiError } = useApiError();
     const { showError } = useCustomAlert();
@@ -133,14 +153,6 @@ export const useCreateParty = () => {
             terrain.terrainNom.toLowerCase().includes(terrainSearchTerm.toLowerCase()) ||
             terrain.terrainLocalisation.toLowerCase().includes(terrainSearchTerm.toLowerCase())
         )
-        // .map(terrain => ({
-        //     id: terrain.terrainId.toString(),
-        //     name: terrain.terrainNom,
-        //     location: terrain.terrainLocalisation,
-        //     schedule: terrain.terrainHoraires,
-        //     pricePerHour: terrain.terrainPrixParHeure,
-        //     image: terrain.terrainImages?.[0] || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=500',
-        // }));
 
     const filteredSports = activeSports.filter(sport =>
         sport.sportNom.toLowerCase().includes(sportSearchTerm.toLowerCase())
@@ -155,7 +167,10 @@ export const useCreateParty = () => {
         sport => sport.sportId === formData.selectedSportId
     );
 
-    // Charger les terrains depuis l'API
+    /**
+     * Charge les terrains disponibles depuis l'API
+     * Récupère uniquement les terrains confirmés
+     */
     const loadAvailableTerrains = useCallback(async () => {
         try {
             setIsLoadingTerrains(true);
@@ -171,12 +186,16 @@ export const useCreateParty = () => {
         }
     }, [handleApiError]);
 
-    // Fonction de retry pour charger les terrains
+    /**
+     * Réessaie de charger les terrains en cas d'erreur
+     */
     const retryLoadTerrains = useCallback(() => {
         loadAvailableTerrains();
     }, [loadAvailableTerrains]);
 
-    // Fonction de retry pour charger les sports
+    /**
+     * Réessaie de charger les sports en cas d'erreur
+     */
     const retryLoadSports = useCallback(() => {
         fetchActiveSports();
     }, [fetchActiveSports]);
@@ -191,11 +210,18 @@ export const useCreateParty = () => {
         fetchActiveSports();
     }, []);
 
-    // Gestionnaires de mise à jour du formulaire
+    /**
+     * Met à jour les données du formulaire de manière générique
+     * @param updates - Objet contenant les champs à mettre à jour
+     */
     const updateFormData = useCallback((updates: Partial<CreatePartyFormData>) => {
         setFormData(prev => ({ ...prev, ...updates }));
     }, []);
 
+    /**
+     * Sélectionne un terrain et met à jour le formulaire
+     * @param terrain - Terrain sélectionné
+     */
     const selectTerrain = useCallback((terrain: Terrain) => {
         updateFormData({
             selectedTerrainId: terrain?.terrainId.toString(),
@@ -203,27 +229,49 @@ export const useCreateParty = () => {
         });
     }, [updateFormData]);
 
+    /**
+     * Sélectionne un sport et met à jour le formulaire
+     * @param sport - Sport sélectionné
+     */
     const selectSport = useCallback((sport: any) => {
         updateFormData({ selectedSportId: sport.sportId });
     }, [updateFormData]);
 
+    /**
+     * Met à jour la date sélectionnée
+     * @param date - Nouvelle date sélectionnée
+     */
     const updateSelectedDate = useCallback((date: Date) => {
         updateFormData({ selectedDate: date });
     }, [updateFormData]);
 
+    /**
+     * Met à jour la durée en heures
+     * @param durationHours - Nouvelle durée en heures
+     */
     const updateDurationHours = useCallback((durationHours: number) => {
         updateFormData({ durationHours });
     }, [updateFormData]);
 
+    /**
+     * Met à jour le nombre de participants
+     * @param participantCount - Nouveau nombre de participants
+     */
     const updateParticipantCount = useCallback((participantCount: number) => {
         updateFormData({ participantCount });
     }, [updateFormData]);
 
+    /**
+     * Met à jour la description
+     * @param description - Nouvelle description
+     */
     const updateDescription = useCallback((description: string) => {
         updateFormData({ description });
     }, [updateFormData]);
 
-    // Gestionnaires des participants
+    /**
+     * Incrémente le nombre de participants (avec limite maximale)
+     */
     const incrementParticipantCount = useCallback(() => {
         setFormData(prev => {
             if (prev.participantCount < PARTICIPANTS_LIMITS.MAX) {
@@ -233,6 +281,9 @@ export const useCreateParty = () => {
         });
     }, []);
 
+    /**
+     * Décrémente le nombre de participants (avec limite minimale)
+     */
     const decrementParticipantCount = useCallback(() => {
         setFormData(prev => {
             if (prev.participantCount > PARTICIPANTS_LIMITS.MIN) {
@@ -242,7 +293,11 @@ export const useCreateParty = () => {
         });
     }, []);
 
-    // Gestionnaires de date/heure
+    /**
+     * Gère le changement de date/heure depuis les pickers
+     * @param event - Événement du picker
+     * @param selectedDate - Date sélectionnée
+     */
     const handleDateTimeChange = useCallback((event: any, selectedDate?: Date) => {
         setIsDatePickerVisible(false);
         setIsTimePickerVisible(false);
@@ -251,36 +306,60 @@ export const useCreateParty = () => {
         }
     }, [updateSelectedDate]);
 
+    /**
+     * Affiche le picker de date
+     */
     const showDatePicker = useCallback(() => {
         setIsDatePickerVisible(true);
     }, []);
 
+    /**
+     * Affiche le picker d'heure
+     */
     const showTimePicker = useCallback(() => {
         setIsTimePickerVisible(true);
     }, []);
 
-    // Gestionnaires de recherche
+    /**
+     * Met à jour le terme de recherche pour les terrains
+     * @param searchTerm - Terme de recherche
+     */
     const updateTerrainSearchTerm = useCallback((searchTerm: string) => {
         setTerrainSearchTerm(searchTerm);
     }, []);
 
+    /**
+     * Met à jour le terme de recherche pour les sports
+     * @param searchTerm - Terme de recherche
+     */
     const updateSportSearchTerm = useCallback((searchTerm: string) => {
         setSportSearchTerm(searchTerm);
     }, []);
 
-    // Gestionnaires des bottom sheets
+    /**
+     * Ouvre le sélecteur de terrain (bottom sheet)
+     */
     const openTerrainSelector = useCallback(() => {
         terrainBottomSheetRef.current?.open();
     }, []);
 
+    /**
+     * Ferme le sélecteur de terrain (bottom sheet)
+     */
     const closeTerrainSelector = useCallback(() => {
         terrainBottomSheetRef.current?.close();
     }, []);
 
+    /**
+     * Ouvre le sélecteur de sport (bottom sheet)
+     */
     const openSportSelector = useCallback(() => {
         sportBottomSheetRef.current?.open();
     }, []);
 
+    /**
+     * Ferme le sélecteur de sport (bottom sheet)
+     */
     const closeSportSelector = useCallback(() => {
         sportBottomSheetRef.current?.close();
     }, []);
@@ -377,8 +456,6 @@ export const useCreateParty = () => {
         setIsSuccessModalVisible,
         setFormError
     ]);
-
-
 
     // Valeurs calculées pour l'interface
     const isMinParticipantCountReached = formData.participantCount <= PARTICIPANTS_LIMITS.MIN;

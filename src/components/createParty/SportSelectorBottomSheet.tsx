@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../theme/colors';
+import SportIcon from '../SportIcon';
 
 export interface Sport {
     sportId: number;
@@ -18,37 +19,6 @@ interface SportSelectorBottomSheetProps {
     onRetry?: () => void;
 }
 
-// Fonction pour mapper les icônes avec les bonnes bibliothèques
-const getSportIcon = (iconName: string): { name: string; library: 'Ionicons' | 'MaterialCommunityIcons' } => {
-    const iconMapping: { [key: string]: { name: string; library: 'Ionicons' | 'MaterialCommunityIcons' } } = {
-        'football-outline': { name: 'football-outline', library: 'Ionicons' },
-        'basketball-outline': { name: 'basketball-outline', library: 'Ionicons' },
-        'tennisball-outline': { name: 'tennisball-outline', library: 'Ionicons' },
-        'handball-outline': { name: 'basketball', library: 'MaterialCommunityIcons' },
-        'paddle-outline': { name: 'table-tennis', library: 'MaterialCommunityIcons' },
-        'golf-outline': { name: 'golf', library: 'MaterialCommunityIcons' },
-        'volleyball-outline': { name: 'volleyball', library: 'MaterialCommunityIcons' },
-        'badminton-outline': { name: 'badminton', library: 'MaterialCommunityIcons' },
-    };
-
-    return iconMapping[iconName] || { name: 'football-outline', library: 'Ionicons' };
-};
-
-// Fonction pour obtenir la couleur spécifique au sport
-const getSportColor = (iconName: string): string => {
-    const colorMapping: { [key: string]: string } = {
-        'football-outline': '#FF6600',
-        'basketball-outline': '#FF6B35',
-        'tennisball-outline': '#4CAF50',
-        'handball-outline': '#2196F3',
-        'paddle-outline': '#9C27B0',
-        'golf-outline': '#4CAF50',
-        'volleyball-outline': '#FF9800',
-        'badminton-outline': '#E91E63',
-    };
-
-    return colorMapping[iconName] || COLORS.primary;
-};
 
 export const SportSelectorBottomSheet: React.FC<SportSelectorBottomSheetProps> = ({
     selectedSport,
@@ -87,14 +57,7 @@ export const SportSelectorBottomSheet: React.FC<SportSelectorBottomSheetProps> =
             return <Ionicons name="football-outline" size={20} color="#999" />;
         }
 
-        const iconConfig = getSportIcon(selectedSport.sportIcone);
-        const sportColor = getSportColor(selectedSport.sportIcone);
-
-        if (iconConfig.library === 'Ionicons') {
-            return <Ionicons name={iconConfig.name as any} size={20} color={sportColor} />;
-        } else {
-            return <MaterialCommunityIcons name={iconConfig.name as any} size={20} color={sportColor} />;
-        }
+        return <SportIcon sportIcone={selectedSport.sportIcone} size={20} color={COLORS.primary} />;
     };
 
     return (

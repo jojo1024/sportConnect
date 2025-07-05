@@ -5,7 +5,6 @@ export { DateTimeSelector } from './DateTimeSelector';
 export { DurationSelector } from './DurationSelector';
 export { ParticipantsSelector } from './ParticipantsSelector';
 export { FieldCard } from './FieldCard';
-export { FieldsBottomSheet } from './TerrainsBottomSheet';
 export { DescriptionInput } from './DescriptionInput';
 export { Summary } from './Summary';
 export { SportCard } from './SportCard';

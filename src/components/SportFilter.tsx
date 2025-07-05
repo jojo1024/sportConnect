@@ -1,8 +1,7 @@
 import React from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet, View } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
-import { getSportIcon } from '../utils/constant';
+import SportIcon from './SportIcon';
 
 export interface Sport {
     sportId: number;
@@ -27,8 +26,6 @@ const SportFilter: React.FC<SportFilterProps> = ({
     const handleSportPress = (sportId: number) => {
         onSportSelect(sportId);
     };
-
-  
 
     if (isLoading) {
         return (
@@ -56,37 +53,26 @@ const SportFilter: React.FC<SportFilterProps> = ({
                 contentContainerStyle={styles.scrollContent}
             >
                 {/* Sports disponibles - seulement les icônes */}
-                {sports.map((sport) => {
-                    const iconConfig = getSportIcon(sport.sportIcone);
-                    return (
-                                                <TouchableOpacity
-                            key={sport.sportId}
-                            style={[
-                                styles.sportItem,
-                                selectedSportId === sport.sportId && styles.selectedSportItem
-                            ]}
-                            onPress={() => handleSportPress(sport.sportId)}
-                            activeOpacity={0.7}
-                        >
-                            {iconConfig.library === 'Ionicons' ? (
-                                <Ionicons 
-                                    name={iconConfig.name as any} 
-                                    size={28} 
-                                    color={selectedSportId === sport.sportId ? COLORS.primary : '#666'} 
-                                />
-                            ) : (
-                                <MaterialCommunityIcons 
-                                    name={iconConfig.name as any} 
-                                    size={28} 
-                                    color={selectedSportId === sport.sportId ? COLORS.primary : '#666'} 
-                                />
-                            )}
-                            {selectedSportId === sport.sportId && (
-                                <Text style={styles.sportName}>{sport.sportNom}</Text>
-                            )}
-                        </TouchableOpacity>
-                    );
-                })}
+                {sports.map((sport) => (
+                    <TouchableOpacity
+                        key={sport.sportId}
+                        style={[
+                            styles.sportItem,
+                            selectedSportId === sport.sportId && styles.selectedSportItem
+                        ]}
+                        onPress={() => handleSportPress(sport.sportId)}
+                        activeOpacity={0.7}
+                    >
+                        <SportIcon
+                            sportIcone={sport.sportIcone}
+                            size={28}
+                            color={selectedSportId === sport.sportId ? COLORS.primary : '#666'}
+                        />
+                        {selectedSportId === sport.sportId && (
+                            <Text style={styles.sportName}>{sport.sportNom}</Text>
+                        )}
+                    </TouchableOpacity>
+                ))}
             </ScrollView>
         </View>
     );
