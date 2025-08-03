@@ -33,9 +33,9 @@ const ProfileActivities: React.FC<ProfileActivitiesProps> = ({ activities, loadi
                     <Text style={styles.points}>{item.matchPrixParJoueur} FCFA</Text>
                     <Text style={styles.date}>{formatNotificationDate(item.dateParticipation)}</Text>
                 </View>
-                <Text style={styles.description}>
+                {/* <Text style={styles.description}>
                     {item.matchDescription || `Match ${item.codeMatch}`}
-                </Text>
+                </Text> */}
             </View>
         </View>
     );
@@ -80,14 +80,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-start',
         marginBottom: 16,
-        backgroundColor: COLORS.backgroundWhite,
+        backgroundColor: COLORS.white,
         borderRadius: 12,
         padding: 12,
         shadowColor: COLORS.shadow,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
         shadowRadius: 4,
-        elevation: 1,
+        // elevation: 1,
     },
     sportIconContainer: {
         width: 40,

@@ -87,7 +87,7 @@ const DateOfBirthInput: React.FC<DateOfBirthInputProps> = ({
             {/* Indicateur de validation avec affichage de l'âge */}
             {value && !error && (
                 <View style={styles.validIndicator}>
-                    <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
+                    {/* <Ionicons name="checkmark-circle" size={16} color={COLORS.black} /> */}
                     <Text style={styles.validText}>
                         {getAgeDisplay(value)}
                     </Text>
@@ -100,7 +100,7 @@ const DateOfBirthInput: React.FC<DateOfBirthInputProps> = ({
                     <DateTimePicker
                         value={value ? new Date(value) : new Date()}
                         mode="date"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        display={ 'spinner' }
                         onChange={onDateChange}
                         locale="fr-FR"
                         maximumDate={new Date()} // Pas de date future
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     validText: {
-        color: COLORS.success,
+        color: COLORS.black,
         fontSize: 13,
         marginLeft: 4,
     },

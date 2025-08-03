@@ -37,6 +37,10 @@ export interface ChangePasswordData {
     nouveauMotDePasse: string;
 }
 
+export interface DeleteAccountData {
+    motDePasse: string;
+}
+
 export interface ApiResponse<T> {
     status: 'success' | 'error';
     data?: T;
@@ -138,7 +142,7 @@ export const authService = {
             const response = await api.post<ApiResponse<{ success: boolean; message?: string }>>('/auth/change-password', data);
             
             console.log('🚀 ~ Réponse du changement de mot de passe:', response.data);
-            
+              
             if (response.data.status === 'error') {
                 throw new Error(response.data.message || 'Erreur lors du changement de mot de passe');
             }
@@ -156,10 +160,52 @@ export const authService = {
                 headers: error.response?.headers
             });
             
+            // Gestion améliorée des erreurs
+            let errorMessage = 'Erreur lors du changement de mot de passe. Veuillez réessayer.';
+            
+            // Essayer d'extraire le message d'erreur du serveur
             if (error.response?.data?.message) {
-                throw new Error(error.response.data.message);
+                errorMessage = error.response.data.message;
+            } else if (error.message && error.message !== 'Erreur lors du changement de mot de passe. Veuillez réessayer.') {
+                errorMessage = error.message;
             }
-            throw new Error('Erreur lors du changement de mot de passe. Veuillez réessayer.');
+            
+            throw new Error(errorMessage);
+        }
+    },
+
+    // Suppression de compte
+    deleteAccount: async (data: DeleteAccountData): Promise<{ success: boolean; message?: string }> => {
+        try {
+            console.log('🚀 ~ Tentative de suppression de compte...');
+            const response = await api.delete<ApiResponse<{ success: boolean; message?: string }>>('/auth/delete', {
+                data: data
+            });
+            
+            console.log('🚀 ~ Réponse de la suppression de compte:', response.data);
+              
+            if (response.data.status === 'error') {
+                throw new Error(response.data.message || 'Erreur lors de la suppression du compte');
+            }
+            
+            return {
+                success: true,
+                message: response.data.message || 'Compte supprimé avec succès'
+            };
+        } catch (error: any) {
+            console.log('🚀 ~ Erreur lors de la suppression de compte:', error);
+            
+            // D'après les logs, l'erreur a cette structure :
+            // {"message": "Mot de passe incorrect", "originalError": [AxiosError], "status": 400, "type": "VALIDATION"}
+            
+            // Essayer d'extraire le message directement de l'erreur
+            let errorMessage = 'Erreur lors de la suppression du compte';
+            
+            if (error.message && error.message !== 'Erreur lors de la suppression du compte. Veuillez réessayer.') {
+                errorMessage = error.message;
+            }
+            
+            throw new Error(errorMessage);
         }
     }
 };

@@ -37,13 +37,13 @@ const MatchSummaryScreen: React.FC<MatchSummaryScreenProps> = ({ route, navigati
         <SafeAreaView style={styles.container}>
             <Header onBackPress={() => navigation.goBack()} />
 
-                {/* Affichage de l'erreur en haut du scroll */}
-                {errorMessage && (
-                    <CompactErrorCard
-                        message={errorMessage}
-                        onRetry={handleRetry}
-                    />
-                )}
+            {/* Affichage de l'erreur en haut du scroll */}
+            {errorMessage && (
+                <CompactErrorCard
+                    message={errorMessage}
+                    onRetry={handleRetry}
+                />
+            )}
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
 
                 <View style={{ marginBottom: 15 }}></View>
@@ -82,6 +82,7 @@ const MatchSummaryScreen: React.FC<MatchSummaryScreenProps> = ({ route, navigati
                 {/* Espace en bas pour le bouton */}
                 <View style={{ height: 100 }} />
             </ScrollView>
+            
 
             {/* Bouton de paiement */}
             <PaymentButton

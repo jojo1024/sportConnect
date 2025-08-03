@@ -27,6 +27,12 @@ export type RootStackParamList = {
     EditProfile: undefined;
     ProfileOptions: undefined;
     EditPassword: undefined;
+    Reservations: {
+        terrainId?: number;
+    };
+    Statistics: {
+        terrainId?: number;
+    };
 }
 
 export interface INavigationProps {

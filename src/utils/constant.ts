@@ -1,3 +1,4 @@
+import { Match } from "../services/matchService";
 
 export const COMMUNES_ABIDJAN = [
     'Abobo',
@@ -120,3 +121,42 @@ export const RESERVATION_STATUSES_REVERSE = {
     confirme: 'confirmed',
     annule: 'cancelled',
 } as const; 
+
+export const PERIODS = [
+  { label: 'Aujourd\'hui', key: 'today' },
+  { label: 'Cette semaine', key: 'week' },
+  { label: 'Ce mois', key: 'month' },
+  { label: '3 mois', key: '3months' },
+  { label: '6 mois', key: '6months' },
+  { label: '1 an', key: 'year' },
+  { label: 'Tous', key: 'all' },
+  { label: 'Personnalisé', key: 'custom' },
+];
+
+export const getPopularTime = (reservations: Match[]): string => {
+  if (reservations.length === 0) return '--';
+
+  const timeSlots: { [key: string]: number } = {};
+
+  reservations.forEach(reservation => {
+      const startTime = new Date(reservation.matchDateDebut).getHours();
+      const timeSlot = `${startTime}h-${startTime + 2}h`;
+      timeSlots[timeSlot] = (timeSlots[timeSlot] || 0) + 1;
+  });
+
+  const popularTime = Object.entries(timeSlots)
+      .sort(([, a], [, b]) => b - a)[0];
+
+  return popularTime ? popularTime[0] : '--';
+};
+
+
+    // Données pour le FlatList
+    export const STATS_RENDER_DATA = [
+      { id: 'graph', type: 'graph' },
+      { id: 'filter', type: 'filter' },
+      { id: 'customDate', type: 'customDate' },
+      { id: 'revenue', type: 'revenue' },
+      { id: 'stats1', type: 'stats1' },
+      { id: 'bottom', type: 'bottom' },
+  ];

@@ -3,7 +3,9 @@ import { Terrain, terrainService } from '../services/terrainService';
 import { useAppSelector } from '../store/hooks/hooks';
 import { selectUser } from '../store/slices/userSlice';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ScreenNavigationProps, ScreenRouteProps } from '../navigation/types';
+import { RootStackParamList } from '../navigation/types';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 import { Alert } from 'react-native';
 import { ErrorType } from '../services/api';
@@ -39,8 +41,8 @@ interface UseTerrainReturn {
 // Hook personnalisé pour gérer les données de terrain avec pagination et rafraîchissement
 export const useTerrain = (): UseTerrainReturn => {
 
-  const navigation = useNavigation<ScreenNavigationProps>();
-  const route = useRoute<ScreenRouteProps<'TerrainDetails'>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'TerrainDetails'>>();
   
   // Vérifier si route.params existe et contient terrain
   const initialTerrain = route.params?.terrain;
@@ -77,7 +79,7 @@ export const useTerrain = (): UseTerrainReturn => {
       
       // Si l'utilisateur est connecté et est un manager, récupérer ses terrains
       if (user?.utilisateurId && user?.utilisateurRole === 'gerant') {
-        newTerrains = await terrainService.getManagerTerrains(user.utilisateurId);
+        newTerrains = await terrainService.getManagerTerrains();
       } 
       
       console.log('🚀 ~ loadAllTerrains ~ newTerrains:', newTerrains.length);
@@ -239,13 +241,21 @@ const handleAddTerrain = useCallback(() => {
 
 
   const handleReservations = () => {
-      // TODO: Naviguer vers l'écran des réservations
-      Alert.alert('Fonctionnalité', 'Gestion des réservations à implémenter');
+      // Naviguer vers l'écran des réservations avec le terrainId
+      if (terrain?.terrainId) {
+          navigation.navigate('Reservations', { terrainId: terrain.terrainId });
+      } else {
+          navigation.navigate('Reservations', {});
+      }
   };
 
   const handleStatistics = () => {
-      // TODO: Naviguer vers l'écran des statistiques
-      Alert.alert('Fonctionnalité', 'Statistiques du terrain à implémenter');
+      // Naviguer vers l'écran des statistiques avec le terrainId
+      if (terrain?.terrainId) {
+          navigation.navigate('Statistics', { terrainId: terrain.terrainId });
+      } else {
+          navigation.navigate('Statistics', {});
+      }
   };
 
   const handlePreviousImage = () => {

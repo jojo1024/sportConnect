@@ -2,24 +2,16 @@ import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useAppSelector, useAuthLogout } from '../../store/hooks/hooks';
 import { ScreenNavigationProps } from '../../navigation/types';
+import { useAppSelector } from '../../store/hooks/hooks';
 import { selectUser } from '../../store/slices/userSlice';
+import { COLORS } from '../../theme/colors';
 import { getUserAvatar } from '../../utils/functions';
 
 const SettingsScreen: React.FC = () => {
-    const { logout } = useAuthLogout();
     const utilisateur = useAppSelector(selectUser);
 
     const navigation = useNavigation<ScreenNavigationProps>();
-
-    const handleLogout = async () => {
-        await logout();
-        navigation.reset({
-            index: 0,
-            routes: [{ name: 'Welcome' }],
-        });
-    };
 
     return (
         <View style={styles.container}>
@@ -37,44 +29,37 @@ const SettingsScreen: React.FC = () => {
 
             {/* Menu principal */}
             <View style={styles.menuSection}>
-                <TouchableOpacity style={styles.menuItem}>
+                <TouchableOpacity style={[styles.menuItem, styles.disabledMenuItem]} disabled>
                     <View style={styles.menuIconLabel}>
-                        <Ionicons name="notifications-outline" size={22} style={styles.menuIcon} />
-                        <Text style={styles.menuText}>Notifications : Push, SMS</Text>
+                        <Ionicons name="notifications-outline" size={22} style={[styles.menuIcon, styles.disabledIcon]} />
+                        <Text style={[styles.menuText, styles.disabledText]}>Notifications : Push, SMS</Text>
                     </View>
-                    <Text style={styles.arrow}>{'>'}</Text>
+                    <Text style={[styles.arrow, styles.disabledText]}>{'>'}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem}>
+                <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('ProfileOptions' as never)}>
                     <View style={styles.menuIconLabel}>
                         <MaterialIcons name="alternate-email" size={22} style={styles.menuIcon} />
-                        <Text style={styles.menuText}>Ajouter une adresse mail</Text>
+                        <Text style={styles.menuText}>Modifier le profil</Text>
                     </View>
                     <Text style={styles.arrow}>{'>'}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem}>
+                <TouchableOpacity style={[styles.menuItem, styles.disabledMenuItem]} disabled>
                     <View style={styles.menuIconLabel}>
-                        <Feather name="user-plus" size={22} style={styles.menuIcon} />
-                        <Text style={styles.menuText}>Ajouter un autre gérant</Text>
+                        <Feather name="user-plus" size={22} style={[styles.menuIcon, styles.disabledIcon]} />
+                        <Text style={[styles.menuText, styles.disabledText]}>Ajouter un autre gérant</Text>
                     </View>
-                    <Text style={styles.arrow}>{'>'}</Text>
+                    <Text style={[styles.arrow, styles.disabledText]}>{'>'}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem}>
+                <TouchableOpacity style={[styles.menuItem, styles.disabledMenuItem]} disabled>
                     <View style={styles.menuIconLabel}>
-                        <Feather name="help-circle" size={22} style={styles.menuIcon} />
-                        <Text style={styles.menuText}>Contacter le support</Text>
+                        <Feather name="help-circle" size={22} style={[styles.menuIcon, styles.disabledIcon]} />
+                        <Text style={[styles.menuText, styles.disabledText]}>Contacter le support</Text>
                     </View>
-                    <Text style={styles.arrow}>{'>'}</Text>
+                    <Text style={[styles.arrow, styles.disabledText]}>{'>'}</Text>
                 </TouchableOpacity>
             </View>
 
-            {/* Bouton Déconnexion */}
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <Text style={styles.logoutText}>Déconnexion</Text>
-            </TouchableOpacity>
-            {/* Bouton Supprimer le compte */}
-            <TouchableOpacity style={styles.deleteAccountButton}>
-                <Text style={styles.deleteAccountText}>Supprimer le compte</Text>
-            </TouchableOpacity>
+
         </View>
     );
 };
@@ -82,7 +67,7 @@ const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.background,
         alignItems: 'center',
         paddingTop: 0,
     },
@@ -92,7 +77,6 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     avatarContainer: {
-        // backgroundColor: '#00d2ff',
         borderRadius: 50,
         width: 90,
         height: 90,
@@ -110,20 +94,20 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 2,
-        color: '#222',
+        color: COLORS.veryDarkGray,
     },
     waveNumber: {
         fontSize: 14,
-        color: '#888',
+        color: COLORS.gray[600],
     },
     menuSection: {
         width: '92%',
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         paddingVertical: 0,
         marginBottom: 32,
-        elevation: 2,
-        shadowColor: '#000',
+        // elevation: 2,
+        shadowColor: COLORS.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -135,7 +119,7 @@ const styles = StyleSheet.create({
         paddingVertical: 18,
         paddingHorizontal: 18,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: COLORS.borderColor,
     },
     menuIconLabel: {
         flexDirection: 'row',
@@ -146,7 +130,7 @@ const styles = StyleSheet.create({
     },
     menuText: {
         fontSize: 16,
-        color: '#222',
+        color: COLORS.veryDarkGray,
     },
     arrow: {
         fontSize: 18,
@@ -163,7 +147,7 @@ const styles = StyleSheet.create({
         width: '92%',
     },
     logoutText: {
-        color: '#222',
+        color: COLORS.veryDarkGray,
         fontSize: 16,
         fontWeight: 'bold',
     },
@@ -173,11 +157,27 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'transparent',
     },
+    deleteAccountButtonDisabled: {
+        opacity: 0.7,
+    },
     deleteAccountText: {
-        color: '#FF3B30',
+        color: COLORS.red,
         fontSize: 15,
         fontWeight: 'bold',
         textAlign: 'center',
+    },
+    deleteAccountTextDisabled: {
+        color: COLORS.gray[600],
+    },
+    disabledMenuItem: {
+        opacity: 0.5,
+    },
+    disabledIcon: {
+        opacity: 0.5,
+    },
+    disabledText: {
+        color: COLORS.gray[600],
+        opacity: 0.7,
     },
 });
 

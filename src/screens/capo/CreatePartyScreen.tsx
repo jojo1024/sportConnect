@@ -13,18 +13,18 @@ import {
     DateTimeSelector,
     DescriptionInput,
     DurationSelector,
-    FieldSelector,
     Header,
     ParticipantsSelector,
+    SportsBottomSheet,
     Summary
 } from '../../components/createParty';
-import { SportsBottomSheet } from '../../components/createParty/SportsBottomSheet';
-import { SportSelectorBottomSheet } from '../../components/createParty/SportSelectorBottomSheet';
 import { TerrainsBottomSheet } from '../../components/createParty/TerrainsBottomSheet';
 import { SuccessModal } from '../../components/SuccessModal';
 import { useCreateParty } from '../../hooks/useCreateParty';
 import { COLORS } from '../../theme/colors';
 import { formatDate, formatTime } from '../../utils/functions';
+import { TerrainSelector } from '../../components/createParty/TerrainSelector';
+import { SportSelector } from '../../components/createParty/SportSelector';
 
 // Main component
 const CreatePartyScreen: React.FC = () => {
@@ -42,6 +42,7 @@ const CreatePartyScreen: React.FC = () => {
         isSubmittingForm,
         isLoadingTerrains,
         formError,
+        terrainLoadingError,
         isSuccessModalVisible,
         createdMatchData,
 
@@ -128,17 +129,17 @@ const CreatePartyScreen: React.FC = () => {
                     </View>
 
                     <Card icon="location" title="Terrain">
-                        <FieldSelector
+                        <TerrainSelector
                             selectedField={formData.selectedTerrainName}
                             loading={isLoadingTerrains}
-                            error={formError}
+                            error={terrainLoadingError}
                             onPress={openTerrainSelector}
                             onRetry={retryLoadTerrains}
                         />
                     </Card>
 
                     <Card icon="football" title="Sport">
-                        <SportSelectorBottomSheet
+                        <SportSelector
                             selectedSport={selectedSport}
                             loading={isLoadingSports}
                             error={sportsError}
@@ -230,7 +231,7 @@ const CreatePartyScreen: React.FC = () => {
                 <DateTimePicker
                     value={formData.selectedDate}
                     mode="date"
-                    display="default"
+                    display="spinner"
                     onChange={handleDateTimeChange}
                     minimumDate={new Date()}
                 />
@@ -240,7 +241,7 @@ const CreatePartyScreen: React.FC = () => {
                 <DateTimePicker
                     value={formData.selectedDate}
                     mode="time"
-                    display="default"
+                    display="spinner"
                     onChange={handleDateTimeChange}
                 />
             )}
@@ -269,7 +270,7 @@ const CreatePartyScreen: React.FC = () => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#f5f7fa',
+        backgroundColor: COLORS.background,
     },
     container: {
         flex: 1,

@@ -122,7 +122,10 @@ export const useChangePassword = () => {
             }
         } catch (err: any) {
             console.error('🚀 ~ Erreur lors du changement de mot de passe:', err);
-            setError(err.message || 'Erreur de connexion. Veuillez réessayer.');
+            
+            // Utiliser directement le message d'erreur du service
+            const errorMessage = err.message || 'Erreur de connexion. Veuillez réessayer.';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

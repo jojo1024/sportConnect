@@ -75,7 +75,7 @@ export const useEditProfile = (): UseEditProfileReturn => {
     const pickProfileImage = useCallback(async () => {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                mediaTypes: ['images'],
                 allowsEditing: true,
                 aspect: [1, 1], // Format carré pour la photo de profil
                 quality: 0.8,

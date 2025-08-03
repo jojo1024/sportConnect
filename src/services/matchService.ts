@@ -86,6 +86,14 @@ export interface ReservationsResponse {
     pagination: PaginationInfo;
 }
 
+export interface WeeklyChartResponse {
+    success: boolean;
+    message: string;
+    data: {
+        dailyRevenue: number[];
+    };
+}
+
 // Nouvelles interfaces pour les statistiques et activités
 export interface UserStatistics {
     totalMatchs: number;
@@ -222,9 +230,10 @@ export const matchService = {
     },
 
     // Annuler un match
-    cancelMatch: async (matchId: number, raison?: string): Promise<any> => {
+    cancelMatch: async (matchId: number, raison?: string, gerantId?: number): Promise<any> => {
+        console.log("🚀 ~ cancelMatch: ~ gerantId:", gerantId)
         try {
-            const response = await api.post('/matchs/cancel', { matchId, raison });
+            const response = await api.post('/matchs/cancel', { matchId, raison, gerantId });
             return response.data;
         } catch (error) {
             console.error('Erreur lors de l\'annulation du match:', error);
@@ -289,10 +298,11 @@ export const matchService = {
     },
 
     // Récupérer les réservations d'un gérant
-    getGerantReservations: async (status?: string, page: number = 1, limit: number = 10): Promise<ReservationsResponse> => {
+    getGerantReservations: async (status?: string, terrainId?: number | null, page: number = 1, limit: number = 10): Promise<ReservationsResponse> => {
         try {
             const params = new URLSearchParams();
             if (status) params.append('status', status);
+            if (terrainId) params.append('terrainId', terrainId.toString());
             params.append('page', page.toString());
             params.append('limit', limit.toString());
             
@@ -300,6 +310,40 @@ export const matchService = {
             return response.data.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des réservations:', error);
+            throw error;
+        }
+    },
+
+    // Récupérer les réservations d'un gérant avec filtrage par date
+    getGerantReservationsByDate: async (status?: string,  page: number = 1, limit: number = 10, dateDebut?: string, dateFin?: string, terrainId?: number | null): Promise<ReservationsResponse> => {
+        try {
+            const params = new URLSearchParams();
+            if (status) params.append('status', status);
+            if (terrainId) params.append('terrainId', terrainId.toString());
+            params.append('page', page.toString());
+            params.append('limit', limit.toString());
+            if (dateDebut) params.append('dateDebut', dateDebut);
+            if (dateFin) params.append('dateFin', dateFin);
+            
+            const response = await api.get<{ success: boolean; message: string; data: ReservationsResponse }>(`/matchs/gerant-reservations-by-date?${params.toString()}`);
+            return response.data.data;
+        } catch (error) {
+            console.error('Erreur lors de la récupération des réservations par date:', error);
+            throw error;
+        }
+    },
+
+    // Récupérer les données d'activité hebdomadaire d'un gérant
+    getGerantWeeklyChart: async (dateDebut: string, dateFin: string, terrainId?: number | null): Promise<{dailyRevenue: number[]}> => {
+        try {
+            const params = new URLSearchParams();
+            params.append('dateDebut', dateDebut);
+            params.append('dateFin', dateFin);
+            if (terrainId) params.append('terrainId', terrainId.toString());
+            const response = await api.get<WeeklyChartResponse>(`/matchs/gerant-weekly-chart?${params.toString()}`);
+            return response.data.data;
+        } catch (error) {
+            console.error('Erreur lors de la récupération des données d\'activité hebdomadaire:', error);
             throw error;
         }
     },

@@ -11,7 +11,7 @@ import { formatDate, formatTime, getModalConfig, getStatusColor, getStatusText }
 interface ReservationCardProps {
     item: Match;
     onConfirm: (matchId: number, gerantId: number) => void;
-    onCancel: (matchId: number, raison?: string) => void;
+    onCancel: (matchId: number, raison?: string, gerantId?: number) => void;
     confirmingMatchId?: number | null;
     cancellingMatchId?: number | null;
 }
@@ -43,7 +43,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
         if (modalType === 'confirm') {
             onConfirm(item.matchId, user?.utilisateurId || 0);
         } else if (modalType === 'cancel') {
-            onCancel(item.matchId);
+            onCancel(item.matchId, "", user?.utilisateurId || 0);
         }
         setModalType(null);
     };
@@ -63,10 +63,10 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
                 {/* En-tête avec terrain et statut */}
                 <View style={styles.header}>
                     <View style={styles.terrainSection}>
-                        <Ionicons name="location" size={18} color={COLORS.primary} style={styles.terrainIcon} />
+                        {/* <Ionicons name="location" size={18} color={COLORS.primary} style={styles.terrainIcon} /> */}
                         <Text style={styles.terrainName}>{item.terrainNom}</Text>
                     </View>
-                    <View style={[
+                    {/* <View style={[
                         styles.statusBadge,
                         { backgroundColor: getStatusColor(item.matchStatus as "confirme" | "en_attente" | "annule") + '20' }
                     ]}>
@@ -76,7 +76,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
                         ]}>
                             {getStatusText(item.matchStatus as "confirme" | "en_attente" | "annule")}
                         </Text>
-                    </View>
+                    </View> */}
                 </View>
 
                 {/* Informations principales avec icônes */}
@@ -101,6 +101,31 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
                                 {item.nbreJoueursInscrits}/{item.joueurxMax} joueurs
                             </Text>
                         </View>
+                        <View style={styles.infoItem}>
+                            <Ionicons name="football" size={16} color={COLORS.darkGray} style={styles.infoIcon} />
+                            <Text style={styles.durationText}>
+                                {item?.sportNom}
+                            </Text>
+                        </View>
+
+                    </View>
+
+                    <View style={styles.infoRow}>
+                        <View style={styles.infoItem}>
+                            <Ionicons name="time-outline" size={16} color={COLORS.darkGray} style={styles.infoIcon} />
+                            <Text style={styles.durationText}>
+                                {item.matchDuree}h
+                            </Text>
+                        </View>
+                        <View style={styles.infoItem}>
+                            <Ionicons name="cash-outline" size={16} color={COLORS.darkGray} style={styles.infoIcon} />
+                            <Text style={styles.priceText}>
+                                {item.terrainPrixParHeure} FCFA/h
+                            </Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.infoRow}>
                         <View style={styles.infoItem}>
                             <Ionicons name="person" size={16} color={COLORS.darkGray} style={styles.infoIcon} />
                             <Text style={styles.capoText}>{item.capoNomUtilisateur}</Text>
@@ -166,7 +191,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
                 visible={modalType !== null}
                 title={modalConfig.title}
                 message={modalConfig.message}
-                type="warning"
+                type={modalConfig.type as "success" | "error" | "warning" | "info"}
                 confirmText={modalConfig.confirmText}
                 cancelText={modalConfig.cancelText}
                 showCancel={true}
@@ -188,9 +213,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.08,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 2 },
-        elevation: 4,
-        borderWidth: 1,
-        borderColor: COLORS.borderLight,
+        // elevation: 4,
+        // borderWidth: 1,
+        // borderColor: COLORS.borderLight,
     },
     header: {
         flexDirection: 'row',
@@ -257,6 +282,16 @@ const styles = StyleSheet.create({
     capoText: {
         fontSize: 13,
         color: COLORS.darkGray,
+    },
+    durationText: {
+        fontSize: 13,
+        color: COLORS.darkGray,
+        fontWeight: '500',
+    },
+    priceText: {
+        fontSize: 13,
+        color: COLORS.darkGray,
+        fontWeight: '500',
     },
     descriptionSection: {
         flexDirection: 'row',

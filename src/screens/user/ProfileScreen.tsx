@@ -15,10 +15,7 @@ const ProfileScreen: React.FC = () => {
     const { logout } = useAuthLogout();
     const utilisateur = useAppSelector(selectUser);
     const { statistics, recentActivities, loading, error, refreshData, hasData } = useProfileData();
-
-    const handleLogout = () => {
-        logout();
-    };
+    console.log("🚀 ~ hasData:", hasData)
 
     const handleEditProfile = () => {
         navigation.navigate('ProfileOptions' as never);
@@ -26,7 +23,6 @@ const ProfileScreen: React.FC = () => {
 
     const renderContent = () => {
         // Si on a des données (même en cache), on les affiche
-        if (hasData) {
             return (
                 <>
                     <View style={styles.headerContainer}>
@@ -51,25 +47,27 @@ const ProfileScreen: React.FC = () => {
                     />
                 </>
             );
-        }
+        
 
-        // Si on a une erreur et pas de données
-        if (error && !hasData) {
-            return (
-                <View style={styles.errorContainer}>
-                    <MaterialCommunityIcons name="alert-circle" size={48} color={COLORS.danger} />
-                    <Text style={styles.errorText}>Erreur de chargement</Text>
-                    <Text style={styles.errorSubtext}>{error}</Text>
-                    <TouchableOpacity style={styles.retryButton} onPress={refreshData}>
-                        <Text style={styles.retryText}>Réessayer</Text>
-                    </TouchableOpacity>
-                </View>
-            );
-        }
+      
     };
 
+      // Si on a une erreur et pas de données
+      if (error) {
+        return (
+            <View style={styles.errorContainer}>
+                <MaterialCommunityIcons name="alert-circle" size={48} color={COLORS.danger} />
+                <Text style={styles.errorText}>Erreur de chargement</Text>
+                <Text style={styles.errorSubtext}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={refreshData}>
+                    <Text style={styles.retryText}>Réessayer</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
     return (
         <View style={styles.container}>
+
             <FlatList
                 style={styles.bg}
                 contentContainerStyle={{ paddingBottom: 32 }}
@@ -84,11 +82,6 @@ const ProfileScreen: React.FC = () => {
                     />
                 }
                 ListHeaderComponent={renderContent()}
-                // ListFooterComponent={
-                //     <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                //         <Text style={styles.logoutText}>Déconnexion</Text>
-                //     </TouchableOpacity>
-                // }
                 showsVerticalScrollIndicator={false}
             />
             <View style={{ marginBottom: 20 }}></View>

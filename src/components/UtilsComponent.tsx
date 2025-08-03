@@ -1,11 +1,10 @@
-import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { COLORS } from '../theme/colors';
+import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { selectAccessToken, selectRefreshToken, selectUser } from '../store/slices/userSlice';
 import { ErrorType } from '../services/api';
+import { selectAccessToken, selectRefreshToken, selectUser } from '../store/slices/userSlice';
+import { COLORS } from '../theme/colors';
 
 export const GetIcon = (type: string) => {
     switch (type) {

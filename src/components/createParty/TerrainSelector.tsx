@@ -3,7 +3,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { COLORS } from '../../theme/colors';
 
-interface FieldSelectorProps {
+interface TerrainSelectorProps {
     selectedField: string;
     loading?: boolean;
     error?: string | null;
@@ -11,7 +11,7 @@ interface FieldSelectorProps {
     onRetry?: () => void;
 }
 
-export const FieldSelector: React.FC<FieldSelectorProps> = ({
+export const TerrainSelector: React.FC<TerrainSelectorProps> = ({
     selectedField,
     loading = false,
     error = null,
@@ -44,7 +44,7 @@ export const FieldSelector: React.FC<FieldSelectorProps> = ({
     }
 
     return (
-        <TouchableOpacity style={styles.fieldSelector} onPress={onPress}>
+        <TouchableOpacity style={styles.TerrainSelector} onPress={onPress}>
             {selectedField ? (
                 <View style={styles.selectedFieldContainer}>
                     <Ionicons name="location" size={20} color={COLORS.primary} />
@@ -62,7 +62,7 @@ export const FieldSelector: React.FC<FieldSelectorProps> = ({
 };
 
 const styles = StyleSheet.create({
-    fieldSelector: {
+    TerrainSelector: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',

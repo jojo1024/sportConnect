@@ -4,6 +4,7 @@ import {
     Text,
     TouchableOpacity,
     StyleSheet,
+    Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
@@ -19,15 +20,32 @@ interface SuccessCardProps {
 const SuccessCard: React.FC<SuccessCardProps> = ({
     message,
     onClose,
+    autoClose = true,
+    autoCloseDelay = 3000,
     style
 }) => {
     const [isVisible, setIsVisible] = useState(true);
+    const fadeAnim = new Animated.Value(1);
 
+    useEffect(() => {
+        if (autoClose) {
+            const timer = setTimeout(() => {
+                handleClose();
+            }, autoCloseDelay);
 
+            return () => clearTimeout(timer);
+        }
+    }, [autoClose, autoCloseDelay]);
 
     const handleClose = () => {
-        setIsVisible(false);
-        onClose?.();
+        Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+        }).start(() => {
+            setIsVisible(false);
+            onClose?.();
+        });
     };
 
     if (!isVisible) {
@@ -35,14 +53,20 @@ const SuccessCard: React.FC<SuccessCardProps> = ({
     }
 
     return (
-        <View style={[styles.container, style]}>
+        <Animated.View
+            style={[
+                styles.container,
+                style,
+                { opacity: fadeAnim }
+            ]}
+        >
             <View style={styles.card}>
                 {/* Icône de succès */}
                 <View style={styles.iconContainer}>
                     <Ionicons
                         name="checkmark-circle"
-                        size={24}
-                        color={COLORS.success}
+                        size={28}
+                        color={COLORS.white}
                     />
                 </View>
 
@@ -61,12 +85,12 @@ const SuccessCard: React.FC<SuccessCardProps> = ({
                 >
                     <Ionicons
                         name="close"
-                        size={16}
-                        color={COLORS.darkGray}
+                        size={18}
+                        color={COLORS.white}
                     />
                 </TouchableOpacity>
             </View>
-        </View>
+        </Animated.View>
     );
 };
 
@@ -74,15 +98,18 @@ const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 16,
         paddingVertical: 8,
+        position: 'absolute',
+        top: 50,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
     },
     card: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: COLORS.successGreen,
-        borderWidth: 1,
-        borderColor: COLORS.successGreen,
-        borderRadius: 12,
-        padding: 16,
+        borderRadius: 8,
+        padding: 12,
         shadowColor: COLORS.shadow,
         shadowOffset: {
             width: 0,
@@ -90,10 +117,10 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 3,
+        elevation: 2,
     },
     iconContainer: {
-        marginRight: 12,
+        marginRight: 10,
     },
     messageContainer: {
         flex: 1,
@@ -102,13 +129,13 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.white,
         fontWeight: '500',
-        lineHeight: 20,
+        lineHeight: 18,
     },
     closeButton: {
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: COLORS.gray[100],
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 8,

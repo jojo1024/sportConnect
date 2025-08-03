@@ -142,6 +142,7 @@ export const useCreateParty = () => {
     const [isLoadingTerrains, setIsLoadingTerrains] = useState(false);
     const [availableTerrains, setAvailableTerrains] = useState<Terrain[]>([]);
     const [formError, setFormError] = useState<string | null>(null);
+    const [terrainLoadingError, setTerrainLoadingError] = useState<string | null>(null);
 
     // État du modal de succès
     const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
@@ -174,12 +175,12 @@ export const useCreateParty = () => {
     const loadAvailableTerrains = useCallback(async () => {
         try {
             setIsLoadingTerrains(true);
-            setFormError(null);
+            setTerrainLoadingError(null);
             const terrainsData = await terrainService.getAllTerrains("confirme");
             setAvailableTerrains(terrainsData);
         } catch (error: any) {
             const errorResult = handleApiError(error);
-            setFormError(errorResult.message);
+            setTerrainLoadingError(errorResult.message);
             console.error('Erreur lors du chargement des terrains:', error);
         } finally {
             setIsLoadingTerrains(false);
@@ -190,6 +191,7 @@ export const useCreateParty = () => {
      * Réessaie de charger les terrains en cas d'erreur
      */
     const retryLoadTerrains = useCallback(() => {
+        setTerrainLoadingError(null);
         loadAvailableTerrains();
     }, [loadAvailableTerrains]);
 
@@ -481,6 +483,7 @@ export const useCreateParty = () => {
         isSubmittingForm,
         isLoadingTerrains,
         formError,
+        terrainLoadingError,
         isSuccessModalVisible,
         createdMatchData,
         

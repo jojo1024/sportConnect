@@ -1,6 +1,6 @@
 export { Header } from './Header';
 export { Card } from './Card';
-export { FieldSelector } from './FieldSelector';
+export { FieldSelector } from './TerrainSelector';
 export { DateTimeSelector } from './DateTimeSelector';
 export { DurationSelector } from './DurationSelector';
 export { ParticipantsSelector } from './ParticipantsSelector';
@@ -9,4 +9,4 @@ export { DescriptionInput } from './DescriptionInput';
 export { Summary } from './Summary';
 export { SportCard } from './SportCard';
 export { SportsBottomSheet } from './SportsBottomSheet';
-export { SportSelectorBottomSheet } from './SportSelectorBottomSheet'; 
+export { SportSelectorBottomSheet } from './SportSelector'; 

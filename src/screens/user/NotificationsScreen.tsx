@@ -97,7 +97,7 @@ const NotificationsScreen: React.FC = () => {
 const styles = StyleSheet.create<Styles>({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
+        backgroundColor: COLORS.backgroundLight,
     },
     header: {
         flexDirection: 'row',
@@ -106,7 +106,7 @@ const styles = StyleSheet.create<Styles>({
         padding: 20,
         backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.gray[200],
+        borderBottomColor: COLORS.borderColor,
         elevation: 2,
         shadowColor: COLORS.shadow,
         shadowOffset: { width: 0, height: 2 },
@@ -116,7 +116,7 @@ const styles = StyleSheet.create<Styles>({
     title: {
         fontSize: 24,
         fontWeight: '700',
-        color: COLORS.almostBlack,
+        color: COLORS.title,
     },
     filterButton: {
         padding: 8,
@@ -135,7 +135,6 @@ const styles = StyleSheet.create<Styles>({
         borderRadius: 16,
         padding: 16,
         marginBottom: 6,
-        elevation: 2,
         shadowColor: COLORS.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.08,
@@ -189,9 +188,8 @@ const styles = StyleSheet.create<Styles>({
         flex: 1,
     },
     notificationHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        flexDirection: 'column',
+        // alignItems: 'center',
         marginBottom: 4,
     },
     notificationTitle: {
@@ -202,17 +200,16 @@ const styles = StyleSheet.create<Styles>({
     },
     unreadNotificationTitle: {
         fontWeight: '700',
-        color: '#000',
+        color: COLORS.black,
     },
     notificationMessage: {
         fontSize: 14,
-        color: '#666',
+        color: COLORS.darkGray,
         lineHeight: 20,
     },
     notificationDate: {
         fontSize: 12,
-        color: '#888',
-        marginLeft: 8,
+        color: COLORS.gray[600],
     },
     separator: {
         height: 8,

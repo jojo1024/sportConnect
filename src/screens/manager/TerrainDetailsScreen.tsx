@@ -117,11 +117,11 @@ const TerrainDetailsScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.background,
     },
     content: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.background,
     },
     actionButtons: {
         flexDirection: 'row',
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     actionButtonText: {
-        color: '#fff',
+        color: COLORS.white,
         fontWeight: '600',
         marginLeft: 6,
         fontSize: 12,
@@ -152,17 +152,17 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#1a1a1a',
+        color: COLORS.title,
         marginBottom: 12,
     },
     descriptionCard: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         borderRadius: 12,
         padding: 16,
     },
     descriptionText: {
         fontSize: 14,
-        color: '#666',
+        color: COLORS.darkGray,
         lineHeight: 20,
     },
     errorContainer: {
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     errorText: {
-        color: '#1a1a1a',
+        color: COLORS.title,
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 20,
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     errorBackButtonText: {
-        color: '#fff',
+        color: COLORS.white,
         fontSize: 16,
         fontWeight: 'bold',
     },

@@ -64,7 +64,7 @@ export default function LoginScreen() {
                 >
                     <Text style={[
                         styles.signupText,
-                        { color: "#000", textDecorationLine: 'underline' },
+                        { color: COLORS.primary, textDecorationLine: 'underline' },
                         formHandlers.isLoading && styles.disabledText
                     ]}>
                         S'inscrire
@@ -78,7 +78,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.white,
+        backgroundColor: COLORS.backgroundLight,
         justifyContent: 'center',
         paddingHorizontal: 24,
     },
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: 'bold',
         marginBottom: 32,
-        color: COLORS.text,
+        color: COLORS.title,
     },
     roleContainer: {
         flexDirection: 'row',
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: COLORS.borderLight,
         marginHorizontal: 4,
         alignItems: 'center',
     },
@@ -108,11 +108,11 @@ const styles = StyleSheet.create({
         borderColor: COLORS.primary,
     },
     roleText: {
-        color: '#666',
+        color: COLORS.textLight,
         fontSize: 14,
     },
     roleTextSelected: {
-        color: '#fff',
+        color: COLORS.white,
         fontWeight: '600',
     },
     inputContainer: {
@@ -125,22 +125,22 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: '#eee',
+        borderColor: COLORS.borderLight,
         borderRadius: 8,
         padding: 8,
         fontSize: 16,
         backgroundColor: COLORS.white,
     },
     inputError: {
-        borderColor: 'red',
+        borderColor: COLORS.danger,
     },
     error: {
-        color: 'red',
+        color: COLORS.danger,
         fontSize: 13,
         marginTop: 4,
     },
     errorContainer: {
-        backgroundColor: '#ffebee',
+        backgroundColor: COLORS.notificationRed,
         borderColor: COLORS.danger,
         borderWidth: 1,
         borderRadius: 8,
@@ -160,15 +160,15 @@ const styles = StyleSheet.create({
         marginTop: 18,
     },
     buttonDisabled: {
-        backgroundColor: '#FFD6B3',
+        backgroundColor: COLORS.disabledColor,
     },
     buttonText: {
-        color: '#fff',
+        color: COLORS.white,
         fontWeight: 'bold',
         fontSize: 17,
     },
     forgot: {
-        color: '#888',
+        color: COLORS.textLight,
         textAlign: 'right',
         fontSize: 13,
         textDecorationLine: 'underline',
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
         marginTop: 12,
     },
     signupText: {
-        color: '#888',
+        color: COLORS.textLight,
         fontSize: 13,
     },
     disabledText: {

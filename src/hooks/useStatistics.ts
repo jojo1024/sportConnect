@@ -1,322 +1,515 @@
-import { useState, useEffect, useCallback } from 'react';
-import { statisticsService, StatisticsQuery, ManagerOverviewStats, PerformanceStats, RevenueStats, OccupationStats, ParticipantsStats, MatchesStats, TemporalStats, EngagementStats, TerrainComparisonStats, TrendStats } from '../services/statisticsService';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useWindowDimensions, Platform } from 'react-native';
+import { matchService, Match, PaginationInfo } from '../services/matchService';
+import { useToast } from './useToast';
+import { calculateRevenue, formatCurrency, formatShortCurrency, getWeekDates } from '../utils/functions';
+import { getPopularTime, PERIODS } from '../utils/constant';
 
-export const useStatistics = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export interface ReservationFilters {
+    searchQuery?: string;
+    period?: string;
+    dateDebut?: string;
+    dateFin?: string;
+    terrainId?: number | null;
+}
 
-  // État pour les statistiques d'ensemble
-  const [overviewStats, setOverviewStats] = useState<ManagerOverviewStats | null>(null);
-  const [performanceStats, setPerformanceStats] = useState<PerformanceStats | null>(null);
-  const [revenueStats, setRevenueStats] = useState<RevenueStats | null>(null);
-  const [occupationStats, setOccupationStats] = useState<OccupationStats | null>(null);
-  const [participantsStats, setParticipantsStats] = useState<ParticipantsStats | null>(null);
-  const [matchesStats, setMatchesStats] = useState<MatchesStats | null>(null);
-  const [temporalStats, setTemporalStats] = useState<TemporalStats | null>(null);
-  const [engagementStats, setEngagementStats] = useState<EngagementStats | null>(null);
-  const [comparisonStats, setComparisonStats] = useState<TerrainComparisonStats | null>(null);
-  const [trendStats, setTrendStats] = useState<TrendStats | null>(null);
+export interface ReservationsByStatus {
+    [key: string]: {
+        reservations: Match[];
+        pagination: PaginationInfo;
+        loading: boolean;
+        refreshing: boolean;
+        hasMore: boolean;
+    };
+}
 
-  // Fonction générique pour gérer les erreurs
-  const handleError = useCallback((error: any) => {
-    console.error('Erreur dans useStatistics:', error);
-    setError(error?.response?.data?.message || error?.message || 'Une erreur est survenue');
-    setLoading(false);
-  }, []);
+export interface StatisticsData {
+    revenue: string;
+    matches: number;
+    players: number;
+    bars: number[];
+    averagePlayers: number;
+    occupancyRate: string;
+    popularTime: string;
+    reservations: number;
+    reservationsConfirmed: number;
+    reservationsPending: number;
+    reservationsCancelled: number;
+}
 
-  // Fonction pour réinitialiser les erreurs
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
+/**
+ * Hook personnalisé pour gérer les statistiques avec toutes les fonctionnalités
+ * Fournit une interface complète pour charger, gérer et filtrer les statistiques
+ * 
+ * Fonctionnalités principales :
+ * - Chargement des réservations par statut avec filtrage par date
+ * - Gestion du graphique hebdomadaire
+ * - Calcul des statistiques en temps réel
+ * - Gestion des filtres de période
+ * - Gestion des états de chargement et d'erreur
+ * - Support du rafraîchissement
+ * 
+ * @returns {Object} Objet contenant l'état et les méthodes de gestion des statistiques
+ */
+export const useStatistics = (toastFunctions?: { showError: (message: string, duration?: number) => void; showSuccess: (message: string, duration?: number) => void }) => {
+    const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+    const { showError: defaultShowError, showSuccess: defaultShowSuccess } = useToast();
+    
+    // Utilise les fonctions de toast passées en paramètre ou les fonctions par défaut
+    const showError = toastFunctions?.showError || defaultShowError;
+    const showSuccess = toastFunctions?.showSuccess || defaultShowSuccess;
 
-  // Récupérer les statistiques d'ensemble
-  const fetchOverviewStats = useCallback(async (query: StatisticsQuery = { period: 'month' }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const stats = await statisticsService.getOverviewStats(query);
-      setOverviewStats(stats);
-      return stats;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+    // États pour les réservations
+    const [reservationsByStatus, setReservationsByStatus] = useState<ReservationsByStatus>({
+        en_attente: { reservations: [], pagination: {} as PaginationInfo, loading: false, refreshing: false, hasMore: true },
+        confirme: { reservations: [], pagination: {} as PaginationInfo, loading: false, refreshing: false, hasMore: true },
+        annule: { reservations: [], pagination: {} as PaginationInfo, loading: false, refreshing: false, hasMore: true }
+    });
 
-  // Récupérer les statistiques de performance
-  const fetchPerformanceStats = useCallback(async (query: StatisticsQuery = { period: 'month' }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const stats = await statisticsService.getPerformanceStats(query);
-      setPerformanceStats(stats);
-      return stats;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+    // États pour les filtres et la période
+    const [selectedPeriod, setSelectedPeriod] = useState('today');
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [isSpecificDateSelected, setIsSpecificDateSelected] = useState(false);
+    const [selectedTerrainId, setSelectedTerrainId] = useState<number | null>(null);
 
-  // Récupérer les statistiques de revenus
-  const fetchRevenueStats = useCallback(async (query: StatisticsQuery = { period: 'month' }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const stats = await statisticsService.getRevenueStats(query);
-      setRevenueStats(stats);
-      return stats;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+    // États pour le graphique
+    const [weeklyChartData, setWeeklyChartData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+    const [loadingChart, setLoadingChart] = useState(false);
 
-  // Récupérer les statistiques d'occupation
-  const fetchOccupationStats = useCallback(async (query: StatisticsQuery = { period: 'month' }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const stats = await statisticsService.getOccupationStats(query);
-      setOccupationStats(stats);
-      return stats;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+    // États pour le rafraîchissement et les filtres
+    const [refreshing, setRefreshing] = useState(false);
+    const [loadingFilter, setLoadingFilter] = useState(false);
 
-  // Récupérer les statistiques des participants
-  const fetchParticipantsStats = useCallback(async (query: StatisticsQuery = { period: 'month' }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const stats = await statisticsService.getParticipantsStats(query);
-      setParticipantsStats(stats);
-      return stats;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+    // États pour le DateTimePicker
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Récupérer les statistiques des matchs
-  const fetchMatchesStats = useCallback(async (query: StatisticsQuery = { period: 'month' }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const stats = await statisticsService.getMatchesStats(query);
-      setMatchesStats(stats);
-      return stats;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+    // Calcul responsive des dimensions du graphique
+    const cardPadding = 20;
+    const cardMargin = 16;
+    const chartWidth = screenWidth - (cardMargin * 2) - (cardPadding * 2);
+    const chartHeight = Math.max(200, Math.min(300, screenHeight * 0.25));
 
-  // Récupérer les statistiques temporelles
-  const fetchTemporalStats = useCallback(async (query: StatisticsQuery = { period: 'month' }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const stats = await statisticsService.getTemporalStats(query);
-      setTemporalStats(stats);
-      return stats;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+    // Fonction pour calculer les dates selon la période
+    const getDateRangeForPeriod = useCallback((
+        period: string,
+        customDate?: Date
+    ): { dateDebut?: string; dateFin?: string } => {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // 00:00:00
+    
+        switch (period) {
+            case 'today': {
+                const dateStr = today.toISOString().split('T')[0];
+                return { dateDebut: dateStr, dateFin: dateStr };
+            }
+    
+            case 'week': {
+                // Début de la semaine (lundi)
+                const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay(); // dimanche = 0 → 7
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+                return {
+                    dateDebut: startOfWeek.toISOString().split('T')[0],
+                    dateFin: today.toISOString().split('T')[0],
+                };
+            }
+    
+            case 'month': {
+                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                return {
+                    dateDebut: startOfMonth.toISOString().split('T')[0],
+                    dateFin: today.toISOString().split('T')[0],
+                };
+            }
+    
+            case '3months': {
+                const startOf3Months = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+                return {
+                    dateDebut: startOf3Months.toISOString().split('T')[0],
+                    dateFin: today.toISOString().split('T')[0],
+                };
+            }
+    
+            case '6months': {
+                const startOf6Months = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+                return {
+                    dateDebut: startOf6Months.toISOString().split('T')[0],
+                    dateFin: today.toISOString().split('T')[0],
+                };
+            }
+    
+            case 'year': {
+                const startOfYear = new Date(today.getFullYear(), 0, 1);
+                return {
+                    dateDebut: startOfYear.toISOString().split('T')[0],
+                    dateFin: today.toISOString().split('T')[0],
+                };
+            }
+    
+            case 'custom': {
+                if (customDate) {
+                    const customDateStr = customDate.toISOString().split('T')[0];
+                    return {
+                        dateDebut: customDateStr,
+                        dateFin: customDateStr,
+                    };
+                }
+                return {};
+            }
+    
+            case 'all':
+            default:
+                return {};
+        }
+    }, []);
+    
+    
 
-  // Récupérer les statistiques d'engagement
-  const fetchEngagementStats = useCallback(async (query: StatisticsQuery = { period: 'month' }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const stats = await statisticsService.getEngagementStats(query);
-      setEngagementStats(stats);
-      return stats;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+    /**
+     * Charge les réservations pour un statut spécifique avec pagination et filtrage par date
+     */
+    const loadReservationsForStatus = useCallback(async (status: string, page: number = 1, isRefresh: boolean = false, dateDebut?: string, dateFin?: string, terrainId?: number | null) => {
+        try {
+            console.log(`🔄 Chargement des réservations ${status} - page ${page} - refresh: ${isRefresh} - période: ${dateDebut} à ${dateFin} - terrain: ${terrainId}`);
+            
+            setReservationsByStatus(prev => ({
+                ...prev,
+                [status]: {
+                    ...prev[status],
+                    loading: page === 1 && !isRefresh,
+                    refreshing: isRefresh
+                }
+            }));
 
-  // Récupérer les statistiques comparatives
-  const fetchComparisonStats = useCallback(async (query: StatisticsQuery = { period: 'month' }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const stats = await statisticsService.getTerrainComparisonStats(query);
-      setComparisonStats(stats);
-      return stats;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+            // Utiliser le terrainId passé en paramètre ou la valeur actuelle
+            const currentTerrainId = terrainId !== undefined ? terrainId : selectedTerrainId;
 
-  // Récupérer les tendances
-  const fetchTrendStats = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const stats = await statisticsService.getTrendStats();
-      setTrendStats(stats);
-      return stats;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+            const response = await matchService.getGerantReservationsByDate(status, page, 50, dateDebut, dateFin, currentTerrainId);
+            
+            console.log(`✅ Réservations ${status} chargées:`, response.reservations.length);
+            
+            setReservationsByStatus(prev => ({
+                ...prev,
+                [status]: {
+                    reservations: page === 1 || isRefresh 
+                        ? response.reservations 
+                        : [...prev[status].reservations, ...response.reservations],
+                    pagination: response.pagination,
+                    loading: false,
+                    refreshing: false,
+                    hasMore: response.pagination.hasNextPage
+                }
+            }));
+        } catch (error: any) {
+            console.error(`❌ Erreur lors du chargement des réservations ${status}:`, error);
+            const errorMsg = error?.response?.data?.message || `Impossible de charger les réservations ${status}`;
+            
+            setReservationsByStatus(prev => ({
+                ...prev,
+                [status]: {
+                    ...prev[status],
+                    loading: false,
+                    refreshing: false
+                }
+            }));
+            
+            throw error;
+        }
+    }, [selectedTerrainId]);
 
-  // Récupérer les statistiques spécifiques à un terrain
-  const fetchTerrainSpecificStats = useCallback(async (terrainId: number, query: StatisticsQuery = { period: 'month' }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const stats = await statisticsService.getTerrainSpecificStats(terrainId, query);
-      return stats;
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+    /**
+     * Charge les données du graphique hebdomadaire
+     */
+    const loadWeeklyChartData = useCallback(async (terrainId?: number | null) => {
+        try {
+            setLoadingChart(true);
+            const { dateDebut, dateFin } = getWeekDates();
+            console.log('🔄 Chargement des données hebdomadaires:', { dateDebut, dateFin, terrainId });
 
-  // Fonction pour récupérer toutes les statistiques en une fois
-  const fetchAllStats = useCallback(async (query: StatisticsQuery = { period: 'month' }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [
-        overview,
-        performance,
-        revenue,
-        occupation,
-        participants,
-        matches,
-        temporal,
-        engagement,
-        comparison,
-        trends
-      ] = await Promise.all([
-        statisticsService.getOverviewStats(query),
-        statisticsService.getPerformanceStats(query),
-        statisticsService.getRevenueStats(query),
-        statisticsService.getOccupationStats(query),
-        statisticsService.getParticipantsStats(query),
-        statisticsService.getMatchesStats(query),
-        statisticsService.getTemporalStats(query),
-        statisticsService.getEngagementStats(query),
-        statisticsService.getTerrainComparisonStats(query),
-        statisticsService.getTrendStats(),
-      ]);
+            // Utiliser le terrainId passé en paramètre ou la valeur actuelle
+            const currentTerrainId = terrainId !== undefined ? terrainId : selectedTerrainId;
 
-      setOverviewStats(overview);
-      setPerformanceStats(performance);
-      setRevenueStats(revenue);
-      setOccupationStats(occupation);
-      setParticipantsStats(participants);
-      setMatchesStats(matches);
-      setTemporalStats(temporal);
-      setEngagementStats(engagement);
-      setComparisonStats(comparison);
-      setTrendStats(trends);
+            const response = await matchService.getGerantWeeklyChart(dateDebut, dateFin, currentTerrainId);
+            console.log('✅ Données hebdomadaires reçues:', response.dailyRevenue);
 
-      return {
-        overview,
-        performance,
-        revenue,
-        occupation,
-        participants,
-        matches,
-        temporal,
-        engagement,
-        comparison,
-        trends,
-      };
-    } catch (error) {
-      handleError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError]);
+            setWeeklyChartData(response.dailyRevenue);
+            showSuccess('Graphique mis à jour', 1500);
+        } catch (error: any) {
+            console.error('❌ Erreur lors du chargement des données hebdomadaires:', error);
+            const errorMsg = error?.response?.data?.message || 'Erreur lors du chargement du graphique';
+            showError(errorMsg, 3000);
+            throw error;
+        } finally {
+            setLoadingChart(false);
+        }
+    }, [selectedTerrainId, showSuccess, showError]);
 
-  // Fonction pour formater les montants en FCFA
-  const formatCurrency = useCallback((amount: number): string => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  }, []);
+    /**
+     * Charge les données selon le filtre actuel
+     */
+    const loadDataWithFilter = useCallback(async (period: string, customDate?: Date, terrainId?: number | null): Promise<{ success: boolean; error?: string }> => {
+        console.log('🔄 Chargement des données avec filtre:', period, customDate, terrainId);
+        
+        const { dateDebut, dateFin } = getDateRangeForPeriod(period, customDate);
+        
+        // Utiliser le terrainId passé en paramètre ou la valeur actuelle
+        const currentTerrainId = terrainId !== undefined ? terrainId : selectedTerrainId;
+        
+        const promises = [
+            loadReservationsForStatus('en_attente', 1, true, dateDebut, dateFin, currentTerrainId),
+            loadReservationsForStatus('confirme', 1, true, dateDebut, dateFin, currentTerrainId),
+            loadReservationsForStatus('annule', 1, true, dateDebut, dateFin, currentTerrainId)
+        ];
+        
+        try {
+            const results = await Promise.allSettled(promises);
+            
+            const hasErrors = results.some(result => result.status === 'rejected');
+            
+            if (hasErrors) {
+                const errorResult = results.find(result => result.status === 'rejected');
+                const error = errorResult?.reason;
+                const errorMsg = error?.response?.data?.message || 'Erreur lors du chargement des données';
+                
+                console.error('Erreur générale lors du chargement des données avec filtre:', error);
+                return { success: false, error: errorMsg };
+            }
+            
+            console.log('✅ Chargement des données avec filtre terminé');
+            return { success: true };
+        } catch (error: any) {
+            console.error('Erreur générale lors du chargement des données avec filtre:', error);
+            const errorMsg = error?.response?.data?.message || 'Erreur lors du chargement des données';
+            return { success: false, error: errorMsg };
+        }
+    }, [loadReservationsForStatus, getDateRangeForPeriod, selectedTerrainId]);
 
-  // Fonction pour formater les pourcentages
-  const formatPercentage = useCallback((value: number): string => {
-    return `${value.toFixed(1)}%`;
-  }, []);
+    /**
+     * Gère la sélection d'une période
+     */
+    const handlePeriodSelect = useCallback(async (periodKey: string) => {
+        setSelectedPeriod(periodKey);
+        setLoadingFilter(true);
+        try {
+            if (periodKey !== 'custom') {
+                setIsSpecificDateSelected(false);
+                const result = await loadDataWithFilter(periodKey);
 
-  // Fonction pour formater les nombres
-  const formatNumber = useCallback((value: number): string => {
-    return new Intl.NumberFormat('fr-FR').format(value);
-  }, []);
+                if (result.success) {
+                    const periodLabel = PERIODS.find(p => p.key === periodKey)?.label || periodKey;
+                    showSuccess(`Période changée : ${periodLabel}`, 2000);
+                } else {
+                    showError(result.error || 'Erreur lors du changement de période', 3000);
+                }
+            }
+        } catch (error: any) {
+            console.error('❌ Erreur lors du changement de période:', error);
+            const errorMsg = error?.response?.data?.message || 'Erreur lors du changement de période';
+            showError(errorMsg, 3000);
+        } finally {
+            setLoadingFilter(false);
+        }
+    }, [loadDataWithFilter, showSuccess, showError]);
 
-  return {
-    // États
-    loading,
-    error,
-    overviewStats,
-    performanceStats,
-    revenueStats,
-    occupationStats,
-    participantsStats,
-    matchesStats,
-    temporalStats,
-    engagementStats,
-    comparisonStats,
-    trendStats,
+    /**
+     * Gère le changement de date
+     */
+    const handleDateChange = useCallback(async (event: any, date?: Date) => {
+        setShowDatePicker(Platform.OS === 'ios');
+        if (date) {
+            setSelectedDate(date);
+            setIsSpecificDateSelected(true);
+            setSelectedPeriod('custom');
+            setLoadingFilter(true);
+            console.log('Date spécifique sélectionnée:', date.toLocaleDateString('fr-FR'));
 
-    // Fonctions de récupération
-    fetchOverviewStats,
-    fetchPerformanceStats,
-    fetchRevenueStats,
-    fetchOccupationStats,
-    fetchParticipantsStats,
-    fetchMatchesStats,
-    fetchTemporalStats,
-    fetchEngagementStats,
-    fetchComparisonStats,
-    fetchTrendStats,
-    fetchTerrainSpecificStats,
-    fetchAllStats,
+            try {
+                const result = await loadDataWithFilter('custom', date);
 
-    // Fonctions utilitaires
-    clearError,
-    formatCurrency,
-    formatPercentage,
-    formatNumber,
-  };
+                if (result.success) {
+                    const formattedDate = date.toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    showSuccess(`Date sélectionnée : ${formattedDate}`, 2000);
+                } else {
+                    showError(result.error || 'Erreur lors du chargement de la date', 3000);
+                }
+            } catch (error: any) {
+                console.error('❌ Erreur lors du chargement de la date spécifique:', error);
+                const errorMsg = error?.response?.data?.message || 'Erreur lors du chargement de la date';
+                showError(errorMsg, 3000);
+            } finally {
+                setLoadingFilter(false);
+            }
+        }
+    }, [loadDataWithFilter, showSuccess, showError]);
+
+    /**
+     * Gère le changement de terrain sélectionné
+     */
+    const handleTerrainFilterChange = useCallback(async (terrainId: number | null) => {
+        console.log("🚀 ~ handleTerrainFilterChange ~ terrainId:", terrainId);
+        
+        setSelectedTerrainId(terrainId);
+        setLoadingFilter(true);
+        
+        try {
+            // Vider les réservations existantes
+            setReservationsByStatus(prev => ({
+                en_attente: { ...prev.en_attente, reservations: [], hasMore: true },
+                confirme: { ...prev.confirme, reservations: [], hasMore: true },
+                annule: { ...prev.annule, reservations: [], hasMore: true }
+            }));
+            
+            const result = await loadDataWithFilter(selectedPeriod, selectedPeriod === 'custom' ? selectedDate : undefined, terrainId);
+            
+            if (result.success) {
+                const terrainLabel = terrainId ? `terrain ${terrainId}` : 'tous les terrains';
+                showSuccess(`Filtre appliqué : ${terrainLabel}`, 2000);
+            } else {
+                showError(result.error || 'Erreur lors du changement de filtre', 3000);
+            }
+        } catch (error: any) {
+            console.error('❌ Erreur lors du changement de filtre terrain:', error);
+            const errorMsg = error?.response?.data?.message || 'Erreur lors du changement de filtre';
+            showError(errorMsg, 3000);
+        } finally {
+            setLoadingFilter(false);
+        }
+    }, [selectedPeriod, selectedDate, loadDataWithFilter, showSuccess, showError]);
+
+    /**
+     * Gère le rafraîchissement des données
+     */
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            console.log('🔄 Rafraîchissement des statistiques...');
+
+            const [dataResult, chartResult] = await Promise.allSettled([
+                loadDataWithFilter(selectedPeriod, selectedPeriod === 'custom' ? selectedDate : undefined, selectedTerrainId),
+                loadWeeklyChartData(selectedTerrainId)
+            ]);
+
+            const hasErrors = dataResult.status === 'rejected' || chartResult.status === 'rejected';
+
+            if (hasErrors) {
+                console.log('❌ Erreur lors du rafraîchissement');
+
+                let errorMsg = 'Erreur lors du rafraîchissement';
+
+                if (dataResult.status === 'rejected') {
+                    const error = dataResult.reason;
+                    errorMsg = error?.response?.data?.message || 'Erreur lors du chargement des données';
+                } else if (chartResult.status === 'rejected') {
+                    const error = chartResult.reason;
+                    errorMsg = error?.response?.data?.message || 'Erreur lors du chargement du graphique';
+                }
+
+                showError(errorMsg, 3000);
+            } else {
+                console.log('✅ Statistiques rafraîchies');
+                showSuccess('Données rafraîchies avec succès', 2000);
+            }
+        } catch (error: any) {
+            console.error('❌ Erreur lors du rafraîchissement:', error);
+            const errorMsg = error?.response?.data?.message || 'Erreur lors du rafraîchissement';
+            showError(errorMsg, 3000);
+        } finally {
+            setRefreshing(false);
+        }
+    }, [selectedPeriod, selectedDate, selectedTerrainId, loadDataWithFilter, loadWeeklyChartData, showSuccess, showError]);
+
+    /**
+     * Gère l'ouverture du sélecteur de date
+     */
+    const handleCalendarPress = useCallback(() => {
+        setShowDatePicker(true);
+    }, []);
+
+    // Calcul des statistiques basées sur les vraies données
+    const statistics = useMemo((): StatisticsData => {
+        const confirmedReservations = reservationsByStatus.confirme?.reservations || [];
+        const pendingReservations = reservationsByStatus.en_attente?.reservations || [];
+        const cancelledReservations = reservationsByStatus.annule?.reservations || [];
+
+        const revenue = calculateRevenue(confirmedReservations);
+        const totalReservations = confirmedReservations.length + pendingReservations.length + cancelledReservations.length;
+        const totalPlayers = confirmedReservations.reduce((total, res) => total + res.nbreJoueursInscrits, 0);
+        const averagePlayers = confirmedReservations.length > 0
+            ? totalPlayers / confirmedReservations.length
+            : 0;
+
+        return {
+            revenue: formatCurrency(revenue),
+            matches: confirmedReservations.length,
+            players: totalPlayers,
+            bars: weeklyChartData,
+            averagePlayers: Math.round(averagePlayers * 10) / 10,
+            occupancyRate: confirmedReservations.length > 0 ? '85%' : '0%',
+            popularTime: getPopularTime(confirmedReservations),
+            reservations: totalReservations,
+            reservationsConfirmed: confirmedReservations.length,
+            reservationsPending: pendingReservations.length,
+            reservationsCancelled: cancelledReservations.length
+        };
+    }, [reservationsByStatus, weeklyChartData]);
+
+    // Charger les données du graphique au montage du composant
+    useEffect(() => {
+        loadWeeklyChartData();
+    }, [loadWeeklyChartData]);
+
+    // Charger les données initiales
+    useEffect(() => {
+        const loadInitialData = async () => {
+            console.log('🔄 Chargement des données initiales...');
+            await loadDataWithFilter('today');
+        };
+        
+        loadInitialData();
+    }, [loadDataWithFilter]);
+
+    const chartData = {
+        labels: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
+        datasets: [
+            {
+                data: statistics.bars,
+            },
+        ],
+    };
+
+    return {
+        // États
+        selectedPeriod,
+        selectedDate,
+        isSpecificDateSelected,
+        showDatePicker,
+        refreshing,
+        loadingChart,
+        loadingFilter,
+        weeklyChartData,
+        reservationsByStatus,
+        selectedTerrainId,
+        
+        // Calculs
+        statistics,
+        chartWidth,
+        chartHeight,
+        chartData,
+        // Fonctions
+        handlePeriodSelect,
+        handleDateChange,
+        handleCalendarPress,
+        onRefresh,
+        loadDataWithFilter,
+        loadWeeklyChartData,
+        handleTerrainFilterChange,
+        
+        // Setters
+        setShowDatePicker,
+    };
 }; 

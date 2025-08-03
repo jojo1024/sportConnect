@@ -16,7 +16,7 @@ export const EmptyStateCard: React.FC<EmptyStateCardProps> = ({
             <Ionicons name={icon as any} size={48} color="#CBD5E1" style={styles.icon} />
             <Text style={styles.message}>{message}</Text>
             <Text style={styles.subtitle}>
-                Les nouvelles réservations apparaîtront ici automatiquement
+                Veuillez rafraîchir la page pour voir les nouvelles réservations
             </Text>
         </View>
     );

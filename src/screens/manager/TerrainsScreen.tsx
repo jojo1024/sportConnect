@@ -4,6 +4,7 @@ import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } fr
 import LoadingFooter from '../../components/LoadingFooter';
 import { RetryComponent } from '../../components/UtilsComponent';
 import { TerrainCard } from '../../components/terrain';
+import CustomOutlineButton from '../../components/CustomOutlineButton';
 import { useTerrain } from '../../hooks/useTerrain';
 import { Terrain } from '../../services/terrainService';
 import { COLORS } from '../../theme/colors';
@@ -42,13 +43,12 @@ const TerrainsScreen: React.FC = () => {
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Mes terrains</Text>
-                <TouchableOpacity
-                    style={styles.addButton}
+                <CustomOutlineButton
                     onPress={handleAddTerrain}
-                >
-                    <Ionicons name="add-circle" size={16} color={COLORS.primary} />
-                    <Text style={styles.addButtonText}>Ajouter</Text>
-                </TouchableOpacity>
+                    title="Ajouter"
+                    iconName="add-circle"
+                    iconType="ionicons"
+                />
             </View>
 
             <FlatList
@@ -108,22 +108,6 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: 'bold',
         color: COLORS.almostBlack,
-    },
-    addButton: {
-        backgroundColor: COLORS.white,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 6,
-        borderRadius: 40,
-        borderWidth: 1,
-        borderColor: COLORS.primary,
-    },
-    addButtonText: {
-        color: COLORS.primary,
-        fontWeight: '600',
-        marginLeft: 8,
-        fontSize: 12,
     },
     listContainer: {
         padding: 16,

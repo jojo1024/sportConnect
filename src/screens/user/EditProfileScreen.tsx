@@ -35,7 +35,6 @@ const EditProfileScreen: React.FC = () => {
         handleInputChange,
         pickProfileImage,
         handleSave,
-        resetForm,
         clearSuccessMessage,
         handleRetry,
         goBack
@@ -198,7 +197,7 @@ const EditProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.white,
+        backgroundColor: COLORS.backgroundLight,
     },
     keyboardContainer: {
         flex: 1,
@@ -211,7 +210,7 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.gray[200],
+        borderBottomColor: COLORS.borderColor,
     },
     backButton: {
         padding: 8,
@@ -219,7 +218,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: COLORS.text,
+        color: COLORS.title,
         flex: 1,
         textAlign: 'center',
     },
@@ -237,7 +236,7 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: 'bold',
         marginBottom: 32,
-        color: COLORS.text,
+        color: COLORS.title,
     },
     inputContainer: {
         marginBottom: 8,
@@ -252,14 +251,14 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#eee',
+        borderColor: COLORS.borderLight,
         borderRadius: 8,
         padding: 8,
         fontSize: 16,
         backgroundColor: COLORS.white,
     },
     inputText: {
-        color: COLORS.textLight,
+        color: COLORS.placeholderColor,
         fontSize: 16,
     },
     validIndicator: {
@@ -304,7 +303,7 @@ const styles = StyleSheet.create({
     resetButton: {
         backgroundColor: COLORS.white,
         borderWidth: 1,
-        borderColor: COLORS.gray[300],
+        borderColor: COLORS.borderMedium,
         flex: 0.4,
     },
 

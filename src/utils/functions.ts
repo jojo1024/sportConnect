@@ -259,7 +259,7 @@ export    const formatDateForMySQL = (date: Date) => {
 export const getUserAvatar = (avatarPath: string | null | undefined): string => {
     if (!avatarPath) {
         // Avatar par défaut si aucun avatar n'est défini
-        return 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face';
+        return 'https://tse4.mm.bing.net/th/id/OIP.GeEEvvh1bNc8fdvZsq4gQwHaHa?pid=Api&P=0&h=180';
     }
 
     // Si c'est déjà une URL complète (http/https), on la retourne telle quelle
@@ -280,14 +280,16 @@ export const getModalConfig = (modalType: ModalType, item: Match) => {
                 title: "Confirmer la réservation",
                 message: `Êtes-vous sûr de vouloir confirmer cette réservation pour le terrain "${item.terrainNom}" ?\n\nCette action ne peut pas être annulée.`,
                 confirmText: "Confirmer",
-                cancelText: "Annuler"
+                cancelText: "Annuler",
+                type: "success"
             };
         case 'cancel':
             return {
                 title: "Annuler la réservation",
                 message: `Êtes-vous sûr de vouloir annuler cette réservation pour le terrain "${item.terrainNom}" ?\n\nCette action ne peut pas être annulée.`,
                 confirmText: "Annuler",
-                cancelText: "Retour"
+                cancelText: "Retour",
+                type: "error"
             };
         default:
             return {
@@ -297,4 +299,51 @@ export const getModalConfig = (modalType: ModalType, item: Match) => {
                 cancelText: ""
             };
     }
+};
+
+// Fonction pour calculer les dates de début et fin de la semaine courante
+export const getWeekDates = (): { dateDebut: string; dateFin: string } => {
+    const today = new Date();
+
+    // Calcul du lundi
+    const day = today.getDay() || 7; // Dimanche (0) devient 7
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - day + 1);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // Calcul du dimanche
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    return {
+        dateDebut: startOfWeek.toISOString().split('T')[0],
+        dateFin: endOfWeek.toISOString().split('T')[0]
+    };
+};
+
+// Fonction pour formater les montants courts (pour les graphiques)
+export const formatShortCurrency = (amount: number): string => {
+    if (amount >= 1000000) {
+        return `${(amount / 1000000).toFixed(1)}M`;
+    } else if (amount >= 1000) {
+        return `${(amount / 1000).toFixed(1)}K`;
+    }
+    return amount.toString();
+};
+
+// Fonctions utilitaires pour calculer les statistiques
+export const calculateRevenue = (reservations: Match[]): number => {
+    return reservations.reduce((total, reservation) => {
+        return total + (reservation.terrainPrixParHeure * reservation.matchDuree);
+    }, 0);
+};
+
+export const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'XOF',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(amount);
 };

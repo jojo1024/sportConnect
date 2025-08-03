@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Modal,
     View,
@@ -35,10 +35,28 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
     confirmText = 'OK',
     cancelText = 'Annuler',
     showCancel = false,
+    autoClose = false,
+    autoCloseDelay = 3000,
     onConfirm,
     onCancel,
 }) => {
 
+    // Gestion de l'auto-fermeture
+    useEffect(() => {
+        let timer: ReturnType<typeof setTimeout>;
+
+        if (visible && autoClose && onConfirm) {
+            timer = setTimeout(() => {
+                onConfirm();
+            }, autoCloseDelay);
+        }
+
+        return () => {
+            if (timer) {
+                clearTimeout(timer);
+            }
+        };
+    }, [visible, autoClose, autoCloseDelay, onConfirm]);
 
     const getIconName = () => {
         switch (type) {

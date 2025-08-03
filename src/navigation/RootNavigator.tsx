@@ -17,6 +17,7 @@ import { useAppSelector, useAuthInitialization } from "../store/hooks/hooks";
 import { selectIsAuthenticated, selectUser } from "../store/slices/userSlice";
 import { BottomTabs } from "./BottomTabs";
 import { RootStackParamList } from "./types";
+import { ReservationsScreen, StatisticsScreen } from "../screens/manager";
 
 const RootNavigator = () => {
     const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -55,6 +56,8 @@ const RootNavigator = () => {
                             <Stack.Screen name="ProfileOptions" component={ProfileOptionsScreen} />
                             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
                             <Stack.Screen name="EditPassword" component={EditPasswordScreen} />
+                            <Stack.Screen name="Reservations" component={ReservationsScreen} />
+                            <Stack.Screen name="Statistics" component={StatisticsScreen} />
                         </>
                     )}
                 </Stack.Navigator>

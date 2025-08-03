@@ -1,11 +1,12 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { COLORS } from "../theme/colors";
 
 const LoadingFooter = ({ loading }: { loading: boolean }) => {
     if (!loading) return null;
 
     return (
         <View style={styles.loadingFooter}>
-            <ActivityIndicator size="small" color="#FF5A1F" />
+            <ActivityIndicator size="small" color={COLORS.primary} />
             <Text style={styles.loadingFooterText}>Chargement...</Text>
         </View>
     );

@@ -11,7 +11,7 @@ export interface Sport {
     sportStatus: number;
 }
 
-interface SportSelectorBottomSheetProps {
+interface SportSelectorProps {
     selectedSport?: Sport | null;
     loading: boolean;
     error?: string | null;
@@ -20,7 +20,7 @@ interface SportSelectorBottomSheetProps {
 }
 
 
-export const SportSelectorBottomSheet: React.FC<SportSelectorBottomSheetProps> = ({
+export const SportSelector: React.FC<SportSelectorProps> = ({
     selectedSport,
     loading,
     error,

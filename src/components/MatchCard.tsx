@@ -56,7 +56,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onPress, compact = 
                         <Text style={styles.cardCode}>Code: {match.codeMatch}</Text>
                     </View>
                     <View style={styles.cardFooter}>
-                        <Text style={styles.capo}>Capo: {match.capoNomUtilisateur}</Text>
+                        <Text style={styles.capo}>Capo: {match?.capoNomUtilisateur?.slice(0, 15)}</Text>
                         <View style={styles.playersRow}>
                             <Text style={styles.players}>
                                 {match.nbreJoueursInscrits}/{match.joueurxMax}
@@ -88,10 +88,10 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.white,
         borderRadius: 22,
         overflow: 'hidden',
-        elevation: 4,
+        elevation: 0.3,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.10,
+        // shadowOffset: { width: 0, height: 2 },
+        // shadowOpacity: 0.10,
         shadowRadius: 6,
         minHeight: 110,
         position: 'relative',

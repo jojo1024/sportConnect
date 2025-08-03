@@ -117,9 +117,9 @@ const analyzeError = (error: any): ApiError => {
 // Configuration de l'API
 // const API_URL = 'https://ibori.wookami.com/v1';
 const API_URL =  'http://192.168.100.4:50015/v1' // Pour l'émulateur Android
-// export const BASE_URL_IMAGES = 'http://192.168.100.4:50015/images'
-export const BASE_URL_IMAGES = 'http://192.168.100.4:50015/images'
-export const BASE_URL_AVATARS = 'http://192.168.100.4:50015/avatars'
+// export const BASE_URL_IMAGES = 'http://192.168.100.8:50015/images'
+export const BASE_URL_IMAGES = 'https://ibori.wookami.com/images'
+export const BASE_URL_AVATARS = 'https://ibori.wookami.com/avatars'
 
 // Création de l'instance axios
 const api = axios.create({

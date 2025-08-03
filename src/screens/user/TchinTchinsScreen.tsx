@@ -7,7 +7,7 @@ import NewMatchesNotification from '../../components/NewMatchesNotification';
 import SearchMatchBottomSheet from '../../components/SearchMatchBottomSheet';
 import { MatchCard } from '../../components/MatchCard';
 import SportFilter from '../../components/SportFilter';
-import { ErrorDemoComponent, RetryComponent } from '../../components/UtilsComponent';
+import { RetryComponent } from '../../components/UtilsComponent';
 import { useMatch } from '../../hooks/useMatch';
 import { useSport } from '../../hooks/useSport';
 import { COLORS } from '../../theme/colors';
@@ -40,8 +40,6 @@ const TchinTchinsScreen = () => {
         searchBottomSheetRef
     } = useMatch(selectedSportId);
 
-    // État pour afficher la démonstration des erreurs (à supprimer en production)
-    const [showErrorDemo, setShowErrorDemo] = useState(false);
 
     // Afficher l'erreur si elle existe
     if (error) {
@@ -54,23 +52,6 @@ const TchinTchinsScreen = () => {
         );
     }
 
-    // Afficher la démonstration des erreurs si activée (à supprimer en production)
-    if (showErrorDemo) {
-        return (
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => setShowErrorDemo(false)}
-                    >
-                        <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
-                    </TouchableOpacity>
-                    <Text style={styles.demoHeaderTitle}>Test des Messages d'Erreur</Text>
-                </View>
-                <ErrorDemoComponent />
-            </View>
-        );
-    }
 
     return (
         <View style={styles.container}>
@@ -87,15 +68,6 @@ const TchinTchinsScreen = () => {
                     <Text style={styles.subtitle}>{version}</Text>
                 </View>
                 <View style={styles.headerActions}>
-                    {/* Bouton de démonstration des erreurs (à supprimer en production) */}
-                    <TouchableOpacity
-                        style={styles.demoButton}
-                        onPress={() => setShowErrorDemo(true)}
-                        activeOpacity={0.7}
-                    >
-                        <Ionicons name="bug-outline" size={18} color={COLORS.warning} />
-                    </TouchableOpacity>
-
                     {/* Bouton de recherche */}
                     <TouchableOpacity
                         style={styles.searchButton}
@@ -191,7 +163,7 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 8,
-        color: COLORS.darkGray,
+        color: COLORS.gray[600],
         fontStyle: 'italic',
         paddingTop: 10,
     },
@@ -202,7 +174,7 @@ const styles = StyleSheet.create({
     dateTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: COLORS.darkestGray,
+        color: COLORS.almostBlack,
     },
     dateShort: {
         fontSize: 14,
@@ -261,7 +233,7 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 17,
         fontWeight: 'bold',
-        color: COLORS.veryDarkGray,
+        color: COLORS.almostBlack,
         flex: 1,
         flexWrap: 'wrap',
     },
@@ -280,7 +252,7 @@ const styles = StyleSheet.create({
     },
     cardLocation: {
         fontSize: 13,
-        color: COLORS.darkGray,
+        color: COLORS.gray[600],
         marginBottom: 4,
         marginTop: 2,
     },
@@ -292,12 +264,12 @@ const styles = StyleSheet.create({
     },
     cardField: {
         fontSize: 13,
-        color: COLORS.darkerGray,
+        color: COLORS.gray[700],
         marginRight: 16,
     },
     cardFormat: {
         fontSize: 13,
-        color: COLORS.darkerGray,
+        color: COLORS.gray[700],
     },
     cardCodeRow: {
         flexDirection: 'row',
@@ -358,17 +330,17 @@ const styles = StyleSheet.create({
     loadingText: {
         marginLeft: 10,
         fontSize: 14,
-        color: COLORS.darkGray,
+        color: COLORS.gray[600],
     },
     searchButton: {
         width: 36,
         height: 36,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.gray[100],
         borderRadius: 18,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#e9ecef',
+        borderColor: COLORS.gray[200],
     },
     headerActions: {
         flexDirection: 'row',
@@ -378,12 +350,12 @@ const styles = StyleSheet.create({
     creditCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.gray[100],
         borderRadius: 20,
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderWidth: 1,
-        borderColor: '#e9ecef',
+        borderColor: COLORS.gray[200],
         gap: 6,
     },
     creditAmount: {
@@ -394,22 +366,22 @@ const styles = StyleSheet.create({
     demoButton: {
         width: 36,
         height: 36,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.gray[100],
         borderRadius: 18,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#e9ecef',
+        borderColor: COLORS.gray[200],
     },
     backButton: {
         width: 36,
         height: 36,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.gray[100],
         borderRadius: 18,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#e9ecef',
+        borderColor: COLORS.gray[200],
     },
     demoHeaderTitle: {
         fontSize: 22,

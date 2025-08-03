@@ -17,7 +17,7 @@ interface ReservationsTabContentProps {
     searchQuery: string;
     setSearchQuery: (query: string) => void;
     onConfirm: (matchId: number, gerantId: number) => void;
-    onCancel: (matchId: number, raison?: string) => void;
+    onCancel: (matchId: number, raison?: string, gerantId?: number) => void;
     onLoadMore: () => void;
     onRefresh: () => void;
     confirmingMatchId: number | null;

@@ -2,6 +2,16 @@ import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { COLORS } from '../../theme/colors';
 
+// Fonction pour formater les montants en FCFA
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'XOF',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
 interface BarChartProps {
   data: Array<{
     label: string;
@@ -68,7 +78,7 @@ const BarChart: React.FC<BarChartProps> = ({
                 ]}
               />
               {showValues && (
-                <Text style={styles.barValue}>{item.value}</Text>
+                <Text style={styles.barValue}>{formatCurrency(item.value)}</Text>
               )}
             </View>
             <Text style={styles.barLabel} numberOfLines={2}>
@@ -83,11 +93,11 @@ const BarChart: React.FC<BarChartProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-            backgroundColor: COLORS.backgroundWhite,
+    backgroundColor: COLORS.backgroundWhite,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-            shadowColor: COLORS.shadow,
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -96,7 +106,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-            color: COLORS.almostBlack,
+    color: COLORS.almostBlack,
     marginBottom: 16,
   },
   chartContainer: {
@@ -121,7 +131,7 @@ const styles = StyleSheet.create({
   barValue: {
     fontSize: 10,
     fontWeight: '500',
-            color: COLORS.gray[600],
+    color: COLORS.gray[600],
     marginTop: 4,
   },
   barLabel: {

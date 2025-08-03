@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import CustomOutlineButton from '../CustomOutlineButton';
 import { COLORS } from '../../theme/colors';
 
 interface HeaderProps {
@@ -9,31 +10,30 @@ interface HeaderProps {
     isFormReady?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onCreate, isSubmitting, isFormReady = false }) => (
-    <View style={styles.header}>
-        <Text style={styles.title}>Créer une partie</Text>
-        <TouchableOpacity
-            style={[
-                styles.addButton, 
-                (isSubmitting || !isFormReady) && styles.addButtonDisabled
-            ]}
-            onPress={onCreate}
-            disabled={isSubmitting || !isFormReady}
-        >
-            <Ionicons
-                name="save"
-                size={16}
-                color={(isSubmitting || !isFormReady) ? '#ccc' : COLORS.primary}
+export const Header: React.FC<HeaderProps> = ({ onCreate, isSubmitting, isFormReady = false }) => {
+    const isDisabled = isSubmitting || !isFormReady;
+    const buttonText = isSubmitting ? 'Création...' : 'Créer';
+
+    return (
+        <View style={styles.header}>
+            <Text style={styles.title}>Créer une partie</Text>
+            <CustomOutlineButton
+                onPress={onCreate}
+                title={buttonText}
+                iconName="save"
+                iconType="ionicons"
+                iconColor={isDisabled ? '#ccc' : COLORS.primary}
+                textColor={isDisabled ? '#ccc' : COLORS.primary}
+                borderColor={isDisabled ? '#ccc' : COLORS.primary}
+                backgroundColor={isDisabled ? '#f5f5f5' : '#fff'}
+                disabled={isDisabled}
+                textStyle={{
+                    color: isDisabled ? '#ccc' : COLORS.primary,
+                }}
             />
-            <Text style={[
-                styles.addButtonText, 
-                (isSubmitting || !isFormReady) && styles.addButtonTextDisabled
-            ]}>
-                {isSubmitting ? 'Création...' : 'Créer'}
-            </Text>
-        </TouchableOpacity>
-    </View>
-);
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
     header: {
@@ -54,20 +54,6 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: 'bold',
         color: '#1a1a1a',
-    },
-    addButton: {
-        backgroundColor: '#fff',
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 6,
-        borderRadius: 40,
-        borderWidth: 1,
-        borderColor: COLORS.primary,
-    },
-    addButtonDisabled: {
-        borderColor: '#ccc',
-        backgroundColor: '#f5f5f5',
     },
     addButtonText: {
         color: COLORS.primary,

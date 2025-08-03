@@ -28,6 +28,7 @@ export const useProfileData = () => {
     const isCacheValid = lastUpdate && (Date.now() - lastUpdate) < CACHE_DURATION;
 
     const fetchProfileData = useCallback(async (forceRefresh = false) => {
+        console.log("🚀 ~ fetchProfileData ~ forceRefresh:", forceRefresh)
         if (!user?.utilisateurId) {
             return;
         }

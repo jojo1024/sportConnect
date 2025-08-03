@@ -5,6 +5,7 @@ import { RESERVATION_STATUSES } from '../utils/constant';
 
 export interface ReservationFilters {
     searchQuery?: string;
+    terrainId?: number | null;
 }
 
 export interface ReservationsByStatus {
@@ -25,9 +26,10 @@ export interface ReservationsByStatus {
  * Fonctionnalités principales :
  * - Chargement paginé des réservations par statut
  * - Confirmation et annulation de réservations
- * - Filtrage par recherche
+ * - Filtrage par recherche et par terrain
  * - Gestion des états de chargement et d'erreur
  * - Support de l'infinite scroll
+ * - Cache pour éviter les rechargements inutiles
  * 
  * @returns {Object} Objet contenant l'état et les méthodes de gestion des réservations
  */
@@ -35,6 +37,8 @@ export const useReservationsInfinite = () => {
 
     const [index, setIndex] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedTerrainId, setSelectedTerrainId] = useState<number | null>(null);
+    console.log("🚀 ~ useReservationsInfinite ~ selectedTerrainId:", selectedTerrainId)
     const [reservationsByStatus, setReservationsByStatus] = useState<ReservationsByStatus>({
         en_attente: { reservations: [], pagination: {} as PaginationInfo, loading: false, refreshing: false, hasMore: true },
         confirme: { reservations: [], pagination: {} as PaginationInfo, loading: false, refreshing: false, hasMore: true },
@@ -47,14 +51,19 @@ export const useReservationsInfinite = () => {
     const [cancellingMatchId, setCancellingMatchId] = useState<number | null>(null);
     const { showError } = useCustomAlert();
     const loadingRef = useRef(false);
+    
+    // Cache pour éviter les rechargements inutiles
+    const lastTerrainId = useRef<number | null>(null);
+    const hasInitialDataLoaded = useRef(false);
 
     /**
      * Charge les réservations pour un statut spécifique avec pagination
      * @param status - Statut des réservations ('en_attente', 'confirme', 'annule')
      * @param page - Numéro de la page à charger
      * @param isRefresh - Si true, remplace les données existantes
+     * @param terrainId - ID du terrain pour le filtrage (optionnel)
      */
-    const loadReservationsForStatus = useCallback(async (status: string, page: number = 1, isRefresh: boolean = false) => {
+    const loadReservationsForStatus = useCallback(async (status: string, page: number = 1, isRefresh: boolean = false, terrainId?: number | null) => {
         if (loadingRef.current) return;
         
         try {
@@ -69,7 +78,11 @@ export const useReservationsInfinite = () => {
                 }
             }));
 
-            const response = await matchService.getGerantReservations(status, page, 10);
+            // Utiliser le terrainId passé en paramètre ou la valeur actuelle
+            const currentTerrainId = terrainId !== undefined ? terrainId : selectedTerrainId;
+            console.log("🚀 ~ loadReservationsForStatus ~ currentTerrainIdxxyy:", currentTerrainId, "terrainId param:", terrainId)
+
+            const response = await matchService.getGerantReservations(status, currentTerrainId || undefined, page, 20);
             
             setReservationsByStatus(prev => ({
                 ...prev,
@@ -99,7 +112,7 @@ export const useReservationsInfinite = () => {
         } finally {
             loadingRef.current = false;
         }
-    }, [setErrorMessage]);
+    }, [selectedTerrainId, setErrorMessage]);
 
     /**
      * Charge la page suivante pour un statut donné (infinite scroll)
@@ -122,7 +135,7 @@ export const useReservationsInfinite = () => {
     }, [loadReservationsForStatus]);
 
     /**
-     * Confirme une réservation et recharge les données
+     * Confirme une réservation et met à jour les listes localement
      * @param matchId - ID du match à confirmer
      * @param gerantId - ID du gérant qui confirme
      */
@@ -132,11 +145,37 @@ export const useReservationsInfinite = () => {
             await matchService.confirmMatch(matchId, gerantId);
             setSuccessMessage('Réservation confirmée avec succès');
             
-            // Recharger les réservations en attente et confirmées
-            await Promise.all([
-                refreshForStatus('en_attente'),
-                refreshForStatus('confirme')
-            ]);
+            // Mettre à jour les listes localement
+            setReservationsByStatus(prev => {
+                // Trouver la réservation dans la liste en attente
+                const reservationToMove = prev.en_attente.reservations.find(r => r.matchId === matchId);
+                
+                if (reservationToMove) {
+                    // Supprimer de la liste en attente
+                    const updatedEnAttente = prev.en_attente.reservations.filter(r => r.matchId !== matchId);
+                    
+                    // Mettre à jour le statut et ajouter à la liste confirmée
+                    const updatedReservation = {
+                        ...reservationToMove,
+                        matchStatus: 'confirme' as const
+                    };
+                    const updatedConfirme = [updatedReservation, ...prev.confirme.reservations];
+                    
+                    return {
+                        ...prev,
+                        en_attente: {
+                            ...prev.en_attente,
+                            reservations: updatedEnAttente
+                        },
+                        confirme: {
+                            ...prev.confirme,
+                            reservations: updatedConfirme
+                        }
+                    };
+                }
+                
+                return prev;
+            });
         } catch (error: any) {
             console.error('Erreur lors de la confirmation:', error);
             const errorMsg = error?.response?.data?.message || 'Impossible de confirmer la réservation';
@@ -144,25 +183,57 @@ export const useReservationsInfinite = () => {
         } finally {
             setConfirmingMatchId(null);
         }
-    }, [refreshForStatus, setSuccessMessage, setErrorMessage]);
+    }, [setSuccessMessage, setErrorMessage]);
 
     /**
-     * Annule une réservation et recharge les données
+     * Annule une réservation et met à jour les listes localement
      * @param matchId - ID du match à annuler
      * @param raison - Raison de l'annulation (optionnel)
      */
-    const cancelReservation = useCallback(async (matchId: number, raison?: string) => {
+    const cancelReservation = useCallback(async (matchId: number, raison?: string, gerantId?: number) => {
         try {
             setCancellingMatchId(matchId);
-            await matchService.cancelMatch(matchId, raison);
+            await matchService.cancelMatch(matchId, raison, gerantId);
             setSuccessMessage('Réservation annulée avec succès');
             
-            // Recharger toutes les réservations
-            await Promise.all([
-                refreshForStatus('en_attente'),
-                refreshForStatus('confirme'),
-                refreshForStatus('annule')
-            ]);
+            // Mettre à jour les listes localement
+            setReservationsByStatus(prev => {
+                // Chercher la réservation dans toutes les listes
+                let reservationToMove = prev.en_attente.reservations.find(r => r.matchId === matchId);
+                let sourceStatus = 'en_attente';
+                
+                if (!reservationToMove) {
+                    reservationToMove = prev.confirme.reservations.find(r => r.matchId === matchId);
+                    sourceStatus = 'confirme';
+                }
+                
+                if (reservationToMove) {
+                    // Supprimer de la liste source
+                    const updatedSource = prev[sourceStatus].reservations.filter(r => r.matchId !== matchId);
+                    
+                    // Mettre à jour le statut et ajouter à la liste annulée
+                    const updatedReservation = {
+                        ...reservationToMove,
+                        matchStatus: 'annule' as const
+                    };
+                    const updatedAnnule = [updatedReservation, ...prev.annule.reservations];
+                    
+                    return {
+                        ...prev,
+                        [sourceStatus]: {
+                            ...prev[sourceStatus],
+                            reservations: updatedSource
+                        },
+                        annule: {
+                            ...prev.annule,
+                            reservations: updatedAnnule
+                        }
+                    };
+                }
+                
+                return prev;
+            });
+           
         } catch (error: any) {
             console.error('Erreur lors de l\'annulation:', error);
             const errorMsg = error?.response?.data?.message || 'Impossible d\'annuler la réservation';
@@ -170,7 +241,7 @@ export const useReservationsInfinite = () => {
         } finally {
             setCancellingMatchId(null);
         }
-    }, [refreshForStatus, setSuccessMessage, setErrorMessage]);
+    }, [setSuccessMessage, setErrorMessage]);
 
     /**
      * Filtre les réservations par recherche textuelle
@@ -202,48 +273,85 @@ export const useReservationsInfinite = () => {
     const clearErrorMessage = useCallback(() => setErrorMessage(null), []);
 
     /**
+     * Gère le changement de terrain sélectionné
+     * @param terrainId - ID du terrain sélectionné (null pour tous les terrains)
+     */
+    const handleTerrainFilterChange = useCallback(async (terrainId: number | null) => {
+        console.log("🚀 ~ handleTerrainFilterChange ~ terrainId:", terrainId);
+        
+        // Éviter les rechargements inutiles si le terrain n'a pas changé
+        if (lastTerrainId.current === terrainId) {
+            return;
+        }
+        
+        // Mettre à jour l'état
+        setSelectedTerrainId(terrainId);
+        lastTerrainId.current = terrainId;
+        // Vider les réservations existantes
+        setReservationsByStatus(prev => ({
+                en_attente: { ...prev.en_attente, reservations: [], hasMore: true },
+                confirme: { ...prev.confirme, reservations: [], hasMore: true },
+                annule: { ...prev.annule, reservations: [], hasMore: true }
+            }));
+            
+            await loadReservationsForStatus('en_attente', 1, true, terrainId);
+            await loadReservationsForStatus('confirme', 1, true, terrainId);
+            await loadReservationsForStatus('annule', 1, true, terrainId);
+
+    }, [loadReservationsForStatus]);
+
+    /**
      * Charge les données initiales au montage du composant
      */
     useEffect(() => {
         const loadInitialData = async () => {
+            // Éviter les rechargements inutiles
+            if (hasInitialDataLoaded.current) {
+                return;
+            }
+            
             console.log("🚀 ~ loadInitialData ~ loadInitialData:")
             await Promise.all([
                 loadReservationsForStatus('en_attente'),
                 loadReservationsForStatus('confirme'),
                 loadReservationsForStatus('annule')
             ]);
+            
+            hasInitialDataLoaded.current = true;
         };
         
         loadInitialData();
     }, [loadReservationsForStatus]);
 
-        // Mettre à jour les filtres quand la recherche change
-        useEffect(() => {
-            setFilters({ searchQuery });
-        }, [searchQuery, setFilters]);
-    
-        const handleConfirm = useCallback((matchId: number, gerantId: number) => {
-            confirmReservation(matchId, gerantId);
-        }, [confirmReservation]);
-    
-        const handleCancel = useCallback((matchId: number, raison?: string) => {
-            cancelReservation(matchId, raison);
-        }, [cancelReservation]);
-    
-        const handleRetry = useCallback(() => {
-            clearErrorMessage();
-            // Recharger toutes les réservations
-            Object.values(RESERVATION_STATUSES).forEach(status => {
-                refreshForStatus(status);
-            });
-        }, [clearErrorMessage, refreshForStatus]);
+    // Mettre à jour les filtres quand la recherche change
+    useEffect(() => {
+        setFilters({ searchQuery, terrainId: selectedTerrainId });
+    }, [searchQuery, selectedTerrainId]);
+
+    const handleConfirm = useCallback((matchId: number, gerantId: number) => {
+        confirmReservation(matchId, gerantId);
+    }, [confirmReservation]);
+
+    const handleCancel = useCallback((matchId: number, raison?: string, gerantId?: number) => {
+        cancelReservation(matchId, raison, gerantId);
+    }, [cancelReservation]);
+
+    const handleRetry = useCallback(() => {
+        clearErrorMessage();
+        // Recharger toutes les réservations
+        Object.values(RESERVATION_STATUSES).forEach(status => {
+            refreshForStatus(status);
+        });
+    }, [clearErrorMessage, refreshForStatus]);
 
     return {
         reservationsByStatus,
         index,
         searchQuery,
+        selectedTerrainId,
         setIndex,
         setSearchQuery,
+        setSelectedTerrainId,
         filters,
         setFilters,
         successMessage,
@@ -257,6 +365,7 @@ export const useReservationsInfinite = () => {
         getFilteredReservations,
         clearSuccessMessage,
         clearErrorMessage,
+        handleTerrainFilterChange,
         handleConfirm,
         handleCancel,
         handleRetry

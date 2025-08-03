@@ -3,8 +3,11 @@ import {
     FlatList,
     StyleSheet,
     TextInput,
-    View
+    View,
+    TouchableOpacity,
+    ActivityIndicator
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { SIZES } from '../../theme/typography';
 import { FieldCard } from './FieldCard';
@@ -18,6 +21,8 @@ interface TerrainsBottomSheetProps {
     filteredFields: Terrain[];
     selectedFieldId: string;
     onFieldSelect: (field: Terrain) => void;
+    onRefresh?: () => void;
+    isRefreshing?: boolean;
 }
 
 export const TerrainsBottomSheet: React.FC<TerrainsBottomSheetProps> = ({
@@ -26,7 +31,9 @@ export const TerrainsBottomSheet: React.FC<TerrainsBottomSheetProps> = ({
     onSearchChange,
     filteredFields,
     selectedFieldId,
-    onFieldSelect
+    onFieldSelect,
+    onRefresh,
+    isRefreshing = false
 }) => (
     <RBSheet
         ref={bottomSheetRef}
@@ -43,13 +50,34 @@ export const TerrainsBottomSheet: React.FC<TerrainsBottomSheetProps> = ({
         }}
     >
         <View style={styles.bottomSheetContainer}>
-            <TextInput
-                style={styles.searchInput}
-                placeholder="Rechercher un terrain..."
-                value={searchQuery}
-                selectionColor={COLORS.primary}
-                onChangeText={onSearchChange}
-            />
+            <View style={styles.headerContainer}>
+                <View style={styles.searchContainer}>
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Rechercher un terrain..."
+                        value={searchQuery}
+                        selectionColor={COLORS.primary}
+                        onChangeText={onSearchChange}
+                    />
+                </View>
+                {onRefresh && (
+                    <TouchableOpacity
+                        style={styles.refreshButton}
+                        onPress={onRefresh}
+                        disabled={isRefreshing}
+                    >
+                        {isRefreshing ? (
+                            <ActivityIndicator size="small" color={COLORS.primary} />
+                        ) : (
+                            <Ionicons
+                                name="refresh"
+                                size={20}
+                                color={COLORS.primary}
+                            />
+                        )}
+                    </TouchableOpacity>
+                )}
+            </View>
             <FlatList
                 data={filteredFields}
                 keyExtractor={(item) => item?.terrainId?.toString()}
@@ -76,11 +104,29 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 16,
     },
+    headerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        gap: 12,
+    },
+    searchContainer: {
+        flex: 1,
+    },
     searchInput: {
         backgroundColor: '#f5f5f5',
         padding: 12,
         borderRadius: 8,
-        marginBottom: 16,
         fontSize: 16,
+    },
+    refreshButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#f5f5f5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.gray[200],
     }
 });

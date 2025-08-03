@@ -1,5 +1,5 @@
 export { default as ReservationCard } from './ReservationCard';
-export { ReservationsHeader } from './ReservationsHeader';
+// export { ReservationsHeader } from '../Header';
 export { ReservationsTabContent } from './ReservationsTabContent';
 export { SearchInput } from './SearchInput';
 export { EmptyStateCard } from './EmptyStateCard';
