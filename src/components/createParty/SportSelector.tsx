@@ -17,6 +17,7 @@ interface SportSelectorProps {
     error?: string | null;
     onPress: () => void;
     onRetry?: () => void;
+    disabled?: boolean;
 }
 
 
@@ -26,6 +27,7 @@ export const SportSelector: React.FC<SportSelectorProps> = ({
     error,
     onPress,
     onRetry,
+    disabled = false,
 }) => {
     if (loading) {
         return (
@@ -61,22 +63,28 @@ export const SportSelector: React.FC<SportSelectorProps> = ({
     };
 
     return (
-        <TouchableOpacity style={styles.sportSelector} onPress={onPress}>
+        <TouchableOpacity
+            style={[styles.sportSelector, disabled && styles.disabledSelector]}
+            onPress={onPress}
+            disabled={disabled}
+        >
             {selectedSport ? (
                 <View style={styles.selectedSportContainer}>
                     {renderSportIcon()}
-                    <Text style={styles.selectedSportText}>{selectedSport.sportNom}</Text>
+                    <Text style={[styles.selectedSportText, disabled && styles.disabledText]}>{selectedSport.sportNom}</Text>
                 </View>
             ) : (
                 <View style={styles.placeholderContainer}>
                     <Ionicons name="football-outline" size={20} color="#999" />
-                    <Text style={styles.placeholderText}>Sélectionner un sport</Text>
+                    <Text style={[styles.placeholderText, disabled && styles.disabledText]}>
+                        {disabled ? 'Aucun sport disponible' : 'Sélectionner un sport'}
+                    </Text>
                 </View>
             )}
             <Ionicons
                 name="chevron-down"
                 size={24}
-                color={selectedSport ? COLORS.primary : "#999"}
+                color={disabled ? "#ccc" : (selectedSport ? COLORS.primary : "#999")}
             />
         </TouchableOpacity>
     );
@@ -153,5 +161,13 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#999',
         fontStyle: 'italic',
+    },
+    disabledSelector: {
+        opacity: 0.7,
+        backgroundColor: '#e0e0e0',
+        borderColor: '#d0d0d0',
+    },
+    disabledText: {
+        color: '#b0b0b0',
     },
 }); 

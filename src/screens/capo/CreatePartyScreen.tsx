@@ -56,6 +56,7 @@ const CreatePartyScreen: React.FC = () => {
         // Valeurs calculées
         filteredTerrains,
         filteredSports,
+        availableSportsForTerrain,
         formValidation,
         selectedTerrain,
         isMinParticipantCountReached,
@@ -98,6 +99,8 @@ const CreatePartyScreen: React.FC = () => {
         refreshSports,
         refreshTerrains,
     } = useCreateParty();
+    console.log("🚀 ~ filteredSportsbbbbbbbbbbbbbb:", filteredSports.slice(0, 2))
+    // console.log("🚀 ~ filteredTerrainsbbbbbbbbbbbbbbb:", filteredTerrains)
 
     // Vérifier si le formulaire est prêt à être soumis
     const isFormReady = formValidation.isValid && !isSubmittingForm && !isLoadingTerrains && !isLoadingSports;
@@ -175,12 +178,23 @@ const CreatePartyScreen: React.FC = () => {
                             </TouchableOpacity>
                         }
                     >
+                        {/* Message informatif si aucun sport n'est disponible sur le terrain sélectionné */}
+                        {formData.selectedTerrainId && availableSportsForTerrain.length === 0 && (
+                            <View style={styles.infoMessage}>
+                                <Text style={styles.infoMessageText}>
+                                    Aucun sport n'est disponible sur ce terrain. Veuillez sélectionner un autre terrain.
+                                </Text>
+                            </View>
+                        )}
+
+
                         <SportSelector
                             selectedSport={selectedSport}
                             loading={isLoadingSports}
                             error={sportsError}
                             onPress={openSportSelector}
                             onRetry={retryLoadSports}
+                            disabled={!!(formData.selectedTerrainId && availableSportsForTerrain.length === 0)}
                         />
                     </Card>
 
@@ -356,6 +370,32 @@ const styles = StyleSheet.create({
         padding: 8,
         borderRadius: 8,
         backgroundColor: '#f0f9ff',
+    },
+    infoMessage: {
+        backgroundColor: '#fff3cd',
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 10,
+        marginBottom: 10,
+        alignItems: 'center',
+    },
+    infoMessageText: {
+        fontSize: 14,
+        color: '#856404',
+        textAlign: 'center',
+    },
+    successMessage: {
+        backgroundColor: '#d4edda',
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 10,
+        marginBottom: 10,
+        alignItems: 'center',
+    },
+    successMessageText: {
+        fontSize: 14,
+        color: '#155724',
+        textAlign: 'center',
     },
 });
 

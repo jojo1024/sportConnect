@@ -35,66 +35,6 @@ export interface FormValidationResult {
 }
 
 /**
- * Valide les données du formulaire de création de partie
- * Vérifie tous les champs requis et leurs contraintes
- * 
- * @param formData - Données du formulaire à valider
- * @returns {FormValidationResult} Résultat de la validation avec messages d'erreur
- */
-const validateCreatePartyForm = (formData: CreatePartyFormData): FormValidationResult => {
-    const errorMessages: string[] = [];
-
-    if (!formData.selectedTerrainId) {
-        errorMessages.push('Veuillez sélectionner un terrain');
-    }
-
-    if (!formData.selectedSportId) {
-        errorMessages.push('Veuillez sélectionner un sport');
-    }
-
-    if (!formData.selectedDate) {
-        errorMessages.push('Veuillez sélectionner une date');
-    } else {
-        const currentDate = new Date();
-        const selectedDate = new Date(formData.selectedDate);
-        
-        // Vérifier que la date est dans le futur
-        if (selectedDate <= currentDate) {
-            errorMessages.push('La date doit être dans le futur');
-        }
-        
-        // Vérifier que la date n'est pas trop éloignée (max 3 mois)
-        const maxAllowedDate = new Date();
-        maxAllowedDate.setMonth(maxAllowedDate.getMonth() + 3);
-        if (selectedDate > maxAllowedDate) {
-            errorMessages.push('La date ne peut pas être plus de 3 mois dans le futur');
-        }
-    }
-
-    if (formData.durationHours < 1) {
-        errorMessages.push('La durée doit être d\'au moins 1 heure');
-    }
-
-    if (formData.durationHours > 24) {
-        errorMessages.push('La durée ne peut pas dépasser 24 heures');
-    }
-
-    if (formData.participantCount < PARTICIPANTS_LIMITS.MIN || 
-        formData.participantCount > PARTICIPANTS_LIMITS.MAX) {
-        errorMessages.push(`Le nombre de participants doit être entre ${PARTICIPANTS_LIMITS.MIN} et ${PARTICIPANTS_LIMITS.MAX}`);
-    }
-
-    if (formData.description.length > 170) {
-        errorMessages.push('La description ne peut pas dépasser 170 caractères');
-    }
-
-    return {
-        isValid: errorMessages.length === 0,
-        errorMessages,
-    };
-};
-
-/**
  * Hook personnalisé pour gérer la création de parties/matches
  * Fournit une interface complète pour créer des parties avec sélection de terrain,
  * sport, date, durée et participants
@@ -162,6 +102,78 @@ export const useCreateParty = () => {
     const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
     const [createdMatchData, setCreatedMatchData] = useState<any>(null);
 
+    /**
+     * Valide les données du formulaire de création de partie
+     * Vérifie tous les champs requis et leurs contraintes
+     * 
+     * @param formData - Données du formulaire à valider
+     * @returns {FormValidationResult} Résultat de la validation avec messages d'erreur
+     */
+    const validateCreatePartyForm = useCallback((formData: CreatePartyFormData): FormValidationResult => {
+        const errorMessages: string[] = [];
+
+        if (!formData.selectedTerrainId) {
+            errorMessages.push('Veuillez sélectionner un terrain');
+        }
+
+        if (!formData.selectedSportId) {
+            errorMessages.push('Veuillez sélectionner un sport');
+        } else {
+            // Vérifier que le sport sélectionné est disponible sur le terrain sélectionné
+            const selectedTerrain = cachedTerrains.find(
+                (terrain: Terrain) => terrain.terrainId.toString() === formData.selectedTerrainId
+            );
+            
+            if (selectedTerrain && selectedTerrain.terrainSports) {
+                const isSportAvailable = selectedTerrain.terrainSports.includes(formData.selectedSportId);
+                if (!isSportAvailable) {
+                    errorMessages.push('Le sport sélectionné n\'est pas disponible sur ce terrain');
+                }
+            }
+        }
+
+        if (!formData.selectedDate) {
+            errorMessages.push('Veuillez sélectionner une date');
+        } else {
+            const currentDate = new Date();
+            const selectedDate = new Date(formData.selectedDate);
+            
+            // Vérifier que la date est dans le futur
+            if (selectedDate <= currentDate) {
+                errorMessages.push('La date doit être dans le futur');
+            }
+            
+            // Vérifier que la date n'est pas trop éloignée (max 3 mois)
+            const maxAllowedDate = new Date();
+            maxAllowedDate.setMonth(maxAllowedDate.getMonth() + 3);
+            if (selectedDate > maxAllowedDate) {
+                errorMessages.push('La date ne peut pas être plus de 3 mois dans le futur');
+            }
+        }
+
+        if (formData.durationHours < 1) {
+            errorMessages.push('La durée doit être d\'au moins 1 heure');
+        }
+
+        if (formData.durationHours > 24) {
+            errorMessages.push('La durée ne peut pas dépasser 24 heures');
+        }
+
+        if (formData.participantCount < PARTICIPANTS_LIMITS.MIN || 
+            formData.participantCount > PARTICIPANTS_LIMITS.MAX) {
+            errorMessages.push(`Le nombre de participants doit être entre ${PARTICIPANTS_LIMITS.MIN} et ${PARTICIPANTS_LIMITS.MAX}`);
+        }
+
+        if (formData.description.length > 170) {
+            errorMessages.push('La description ne peut pas dépasser 170 caractères');
+        }
+
+        return {
+            isValid: errorMessages.length === 0,
+            errorMessages,
+        };
+    }, [cachedTerrains]);
+
     // Fonction pour charger les terrains avec cache
     const loadTerrainsWithCache = useCallback(async () => {
         const now = Date.now();
@@ -193,6 +205,7 @@ export const useCreateParty = () => {
         setTerrainsError(null);
         try {
             const terrainsData = await terrainService.getAllTerrains("confirme");
+            console.log("🚀 ~ refreshTerrains ~ terrainsDatallll:", terrainsData.slice(0,2))
             setCachedTerrains(terrainsData);
             setLastTerrainsFetched(Date.now());
         } catch (error: any) {
@@ -258,7 +271,31 @@ export const useCreateParty = () => {
         loadSportsWithCache();
     }, [loadSportsWithCache]);
 
-    const filteredSports = cachedSports.filter(sport =>
+    // Filtrer les sports en fonction du terrain sélectionné
+    const getAvailableSportsForSelectedTerrain = useCallback(() => {
+        if (!formData.selectedTerrainId || !cachedSports.length) {
+            return [];
+        }
+
+        const selectedTerrain = cachedTerrains.find(
+            terrain => terrain.terrainId.toString() === formData.selectedTerrainId
+        );
+
+        if (!selectedTerrain || !selectedTerrain.terrainSports) {
+            return [];
+        }
+
+        // Filtrer les sports qui sont disponibles sur le terrain sélectionné
+        return cachedSports.filter(sport => 
+            selectedTerrain.terrainSports!.includes(sport.sportId)
+        );
+    }, [formData.selectedTerrainId, cachedSports, cachedTerrains]);
+
+    // Sports disponibles pour le terrain sélectionné
+    const availableSportsForTerrain = getAvailableSportsForSelectedTerrain();
+
+    // Filtrer les sports disponibles par le terme de recherche
+    const filteredSports = availableSportsForTerrain.filter(sport =>
         sport.sportNom.toLowerCase().includes(sportSearchTerm.toLowerCase())
     );
 
@@ -308,11 +345,32 @@ export const useCreateParty = () => {
      * @param terrain - Terrain sélectionné
      */
     const selectTerrain = useCallback((terrain: Terrain) => {
+        // Vérifier si le sport actuellement sélectionné est disponible sur le nouveau terrain
+        const currentSportId = formData.selectedSportId;
+        const isCurrentSportAvailable = terrain.terrainSports?.includes(currentSportId || 0);
+        
+        // Vérifier s'il n'y a qu'un seul sport disponible sur ce terrain
+        const availableSportsForThisTerrain = cachedSports.filter(sport => 
+            terrain.terrainSports?.includes(sport.sportId)
+        );
+        
+        // Si il n'y a qu'un seul sport disponible, le sélectionner automatiquement
+        const autoSelectSportId = availableSportsForThisTerrain.length === 1 
+            ? availableSportsForThisTerrain[0].sportId 
+            : null;
+        
+        console.log('🚀 ~ selectTerrain ~ terrain:', terrain.terrainNom);
+        console.log('🚀 ~ selectTerrain ~ availableSportsForThisTerrain:', availableSportsForThisTerrain.length);
+        console.log('🚀 ~ selectTerrain ~ autoSelectSportId:', autoSelectSportId);
+        
         updateFormData({
             selectedTerrainId: terrain?.terrainId.toString(),
             selectedTerrainName: terrain.terrainNom,
+            // Réinitialiser le sport si il n'est pas disponible sur le nouveau terrain
+            // ou sélectionner automatiquement s'il n'y en a qu'un seul
+            selectedSportId: autoSelectSportId || (isCurrentSportAvailable ? currentSportId : null),
         });
-    }, [updateFormData]);
+    }, [updateFormData, formData.selectedSportId, cachedSports]);
 
     /**
      * Sélectionne un sport et met à jour le formulaire
@@ -579,6 +637,7 @@ export const useCreateParty = () => {
         // Valeurs calculées
         filteredTerrains,
         filteredSports,
+        availableSportsForTerrain,
         formValidation,
         selectedTerrain,
         isMinParticipantCountReached,
