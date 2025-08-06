@@ -7,13 +7,21 @@ interface CardProps {
     icon: string;
     title: string;
     children: React.ReactNode;
+    headerAction?: React.ReactNode;
 }
 
-export const Card: React.FC<CardProps> = ({ icon, title, children }) => (
+export const Card: React.FC<CardProps> = ({ icon, title, children, headerAction }) => (
     <View style={styles.card}>
         <View style={styles.cardHeader}>
-            <Ionicons name={icon as any} size={24} color={COLORS.primary} />
-            <Text style={styles.cardTitle}>{title}</Text>
+            <View style={styles.cardHeaderLeft}>
+                <Ionicons name={icon as any} size={24} color={COLORS.primary} />
+                <Text style={styles.cardTitle}>{title}</Text>
+            </View>
+            {headerAction && (
+                <View style={styles.cardHeaderAction}>
+                    {headerAction}
+                </View>
+            )}
         </View>
         {children}
     </View>
@@ -32,8 +40,17 @@ const styles = StyleSheet.create({
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         marginBottom: 12,
+    },
+    cardHeaderLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
         gap: 8,
+    },
+    cardHeaderAction: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     cardTitle: {
         fontSize: 18,

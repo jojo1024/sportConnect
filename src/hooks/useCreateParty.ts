@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CreateMatchData, matchService } from '../services/matchService';
 import { Terrain, terrainService } from '../services/terrainService';
+import { Sport } from '../components/createParty/SportCard';
 import { useSport } from './useSport';
 import { store } from '../store';
 import { useApiError } from './useApiError';
@@ -113,10 +114,23 @@ export const useCreateParty = () => {
     const { showError } = useCustomAlert();
     const { 
         activeSports, 
-        loading: isLoadingSports, 
-        error: sportsError, 
+        loading: apiLoading, 
+        error: apiError, 
         fetchActiveSports 
     } = useSport();
+
+    // États pour le cache des sports
+    const [cachedSports, setCachedSports] = useState<Sport[]>([]);
+    const [sportsLoading, setSportsLoading] = useState(false);
+    const [sportsError, setSportsError] = useState<string | null>(null);
+    const [lastFetched, setLastFetched] = useState<number | null>(null);
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+    // États pour le cache des terrains
+    const [cachedTerrains, setCachedTerrains] = useState<Terrain[]>([]);
+    const [terrainsLoading, setTerrainsLoading] = useState(false);
+    const [terrainsError, setTerrainsError] = useState<string | null>(null);
+    const [lastTerrainsFetched, setLastTerrainsFetched] = useState<number | null>(null);
 
     // Refs pour les bottom sheets
     const terrainBottomSheetRef = useRef<any>(null);
@@ -148,64 +162,133 @@ export const useCreateParty = () => {
     const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
     const [createdMatchData, setCreatedMatchData] = useState<any>(null);
 
+    // Fonction pour charger les terrains avec cache
+    const loadTerrainsWithCache = useCallback(async () => {
+        const now = Date.now();
+        
+        // Si on a des terrains en cache et que le cache n'est pas expiré, on les utilise
+        if (cachedTerrains.length > 0 && lastTerrainsFetched && (now - lastTerrainsFetched) < CACHE_DURATION) {
+            return;
+        }
+
+        // Sinon, on charge depuis l'API
+        try {
+            setTerrainsLoading(true);
+            setTerrainsError(null);
+            const terrainsData = await terrainService.getAllTerrains("confirme");
+            setCachedTerrains(terrainsData);
+            setLastTerrainsFetched(Date.now());
+        } catch (error: any) {
+            const errorResult = handleApiError(error);
+            setTerrainsError(errorResult.message);
+        } finally {
+            setTerrainsLoading(false);
+        }
+    }, [cachedTerrains.length, lastTerrainsFetched, handleApiError]);
+
+    // Fonction pour forcer le rafraîchissement des terrains
+    const refreshTerrains = useCallback(async () => {
+        setLastTerrainsFetched(null); // Invalider le cache
+        setTerrainsLoading(true);
+        setTerrainsError(null);
+        try {
+            const terrainsData = await terrainService.getAllTerrains("confirme");
+            setCachedTerrains(terrainsData);
+            setLastTerrainsFetched(Date.now());
+        } catch (error: any) {
+            const errorResult = handleApiError(error);
+            setTerrainsError(errorResult.message);
+        } finally {
+            setTerrainsLoading(false);
+        }
+    }, [handleApiError]);
+
     // Valeurs calculées
-    const filteredTerrains = availableTerrains
+    const filteredTerrains = cachedTerrains
         .filter(terrain =>
             terrain.terrainNom.toLowerCase().includes(terrainSearchTerm.toLowerCase()) ||
             terrain.terrainLocalisation.toLowerCase().includes(terrainSearchTerm.toLowerCase())
         )
 
-    const filteredSports = activeSports.filter(sport =>
+    // Fonction pour charger les sports avec cache
+    const loadSportsWithCache = useCallback(async () => {
+        const now = Date.now();
+        
+        // Si on a des sports en cache et que le cache n'est pas expiré, on les utilise
+        if (cachedSports.length > 0 && lastFetched && (now - lastFetched) < CACHE_DURATION) {
+            return;
+        }
+
+        // Sinon, on charge depuis l'API
+        try {
+            setSportsLoading(true);
+            setSportsError(null);
+            await fetchActiveSports();
+        } catch (error) {
+            setSportsError('Erreur lors du chargement des sports');
+        } finally {
+            setSportsLoading(false);
+        }
+    }, [cachedSports.length, lastFetched, fetchActiveSports]);
+
+    // Fonction pour forcer le rafraîchissement des sports
+    const refreshSports = useCallback(async () => {
+        setLastFetched(null); // Invalider le cache
+        setSportsLoading(true);
+        setSportsError(null);
+        try {
+            await fetchActiveSports();
+        } catch (error) {
+            setSportsError('Erreur lors du rafraîchissement des sports');
+        } finally {
+            setSportsLoading(false);
+        }
+    }, [fetchActiveSports]);
+
+    // Initialiser les sports en cache quand ils sont chargés
+    useEffect(() => {
+        if (activeSports.length > 0) {
+            setCachedSports(activeSports);
+            setLastFetched(Date.now());
+        }
+    }, [activeSports]);
+
+    // Charger les sports au montage si nécessaire
+    useEffect(() => {
+        loadSportsWithCache();
+    }, [loadSportsWithCache]);
+
+    const filteredSports = cachedSports.filter(sport =>
         sport.sportNom.toLowerCase().includes(sportSearchTerm.toLowerCase())
     );
 
     const formValidation = validateCreatePartyForm(formData);
 
-    const selectedTerrain = availableTerrains.find(
+    const selectedTerrain = cachedTerrains.find(
         terrain => terrain.terrainId.toString() === formData.selectedTerrainId
     );
-    const selectedSport = activeSports.find(
+    const selectedSport = cachedSports.find(
         sport => sport.sportId === formData.selectedSportId
     );
-
-    /**
-     * Charge les terrains disponibles depuis l'API
-     * Récupère uniquement les terrains confirmés
-     */
-    const loadAvailableTerrains = useCallback(async () => {
-        try {
-            setIsLoadingTerrains(true);
-            setTerrainLoadingError(null);
-            const terrainsData = await terrainService.getAllTerrains("confirme");
-            setAvailableTerrains(terrainsData);
-        } catch (error: any) {
-            const errorResult = handleApiError(error);
-            setTerrainLoadingError(errorResult.message);
-            console.error('Erreur lors du chargement des terrains:', error);
-        } finally {
-            setIsLoadingTerrains(false);
-        }
-    }, [handleApiError]);
 
     /**
      * Réessaie de charger les terrains en cas d'erreur
      */
     const retryLoadTerrains = useCallback(() => {
-        setTerrainLoadingError(null);
-        loadAvailableTerrains();
-    }, [loadAvailableTerrains]);
+        refreshTerrains();
+    }, [refreshTerrains]);
 
     /**
      * Réessaie de charger les sports en cas d'erreur
      */
     const retryLoadSports = useCallback(() => {
-        fetchActiveSports();
-    }, [fetchActiveSports]);
+        refreshSports();
+    }, [refreshSports]);
 
     // Charger les terrains au montage du composant
     useEffect(() => {
-        loadAvailableTerrains();
-    }, [loadAvailableTerrains]);
+        loadTerrainsWithCache();
+    }, [loadTerrainsWithCache]);
 
     // Charger les sports actifs au montage du composant
     useEffect(() => {
@@ -481,15 +564,15 @@ export const useCreateParty = () => {
         isDatePickerVisible,
         isTimePickerVisible,
         isSubmittingForm,
-        isLoadingTerrains,
+        isLoadingTerrains: terrainsLoading,
         formError,
-        terrainLoadingError,
+        terrainLoadingError: terrainsError,
         isSuccessModalVisible,
         createdMatchData,
         
         // État des sports
-        activeSports,
-        isLoadingSports,
+        activeSports: cachedSports,
+        isLoadingSports: sportsLoading,
         sportsError,
         selectedSport,
         
@@ -537,9 +620,10 @@ export const useCreateParty = () => {
         submitCreatePartyForm,
 
         // Chargement des données
-        loadAvailableTerrains,
         retryLoadTerrains,
         retryLoadSports,
+        refreshSports,
+        refreshTerrains,
         
         // Gestionnaires du modal
         hideSuccessModal,

@@ -1,5 +1,5 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
-import React from 'react';
+import React, { useRef } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
@@ -7,19 +7,31 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View
 } from 'react-native';
+import RBSheet from 'react-native-raw-bottom-sheet';
 import { Card, Header } from '../../components/addTerrain';
 import CompactErrorCard from '../../components/CompactErrorCard';
 import CustomTextInput from '../../components/CustomTextInput';
 import PhoneInput from '../../components/PhoneInput';
 import SuccessCard from '../../components/SuccessCard';
 import { ImageSelector, TerrainSummary, TimeSelector } from '../../components/terrain';
+import { SportsBottomSheet } from '../../components/createParty/SportsBottomSheet';
 import { useTerrainForm } from '../../hooks/useTerrainForm';
 import { COLORS } from '../../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 
 
 const TerrainFormScreen: React.FC = () => {
+
+    // États pour SportsBottomSheet
+    const sportsBottomSheetRef = useRef<RBSheet>(null);
+
+    // Ouvrir le bottom sheet
+    const openSportsBottomSheet = () => {
+        sportsBottomSheetRef.current?.open();
+    };
 
     const {
         formData,
@@ -51,6 +63,19 @@ const TerrainFormScreen: React.FC = () => {
         descriptionRef,
         contactRef,
         prixRef,
+
+        // États pour les sports
+        selectedSports,
+        filteredSports,
+        sportsLoading,
+        sportsError,
+        searchQuery,
+
+        // Sports handlers
+        handleSportSelect,
+        handleSearchChange,
+        isSportSelected,
+        refreshSports,
     } = useTerrainForm();
 
 
@@ -77,6 +102,14 @@ const TerrainFormScreen: React.FC = () => {
                 <CompactErrorCard
                     message={errorMessage}
                     onRetry={handleRetry}
+                />
+            )}
+
+            {/* Affichage de l'erreur pour les sports */}
+            {sportsError && (
+                <CompactErrorCard
+                    message={sportsError}
+                    onRetry={refreshSports}
                 />
             )}
 
@@ -121,6 +154,85 @@ const TerrainFormScreen: React.FC = () => {
                                 refInput={localisationRef}
                                 onSubmitEditing={() => contactRef.current?.focus()}
                             />
+
+                            {/* Sélecteur de sport */}
+                            <View style={styles.inputGroup}>
+                                <View style={styles.sportHeader}>
+                                    <Text style={styles.inputLabel}>Sports disponibles</Text>
+                                    <TouchableOpacity
+                                        style={styles.refreshButton}
+                                        onPress={refreshSports}
+                                        disabled={sportsLoading}
+                                    >
+                                        <Ionicons
+                                            name="refresh"
+                                            size={16}
+                                            color={sportsLoading ? "#ccc" : COLORS.primary}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                                {errors.selectedSports && (
+                                    <Text style={styles.errorText}>{errors.selectedSports}</Text>
+                                )}
+                                <TouchableOpacity
+                                    style={[styles.sportSelector, sportsLoading && styles.sportSelectorDisabled]}
+                                    onPress={openSportsBottomSheet}
+                                    disabled={sportsLoading}
+                                >
+                                    <View style={styles.sportSelectorContent}>
+                                        <Ionicons
+                                            name="football"
+                                            size={20}
+                                            color={selectedSports.length > 0 ? COLORS.primary : "#999"}
+                                        />
+                                        <Text style={selectedSports.length > 0 ? styles.selectedSportText : styles.placeholderText}>
+                                            {sportsLoading
+                                                ? "Chargement des sports..."
+                                                : selectedSports.length === 0
+                                                    ? "Sélectionner des sports"
+                                                    : selectedSports.length === 1
+                                                        ? selectedSports[0].sportNom
+                                                        : `${selectedSports.length} sports sélectionnés`
+                                            }
+                                        </Text>
+                                    </View>
+                                    {!sportsLoading && (
+                                        <Ionicons
+                                            name="chevron-down"
+                                            size={20}
+                                            color="#999"
+                                        />
+                                    )}
+                                </TouchableOpacity>
+
+                                {/* Affichage des sports sélectionnés */}
+                                {selectedSports.length > 0 && (
+                                    <View style={styles.selectedSportsContainer}>
+                                        {selectedSports.map((sport) => (
+                                            <View key={sport.sportId} style={styles.selectedSportTag}>
+                                                <Ionicons
+                                                    name="football"
+                                                    size={16}
+                                                    color={COLORS.primary}
+                                                />
+                                                <Text style={styles.selectedSportTagText}>
+                                                    {sport.sportNom}
+                                                </Text>
+                                                <TouchableOpacity
+                                                    onPress={() => handleSportSelect(sport)}
+                                                    style={styles.removeSportButton}
+                                                >
+                                                    <Ionicons
+                                                        name="close-circle"
+                                                        size={16}
+                                                        color="#999"
+                                                    />
+                                                </TouchableOpacity>
+                                            </View>
+                                        ))}
+                                    </View>
+                                )}
+                            </View>
 
                             <PhoneInput
                                 label="Numero"
@@ -214,6 +326,16 @@ const TerrainFormScreen: React.FC = () => {
                     onChange={handleEndTimeChange}
                 />
             )}
+
+            {/* SportsBottomSheet */}
+            <SportsBottomSheet
+                bottomSheetRef={sportsBottomSheetRef}
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+                filteredSports={filteredSports}
+                isSportSelected={isSportSelected}
+                onSportSelect={handleSportSelect}
+            />
         </SafeAreaView>
     );
 };
@@ -267,7 +389,7 @@ const styles = StyleSheet.create({
     inputLabel: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#333',
+        color: COLORS.primary,
         marginBottom: 8,
     },
     textArea: {
@@ -276,6 +398,76 @@ const styles = StyleSheet.create({
     },
     timeContainer: {
         gap: 12,
+    },
+    sportSelector: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 8,
+    },
+    sportSelectorContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    selectedSportText: {
+        fontSize: 16,
+        marginLeft: 12,
+        // fontWeight: '600',
+    },
+    placeholderText: {
+        fontSize: 16,
+        color: '#999',
+        marginLeft: 12,
+    },
+    selectedSportsContainer: {
+        marginTop: 8,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    selectedSportTag: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f0f8ff',
+        borderWidth: 1,
+        borderColor: COLORS.primary,
+        borderRadius: 16,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+    },
+    selectedSportTagText: {
+        fontSize: 14,
+        color: COLORS.primary,
+        marginLeft: 6,
+        marginRight: 4,
+    },
+    removeSportButton: {
+        marginLeft: 4,
+    },
+    sportSelectorDisabled: {
+        opacity: 0.6,
+    },
+    sportHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    refreshButton: {
+        padding: 4,
+        borderRadius: 4,
+    },
+    errorText: {
+        color: '#dc3545',
+        fontSize: 12,
+        marginTop: 4,
+        marginBottom: 8,
     },
 });
 

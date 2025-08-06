@@ -16,7 +16,7 @@ interface SportsBottomSheetProps {
     searchQuery: string;
     onSearchChange: (query: string) => void;
     filteredSports: Sport[];
-    selectedSportId: number | null;
+    isSportSelected: (sportId: number) => boolean;
     onSportSelect: (sport: Sport) => void;
 }
 
@@ -25,7 +25,7 @@ export const SportsBottomSheet: React.FC<SportsBottomSheetProps> = ({
     searchQuery,
     onSearchChange,
     filteredSports,
-    selectedSportId,
+    isSportSelected,
     onSportSelect
 }) => (
     <RBSheet
@@ -56,7 +56,7 @@ export const SportsBottomSheet: React.FC<SportsBottomSheetProps> = ({
                 renderItem={({ item }) => (
                     <SportCard
                         sport={item}
-                        isSelected={selectedSportId === item.sportId}
+                        isSelected={isSportSelected(item.sportId)}
                         onSelect={onSportSelect}
                     />
                 )}

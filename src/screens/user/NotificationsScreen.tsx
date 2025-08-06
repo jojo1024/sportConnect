@@ -72,7 +72,7 @@ const NotificationsScreen: React.FC = () => {
                                     </Text>
                                     <Text style={styles.notificationDate}>{formatNotificationDate(item.notificationDate)}</Text>
                                 </View>
-                                <Text style={styles.notificationMessage} numberOfLines={3}>{item.notificationContenu}</Text>
+                                <Text style={styles.notificationMessage} numberOfLines={4}>{item.notificationContenu}</Text>
                             </View>
                             {isUnread && <View style={styles.unreadIndicator} />}
                         </TouchableOpacity>

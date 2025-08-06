@@ -5,6 +5,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View
 } from 'react-native';
 import CompactErrorCard from '../../components/CompactErrorCard';
@@ -25,6 +26,7 @@ import { COLORS } from '../../theme/colors';
 import { formatDate, formatTime } from '../../utils/functions';
 import { TerrainSelector } from '../../components/createParty/TerrainSelector';
 import { SportSelector } from '../../components/createParty/SportSelector';
+import { Ionicons } from '@expo/vector-icons';
 
 // Main component
 const CreatePartyScreen: React.FC = () => {
@@ -93,6 +95,8 @@ const CreatePartyScreen: React.FC = () => {
         // Chargement des données
         retryLoadTerrains,
         retryLoadSports,
+        refreshSports,
+        refreshTerrains,
     } = useCreateParty();
 
     // Vérifier si le formulaire est prêt à être soumis
@@ -128,7 +132,23 @@ const CreatePartyScreen: React.FC = () => {
                         </Text>
                     </View>
 
-                    <Card icon="location" title="Terrain">
+                    <Card
+                        icon="location"
+                        title="Terrain"
+                        headerAction={
+                            <TouchableOpacity
+                                style={styles.refreshButton}
+                                onPress={refreshTerrains}
+                                disabled={isLoadingTerrains}
+                            >
+                                <Ionicons
+                                    name="refresh"
+                                    size={16}
+                                    color={isLoadingTerrains ? "#ccc" : COLORS.primary}
+                                />
+                            </TouchableOpacity>
+                        }
+                    >
                         <TerrainSelector
                             selectedField={formData.selectedTerrainName}
                             loading={isLoadingTerrains}
@@ -138,7 +158,23 @@ const CreatePartyScreen: React.FC = () => {
                         />
                     </Card>
 
-                    <Card icon="football" title="Sport">
+                    <Card
+                        icon="football"
+                        title="Sport"
+                        headerAction={
+                            <TouchableOpacity
+                                style={styles.refreshButton}
+                                onPress={refreshSports}
+                                disabled={isLoadingSports}
+                            >
+                                <Ionicons
+                                    name="refresh"
+                                    size={16}
+                                    color={isLoadingSports ? "#ccc" : COLORS.primary}
+                                />
+                            </TouchableOpacity>
+                        }
+                    >
                         <SportSelector
                             selectedSport={selectedSport}
                             loading={isLoadingSports}
@@ -223,7 +259,7 @@ const CreatePartyScreen: React.FC = () => {
                 searchQuery={sportSearchTerm}
                 onSearchChange={updateSportSearchTerm}
                 filteredSports={filteredSports}
-                selectedSportId={formData.selectedSportId}
+                isSportSelected={(sportId: number) => formData.selectedSportId === sportId}
                 onSportSelect={handleSportSelection}
             />
 
@@ -315,6 +351,11 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.danger,
         marginBottom: 4,
+    },
+    refreshButton: {
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: '#f0f9ff',
     },
 });
 

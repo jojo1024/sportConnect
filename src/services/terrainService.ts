@@ -11,6 +11,7 @@ export interface Terrain {
     terrainImages: string[];
     terrainStatus: number;
     terrainDisponibilite: "confirme" | "en_attente";
+    terrainSports?: number[];
     reservationsEnAttenteCount?: number;
     reservationsConfirmeCount?: number;
 }
@@ -24,6 +25,7 @@ export interface CreateTerrainData {
     terrainHoraires: any;
     terrainImages: string[];
     gerantId: number;
+    terrainSports: number[];
 }
 
 export interface UpdateTerrainData {
@@ -34,6 +36,7 @@ export interface UpdateTerrainData {
     terrainPrixParHeure: number;
     terrainHoraires: any;
     terrainImages: string[];
+    terrainSports: number[];
 }
 
 export interface TerrainResponse {

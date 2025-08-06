@@ -8,6 +8,8 @@ import { selectUser } from '../store/slices/userSlice';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ScreenNavigationProps, ScreenRouteProps } from '../navigation/types';
 import { TextInput } from 'react-native';
+import { Sport } from '../components/createParty/SportCard';
+import { useSport } from './useSport';
 
 export const initialTerrainFormData: FormData = {
     terrainNom: '',
@@ -40,6 +42,7 @@ export interface ValidationErrors {
     terrainContact?: string;
     terrainPrixParHeure?: string;
     terrainImages?: string;
+    selectedSports?: string;
 }
 
 
@@ -61,12 +64,25 @@ interface UseTerrainFormReturn {
     successMessage: string | null;
     errorMessage: string | null;
     
+    // États pour les sports
+    selectedSports: Sport[];
+    filteredSports: Sport[];
+    sportsLoading: boolean;
+    sportsError: string | null;
+    searchQuery: string;
+    
     // Form handlers
     setTerrainNom: (value: string) => void;
     setTerrainLocalisation: (value: string) => void;
     setTerrainDescription: (value: string) => void;
     setTerrainContact: (value: string) => void;
     setTerrainPrixParHeure: (value: string) => void;
+    
+    // Sports handlers
+    handleSportSelect: (sport: Sport) => void;
+    handleSearchChange: (query: string) => void;
+    isSportSelected: (sportId: number) => boolean;
+    refreshSports: () => Promise<void>;
     
     // Time handlers
     setShowStartTimePicker: (show: boolean) => void;
@@ -126,6 +142,78 @@ export const useTerrainForm = (): UseTerrainFormReturn => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    // États pour les sports
+    const [selectedSports, setSelectedSports] = useState<Sport[]>([]);
+    const [filteredSports, setFilteredSports] = useState<Sport[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [cachedSports, setCachedSports] = useState<Sport[]>([]);
+    const [sportsLoading, setSportsLoading] = useState(false);
+    const [sportsError, setSportsError] = useState<string | null>(null);
+    const [lastFetched, setLastFetched] = useState<number | null>(null);
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+    // Hook pour les sports
+    const { activeSports, loading: apiLoading, error: apiError, fetchActiveSports } = useSport();
+
+    // Sports handlers
+    const loadSportsWithCache = useCallback(async () => {
+        const now = Date.now();
+        
+        // Si on a des sports en cache et que le cache n'est pas expiré, on les utilise
+        if (cachedSports.length > 0 && lastFetched && (now - lastFetched) < CACHE_DURATION) {
+            setFilteredSports(cachedSports);
+            return;
+        }
+
+        // Sinon, on charge depuis l'API
+        try {
+            setSportsLoading(true);
+            setSportsError(null);
+            await fetchActiveSports();
+        } catch (error) {
+            setSportsError('Erreur lors du chargement des sports');
+        } finally {
+            setSportsLoading(false);
+        }
+    }, [cachedSports.length, lastFetched, fetchActiveSports]);
+
+    const refreshSports = useCallback(async () => {
+        setLastFetched(null); // Invalider le cache
+        setSportsLoading(true);
+        setSportsError(null);
+        try {
+            await fetchActiveSports();
+        } catch (error) {
+            setSportsError('Erreur lors du rafraîchissement des sports');
+        } finally {
+            setSportsLoading(false);
+        }
+    }, [fetchActiveSports]);
+
+    const handleSportSelect = useCallback((sport: Sport) => {
+        const isSelected = selectedSports.some(s => s.sportId === sport.sportId);
+
+        if (isSelected) {
+            // Désélectionner le sport
+            setSelectedSports(prev => prev.filter(s => s.sportId !== sport.sportId));
+        } else {
+            // Sélectionner le sport
+            setSelectedSports(prev => [...prev, sport]);
+        }
+    }, [selectedSports]);
+
+    const handleSearchChange = useCallback((query: string) => {
+        setSearchQuery(query);
+        const filtered = cachedSports.filter(sport =>
+            sport.sportNom.toLowerCase().includes(query.toLowerCase())
+        );
+        setFilteredSports(filtered);
+    }, [cachedSports]);
+
+    const isSportSelected = useCallback((sportId: number) => {
+        return selectedSports.some(s => s.sportId === sportId);
+    }, [selectedSports]);
+
     // Charger les données du terrain en mode édition
     useEffect(() => {
         if (mode === 'edit' && terrainData) {
@@ -142,6 +230,30 @@ export const useTerrainForm = (): UseTerrainFormReturn => {
             });
         }
     }, [mode, terrainData]);
+
+    // Charger les sports déjà sélectionnés pour ce terrain (séparé pour gérer l'asynchrone)
+    useEffect(() => {
+        if (mode === 'edit' && terrainData && terrainData.terrainSports && cachedSports.length > 0) {
+            const selectedSportsForTerrain = cachedSports.filter(sport => 
+                terrainData.terrainSports!.includes(sport.sportId)
+            );
+            setSelectedSports(selectedSportsForTerrain);
+        }
+    }, [mode, terrainData, cachedSports]);
+
+    // Initialiser les sports en cache quand ils sont chargés
+    useEffect(() => {
+        if (activeSports.length > 0) {
+            setCachedSports(activeSports);
+            setFilteredSports(activeSports);
+            setLastFetched(Date.now());
+        }
+    }, [activeSports]);
+
+    // Charger les sports au montage si nécessaire
+    useEffect(() => {
+        loadSportsWithCache();
+    }, [loadSportsWithCache]);
 
     // Form handlers
     const setTerrainNom = useCallback((value: string) => {
@@ -295,17 +407,21 @@ export const useTerrainForm = (): UseTerrainFormReturn => {
         if (formData.terrainImages.length === 0) {
             newErrors.terrainImages = 'Au moins une photo de couverture est requise';
         }
+        if (selectedSports.length === 0) {
+            newErrors.selectedSports = 'Au moins un sport doit être sélectionné';
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [formData]);
+    }, [formData, selectedSports]);
 
     const isFormReady = Object.keys(errors).length === 0 && 
         formData.terrainNom.trim() !== '' && 
         formData.terrainLocalisation.trim() !== '' && 
         formData.terrainContact.trim() !== '' && 
         formData.terrainPrixParHeure.trim() !== '' &&
-        formData.terrainImages.length > 0;
+        formData.terrainImages.length > 0 &&
+        selectedSports.length > 0;
 
     // Submit handlers
     const handleSubmit = useCallback(async () => {
@@ -329,6 +445,7 @@ export const useTerrainForm = (): UseTerrainFormReturn => {
                     terrainHoraires: formData.terrainHoraires,
                     terrainImages: formData.terrainImages,
                     gerantId: user?.utilisateurId || 0,
+                    terrainSports: selectedSports.map(sport => sport.sportId),
                 };
 
                 await terrainService.createTerrain(terrainData);
@@ -336,6 +453,7 @@ export const useTerrainForm = (): UseTerrainFormReturn => {
 
                 // Reset form
                 setFormData(initialTerrainFormData);
+                setSelectedSports([]);
             } else {
                 // Mode modification
                 if (!terrainData) {
@@ -351,10 +469,10 @@ export const useTerrainForm = (): UseTerrainFormReturn => {
                     terrainPrixParHeure: Number(formData.terrainPrixParHeure),
                     terrainHoraires: formData.terrainHoraires,
                     terrainImages: formData.terrainImages,
+                    terrainSports: selectedSports.map(sport => sport.sportId),
                 };
 
-              const response =   await terrainService.updateTerrain(terrainData.terrainId, updateData);
-                console.log("🚀 ~ handleSubmit ~ response:", response)
+                const response = await terrainService.updateTerrain(terrainData.terrainId, updateData);
                 setSuccessMessage('Terrain modifié avec succès !');
 
                 // Notifier le parent avec les données mises à jour
@@ -371,7 +489,7 @@ export const useTerrainForm = (): UseTerrainFormReturn => {
         } finally {
             setIsSubmitting(false);
         }
-    }, [formData, validateForm, mode, terrainData, user?.utilisateurId, onTerrainUpdated]);
+    }, [formData, validateForm, mode, terrainData, user?.utilisateurId, onTerrainUpdated, selectedSports]);
 
     const clearSuccessMessage = useCallback(() => {
         setSuccessMessage(null);
@@ -407,11 +525,26 @@ export const useTerrainForm = (): UseTerrainFormReturn => {
         descriptionRef,
         contactRef,
         prixRef,
+        
+        // États pour les sports
+        selectedSports,
+        filteredSports,
+        sportsLoading,
+        sportsError,
+        searchQuery,
+        
         setTerrainNom,
         setTerrainLocalisation,
         setTerrainDescription,
         setTerrainContact,
         setTerrainPrixParHeure,
+        
+        // Sports handlers
+        handleSportSelect,
+        handleSearchChange,
+        isSportSelected,
+        refreshSports,
+        
         setShowStartTimePicker,
         setShowEndTimePicker,
         handleStartTimeChange,

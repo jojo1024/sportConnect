@@ -288,3 +288,66 @@ export const fakeMatches = [
         image: ['https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=500', 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=500'],
     },
 ]
+
+export const fakeSports = [
+    {
+        sportId: 1,
+        sportNom: 'Football',
+        sportIcone: 'football',
+        sportStatus: 1
+    },
+    {
+        sportId: 2,
+        sportNom: 'Basketball',
+        sportIcone: 'basketball',
+        sportStatus: 1
+    },
+    {
+        sportId: 3,
+        sportNom: 'Tennis',
+        sportIcone: 'tennis',
+        sportStatus: 1
+    },
+    {
+        sportId: 4,
+        sportNom: 'Volleyball',
+        sportIcone: 'volleyball',
+        sportStatus: 1
+    },
+    {
+        sportId: 5,
+        sportNom: 'Handball',
+        sportIcone: 'handball',
+        sportStatus: 1
+    },
+    {
+        sportId: 6,
+        sportNom: 'Badminton',
+        sportIcone: 'badminton',
+        sportStatus: 1
+    },
+    {
+        sportId: 7,
+        sportNom: 'Pétanque',
+        sportIcone: 'petanque',
+        sportStatus: 1
+    },
+    {
+        sportId: 8,
+        sportNom: 'Ping-pong',
+        sportIcone: 'ping-pong',
+        sportStatus: 1
+    },
+    {
+        sportId: 9,
+        sportNom: 'Rugby',
+        sportIcone: 'rugby',
+        sportStatus: 1
+    },
+    {
+        sportId: 10,
+        sportNom: 'Hockey',
+        sportIcone: 'hockey',
+        sportStatus: 1
+    }
+];

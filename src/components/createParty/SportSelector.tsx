@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         backgroundColor: '#f0f9ff',
     },
+
     selectedSportContainer: {
         flexDirection: 'row',
         alignItems: 'center',
