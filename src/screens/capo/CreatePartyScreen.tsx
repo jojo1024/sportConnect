@@ -187,7 +187,6 @@ const CreatePartyScreen: React.FC = () => {
                             </View>
                         )}
 
-
                         <SportSelector
                             selectedSport={selectedSport}
                             loading={isLoadingSports}
@@ -347,7 +346,6 @@ const styles = StyleSheet.create({
         color: COLORS.textLight,
         lineHeight: 20,
     },
-
     validationSection: {
         backgroundColor: COLORS.white,
         padding: 16,
