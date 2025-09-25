@@ -29,23 +29,28 @@ const DateOfBirthInput: React.FC<DateOfBirthInputProps> = ({
 
     // Fonction appelée lors du changement de date dans le DateTimePicker
     const onDateChange = (event: any, selectedDate?: Date) => {
-        // Sur Android, fermer automatiquement le picker après sélection
-        if (Platform.OS === 'android') {
-            setShowDatePicker(false);
-        }
-
-        if (selectedDate) {
-            // Convertir la date en format string (YYYY-MM-DD)
-            const dateString = selectedDate.toISOString().split('T')[0];
-            onChangeText(dateString);
-
-            // Validation de l'âge - doit être entre 13 et 100 ans
-            const age = calculateAge(selectedDate);
-            if (age < 13 || age > 100) {
-                onErrorChange?.('L\'âge doit être entre 13 et 100 ans');
-            } else {
-                onErrorChange?.('');
+        try {
+            // Sur Android, fermer automatiquement le picker après sélection
+            if (Platform.OS === 'android') {
+                setShowDatePicker(false);
             }
+
+            if (selectedDate && !isNaN(selectedDate.getTime())) {
+                // Convertir la date en format string (YYYY-MM-DD)
+                const dateString = selectedDate.toISOString().split('T')[0];
+                onChangeText(dateString);
+
+                // Validation de l'âge - doit être entre 13 et 100 ans
+                const age = calculateAge(selectedDate);
+                if (age < 13 || age > 100) {
+                    onErrorChange?.('L\'âge doit être entre 13 et 100 ans');
+                } else {
+                    onErrorChange?.('');
+                }
+            }
+        } catch (error) {
+            console.error('Erreur lors de la sélection de date:', error);
+            onErrorChange?.('Erreur lors de la sélection de date');
         }
     };
 
@@ -58,14 +63,19 @@ const DateOfBirthInput: React.FC<DateOfBirthInputProps> = ({
 
     // Fonction pour ouvrir le sélecteur de date
     const openDatePicker = () => {
-        setShowDatePicker(true);
+        try {
+            setShowDatePicker(true);
+        } catch (error) {
+            console.error('Erreur lors de l\'ouverture du sélecteur de date:', error);
+            onErrorChange?.('Erreur lors de l\'ouverture du sélecteur de date');
+        }
     };
 
     return (
         <View style={styles.container}>
             {/* Libellé du champ */}
             <Text style={styles.label}>{label}</Text>
-            
+
             {/* Bouton pour ouvrir le sélecteur de date */}
             <TouchableOpacity
                 style={[styles.input, error && styles.inputError]}
@@ -98,9 +108,20 @@ const DateOfBirthInput: React.FC<DateOfBirthInputProps> = ({
             {showDatePicker && (
                 <>
                     <DateTimePicker
-                        value={value ? new Date(value) : new Date()}
+                        value={(() => {
+                            try {
+                                if (value && value.trim()) {
+                                    const date = new Date(value);
+                                    return isNaN(date.getTime()) ? new Date(2000, 0, 1) : date;
+                                }
+                                return new Date(2000, 0, 1); // Date par défaut : 1er janvier 2000
+                            } catch (error) {
+                                console.error('Erreur lors de la création de la date:', error);
+                                return new Date(2000, 0, 1);
+                            }
+                        })()}
                         mode="date"
-                        display={ 'spinner' }
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                         onChange={onDateChange}
                         locale="fr-FR"
                         maximumDate={new Date()} // Pas de date future

@@ -116,7 +116,7 @@ const analyzeError = (error: any): ApiError => {
 
 // Configuration de l'API
 const API_URL = 'https://ibori.wookami.com/v1';
-// const API_URL =  'http://192.168.178.222:50015/v1' // Pour l'émulateur Android
+// const API_URL =  'http://172.20.10.4:50015/v1' // Pour l'émulateur Android
 // export const BASE_URL_IMAGES = 'http://192.168.100.8:50015/images'
 export const BASE_URL_IMAGES = 'https://ibori.wookami.com/images'
 export const BASE_URL_AVATARS = 'https://ibori.wookami.com/avatars'
@@ -184,7 +184,7 @@ api.interceptors.response.use(
                     console.log('🚀 ~ Refresh token utilisé:', refreshToken.substring(0, 20) + '...');
                 }
                 
-                const response = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+                const response = await axios.post(`${API_URL}/users/refresh-token`, { refreshToken });
                 
                 if (TOKEN_CONFIG.DEBUG.LOG_TOKEN_REFRESH) {
                     console.log('🚀 ~ Réponse du refresh:', response.data);

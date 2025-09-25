@@ -3,26 +3,28 @@ import { useDispatch } from 'react-redux';
 import api from '../services/api';
 import { addRoleRequest } from '../store/slices/userSlice';
 
-interface BeginCapoResponse {
+interface BeginGerantResponse {
     success: boolean;
     message: string;
     data?: any;
 }
 
-export const useBeginCapo = () => {
+export const useBeginGerant = () => {
     const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
-    const beginCapo = async (utilisateurId: number): Promise<BeginCapoResponse> => {
+    const beginGerant = async (utilisateurId: number): Promise<BeginGerantResponse> => {
         setIsLoading(true);
         setError(null);
         setSuccess(false);
 
         try {
-            const response = await api.post(`/users/begin-capo/${utilisateurId}`, {nouveauRole: 'capo'});
-            console.log("🚀 ~ beginCapo ~ response:", response)
+            const response = await api.post(`/users/begin-gerant/${utilisateurId}`, {
+                nouveauRole: 'gerant'
+            });
+            console.log("🚀 ~ beginGerant ~ response:", response)
             
             if (response.data.status === 'success') {
                 setSuccess(true);
@@ -31,7 +33,7 @@ export const useBeginCapo = () => {
                 const roleRequest = {
                     requestId: response.data.data?.requestId || Date.now(),
                     utilisateurId,
-                    requestedRole: 'capo' as const,
+                    requestedRole: 'gerant' as const,
                     status: 'pending' as const,
                     requestDate: new Date().toISOString()
                 };
@@ -39,15 +41,14 @@ export const useBeginCapo = () => {
                 
                 return {
                     success: true,
-                    message: response.data.message || 'Demande de devenir capo envoyée avec succès',
+                    message: response.data.message || 'Demande de devenir gérant envoyée avec succès',
                     data: response.data.data
                 };
             } else {
                 throw new Error(response.data.message || 'Erreur lors de la demande');
             }
         } catch (err: any) {
-            console.log("🚀 ~ beginCapo ~ err:", err)
-            const errorMessage = err.response?.data?.message || err.message || 'Erreur lors de la demande de devenir capo';
+            const errorMessage = err.response?.data?.message || err.message || 'Erreur lors de la demande de devenir gérant';
             setError(errorMessage);
             return {
                 success: false,
@@ -65,10 +66,10 @@ export const useBeginCapo = () => {
     };
 
     return {
-        beginCapo,
+        beginGerant,
         isLoading,
         error,
         success,
         reset
     };
-}; 
+};

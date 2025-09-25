@@ -64,6 +64,7 @@ export interface MatchParticipant {
     utilisateurTelephone?: string;
     utilisateurCommune?: string;
     utilisateurPhoto?: string;
+    utilisateurAvatar?: string;
 }
 
 export interface MatchParticipantsResponse {
@@ -193,10 +194,10 @@ export const matchService = {
     },
 
     // Participer à un match
-    participateInMatch: async (matchId: number): Promise<any> => {
+    participateInMatch: async (matchId: number, utilisateurId: number): Promise<any> => {
         try {
             console.log("🚀 ~ participateInMatch: ~ matchId:", matchId)
-            const response = await api.post('/matchs/participate', { 
+            const response = await api.post(`/matchs/participate/${utilisateurId}`, { 
                 matchId
             });
             return response.data;
@@ -371,9 +372,9 @@ export const matchService = {
     },
 
     // Récupérer les données complètes du profil utilisateur
-    getUserProfileData: async (): Promise<ProfileData> => {
+    getUserProfileData: async (utilisateurId: number): Promise<ProfileData> => {
         try {
-            const response = await api.get<ProfileDataResponse>('/matchs/user-profile-data');
+            const response = await api.get<ProfileDataResponse>(`/matchs/user-profile-data/${utilisateurId}`);
             return response.data.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des données du profil:', error);

@@ -176,6 +176,7 @@ export const TermsSection: React.FC<TermsSectionProps> = ({
                             • Acceptation tacite en cas de continuation d'utilisation
                         </Text>
                     </ScrollView>
+                    <View style={{height: 20}}></View>
                 </View>
             </RBSheet>
         </>

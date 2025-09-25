@@ -22,7 +22,7 @@ interface BottomTabsProps {
 export const BottomTabs: React.FC<BottomTabsProps> = ({ userRole }) => {
 
 
-    console.log("🚀 ~ userRole:", userRole)
+    console.log("🚀 ~ userRoledddddddddddddd:", userRole)
     // const userRole = 'standard';
     const getTabScreens = () => {
         switch (userRole) {
@@ -157,7 +157,7 @@ export const BottomTabs: React.FC<BottomTabsProps> = ({ userRole }) => {
                 tabBarActiveTintColor: COLORS.primary,
                 tabBarInactiveTintColor: 'gray',
                 tabBarStyle: {
-                    height: 55,
+                    height: 75,
                     position: 'absolute',
                     bottom: 0,
                     borderTopWidth: 0,

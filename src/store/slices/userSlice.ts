@@ -3,6 +3,16 @@ import { RootState } from '..';
 
 export type UserRole = 'lambda' | 'capo' | 'gerant';
 
+export interface RoleRequest {
+    requestId: number;
+    utilisateurId: number;
+    requestedRole: 'capo' | 'gerant';
+    status: 'pending' | 'approved' | 'rejected';
+    requestDate: string;
+    processedDate?: string;
+    rejectionReason?: string;
+}
+
 export interface User {
     utilisateurId: number;
     utilisateurNom: string;
@@ -11,6 +21,7 @@ export interface User {
     utilisateurDateNaiss: string;
     utilisateurSexe: 'Homme' | 'Femme';
     utilisateurRole: UserRole;
+    effectiveRole?: UserRole; // Rôle effectif calculé depuis role_requests
     utilisateurAvatar?: string;
 }
 
@@ -68,6 +79,8 @@ interface UserState {
     profileDataLoading: boolean;
     profileDataError: string | null;
     lastProfileDataUpdate: number | null;
+    roleRequests: RoleRequest[];
+    pendingRoleRequests: RoleRequest[];
 }
 
 const initialState: UserState = {
@@ -83,6 +96,8 @@ const initialState: UserState = {
     profileDataLoading: false,
     profileDataError: null,
     lastProfileDataUpdate: null,
+    roleRequests: [],
+    pendingRoleRequests: [],
 };
 
 const userSlice = createSlice({
@@ -215,6 +230,50 @@ const userSlice = createSlice({
             state.profileDataError = null;
             state.lastProfileDataUpdate = null;
         },
+
+        // Actions pour les demandes de rôle
+        setRoleRequests: (state, action: PayloadAction<RoleRequest[]>) => {
+            state.roleRequests = action.payload;
+            state.pendingRoleRequests = action.payload.filter(req => req.status === 'pending');
+        },
+
+        addRoleRequest: (state, action: PayloadAction<RoleRequest>) => {
+            state.roleRequests.push(action.payload);
+            if (action.payload.status === 'pending') {
+                state.pendingRoleRequests.push(action.payload);
+            }
+        },
+
+        updateRoleRequest: (state, action: PayloadAction<RoleRequest>) => {
+            const index = state.roleRequests.findIndex(req => req.requestId === action.payload.requestId);
+            if (index !== -1) {
+                state.roleRequests[index] = action.payload;
+            }
+            
+            // Mettre à jour les demandes en attente
+            const pendingIndex = state.pendingRoleRequests.findIndex(req => req.requestId === action.payload.requestId);
+            if (action.payload.status === 'pending') {
+                if (pendingIndex === -1) {
+                    state.pendingRoleRequests.push(action.payload);
+                } else {
+                    state.pendingRoleRequests[pendingIndex] = action.payload;
+                }
+            } else {
+                if (pendingIndex !== -1) {
+                    state.pendingRoleRequests.splice(pendingIndex, 1);
+                }
+            }
+        },
+
+        removeRoleRequest: (state, action: PayloadAction<number>) => {
+            state.roleRequests = state.roleRequests.filter(req => req.requestId !== action.payload);
+            state.pendingRoleRequests = state.pendingRoleRequests.filter(req => req.requestId !== action.payload);
+        },
+
+        clearRoleRequests: (state) => {
+            state.roleRequests = [];
+            state.pendingRoleRequests = [];
+        }
     },
 });
 
@@ -236,7 +295,12 @@ export const {
     setUserStatistics,
     setUserRecentActivities,
     setProfileData,
-    clearProfileData
+    clearProfileData,
+    setRoleRequests,
+    addRoleRequest,
+    updateRoleRequest,
+    removeRoleRequest,
+    clearRoleRequests
 } = userSlice.actions;
 
 export const selectUser = (state: RootState) => state.user.user;
@@ -251,5 +315,27 @@ export const selectUserRecentActivities = (state: RootState) => state.user.recen
 export const selectProfileDataLoading = (state: RootState) => state.user.profileDataLoading;
 export const selectProfileDataError = (state: RootState) => state.user.profileDataError;
 export const selectLastProfileDataUpdate = (state: RootState) => state.user.lastProfileDataUpdate;
+
+// Sélecteurs pour les demandes de rôle
+export const selectRoleRequests = (state: RootState) => state.user.roleRequests;
+export const selectPendingRoleRequests = (state: RootState) => state.user.pendingRoleRequests;
+export const selectHasPendingCapoRequest = (state: RootState) =>
+    state.user.pendingRoleRequests?.some(req => req.requestedRole === 'capo') || false;
+export const selectHasPendingGerantRequest = (state: RootState) =>
+    state.user.pendingRoleRequests?.some(req => req.requestedRole === 'gerant') || false;
+
+// Sélecteur pour le rôle effectif (priorité : effectiveRole > utilisateurRole > lambda)
+export const selectEffectiveRole = (state: RootState): UserRole => {
+    const user = state.user.user;
+    if (!user) return 'lambda';
+    
+    // Si effectiveRole est défini, l'utiliser
+    if (user.effectiveRole) {
+        return user.effectiveRole;
+    }
+    
+    // Sinon, utiliser utilisateurRole
+    return user.utilisateurRole || 'lambda';
+};
 
 export default userSlice.reducer; 

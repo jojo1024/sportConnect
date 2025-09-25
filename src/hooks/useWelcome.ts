@@ -25,19 +25,17 @@ export const useWelcome = () => {
     const navigation = useNavigation<ScreenNavigationProps>();
 
     /**
-     * Gère l'action "Commencer" - navigue vers l'écran d'inscription
+     * Gère l'action "Créer un compte" - navigue vers l'écran d'inscription
      */
     const handleRegister = () => {
-        // navigation.navigate('Register');
-        dispatch(setDisplayWelcomeScreen(false));
+        navigation.navigate('Register');
     };
 
     /**
-     * Gère l'action "Se connecter" - navigue vers l'écran de connexion
+     * Gère l'action "Connexion" - navigue vers l'écran de connexion
      */
     const handleLogin = () => {
-        // navigation.navigate('Login');
-        dispatch(setDisplayWelcomeScreen(false));
+        navigation.navigate('Login');
     };
 
     /**
@@ -50,10 +48,7 @@ export const useWelcome = () => {
                 routes: [{ name: 'MainTabs' }],
             });
         }
-        if (!displayWelcomeScreen) {
-            navigation.navigate('Login');
-        }
-    }, [displayWelcomeScreen, isAuthenticated]);
+    }, [isAuthenticated]);
 
     return {
         handleRegister,

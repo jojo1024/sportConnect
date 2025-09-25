@@ -77,7 +77,7 @@ export const useMatchSummary = ({ match, navigation }: UseMatchSummaryProps) => 
         setErrorMessage(null);
 
         try {
-            const result = await matchService.participateInMatch(match.matchId);
+            const result = await matchService.participateInMatch(match.matchId, user?.utilisateurId!);
             console.log('🚀 ~ handlePayment ~ result:', result);
 
             setSuccessData(result.data);

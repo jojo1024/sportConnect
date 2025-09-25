@@ -3,8 +3,16 @@ import { Match } from '../services/matchService';
 
 export const formatDate = (date: Date | string | null) => {
     if (!date) return '';
-    const dateObj = new Date(date);
-    return dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    try {
+        const dateObj = new Date(date);
+        if (isNaN(dateObj.getTime())) {
+            return 'Date invalide';
+        }
+        return dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch (error) {
+        console.error('Erreur lors du formatage de la date:', error);
+        return 'Date invalide';
+    }
 };
 
 
@@ -68,6 +76,13 @@ export const extractHour = (dateTime: string): string => {
 export const extractDate = (dateTime: string): string => {
     const date = new Date(dateTime);
     return date.toISOString().split('T')[0];
+}
+
+// Fonction pour vérifier si un match est passé (en tenant compte de l'heure)
+export const isMatchPast = (matchDateDebut: string): boolean => {
+    const now = new Date();
+    const matchDate = new Date(matchDateDebut);
+    return matchDate < now;
 }
 
 // Fonction pour obtenir les images du terrain

@@ -8,6 +8,7 @@ export interface User {
     utilisateurDateNaiss: string;
     utilisateurSexe: 'Homme' | 'Femme';
     utilisateurRole: 'lambda' | 'capo' | 'gerant';
+    effectiveRole?: 'lambda' | 'capo' | 'gerant'; // Rôle effectif calculé depuis role_requests
     utilisateurAvatar?: string;
 }
 
@@ -75,6 +76,7 @@ export const authService = {
 
     // Connexion
     login: async (data: LoginData): Promise<AuthResponse> => {
+        console.log("🚀 ~ login: ~ data:", data)
         try {
             const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', data);
             

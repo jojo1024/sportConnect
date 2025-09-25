@@ -41,7 +41,7 @@ export const useProfileData = () => {
         try {
             dispatch(startProfileDataLoading());
             
-            const data = await matchService.getUserProfileData();
+            const data = await matchService.getUserProfileData(user?.utilisateurId!);
             dispatch(setProfileData(data));
         } catch (err: any) {
             console.error('Erreur lors de la récupération des données du profil:', err);

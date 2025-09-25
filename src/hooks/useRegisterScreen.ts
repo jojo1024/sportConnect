@@ -116,7 +116,7 @@ export const useRegisterScreen = () => {
 
     // Gestion du retour
     const handleGoBack = () => {
-        navigation.goBack();
+        navigation.navigate('Login');
     };
 
     return {

@@ -36,6 +36,7 @@ interface RegisterFormHandlers {
     isFormValid: boolean;
     errors: Record<string, string>;
     validateField: (field: keyof RegisterFormState) => string;
+    setFieldError: (field: keyof RegisterFormState, error: string) => void;
 }
 
 /**
@@ -387,6 +388,14 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
         }
     };
 
+    // Fonction pour définir une erreur sur un champ spécifique
+    const setFieldError = (field: keyof RegisterFormState, error: string) => {
+        setErrors(prev => ({
+            ...prev,
+            [field]: error
+        }));
+    };
+
     // Calculer la validité du formulaire en temps réel
     // Le formulaire est valide si tous les champs requis sont correctement remplis
     const isFormValid = 
@@ -414,6 +423,7 @@ export const useRegisterForm = (): [RegisterFormState, RegisterFormHandlers] => 
             isFormValid,
             errors,
             validateField,
+            setFieldError,
         },
     ];
 }; 

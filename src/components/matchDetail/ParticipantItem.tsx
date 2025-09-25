@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { MatchParticipant } from '../../services/matchService';
 import { COLORS } from '../../theme/colors';
+import { getUserAvatar } from '../../utils/functions';
+import { useAppSelector } from '../../store/hooks/hooks';
+import { selectUser } from '../../store/slices/userSlice';
 
 interface ParticipantItemProps {
     participant: MatchParticipant | null;
@@ -11,6 +14,7 @@ interface ParticipantItemProps {
 }
 
 const ParticipantItem: React.FC<ParticipantItemProps> = ({ participant, index, isCapo }) => {
+    const user = useAppSelector(selectUser);
     if (!participant) {
         return (
             <View style={styles.emptySlot}>
@@ -28,8 +32,10 @@ const ParticipantItem: React.FC<ParticipantItemProps> = ({ participant, index, i
                 </View>
             )}
             <View style={[styles.avatarContainer, isCapo && styles.capoAvatar]}>
-                {participant.utilisateurPhoto ? (
-                    <Image source={{ uri: participant.utilisateurPhoto }} style={styles.avatar} />
+                {participant.utilisateurAvatar ? (
+                    <Image style={styles.avatar}
+                        source={{ uri: getUserAvatar(participant?.utilisateurAvatar) }}
+                    />
                 ) : (
                     <Ionicons name="person-circle-outline" size={54} color={COLORS.lightGray} />
                 )}
@@ -37,11 +43,11 @@ const ParticipantItem: React.FC<ParticipantItemProps> = ({ participant, index, i
             <Text style={[styles.participantName, isCapo && styles.capoName]} numberOfLines={1}>
                 {participant.utilisateurNom}
             </Text>
-            {participant.utilisateurTelephone && (
+            {/* {participant.utilisateurTelephone && (
                 <Text style={styles.participantPhone} numberOfLines={1}>
                     {participant.utilisateurTelephone}
                 </Text>
-            )}
+            )} */}
         </View>
     );
 };
@@ -99,6 +105,11 @@ const styles = StyleSheet.create({
         color: COLORS.white,
         fontSize: 11,
         fontWeight: 'bold',
+    },
+    capoIcon: {
+        width: 13,
+        height: 13,
+        marginRight: 3,
     },
     avatarContainer: {
         marginBottom: 6,

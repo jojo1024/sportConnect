@@ -4,7 +4,8 @@ import {
     extractDate,
     sortDatesWithPriority,
     today,
-    tomorrow
+    tomorrow,
+    isMatchPast
 } from '../utils/functions';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { useNavigation } from '@react-navigation/native';
@@ -110,8 +111,11 @@ export const useMatch = (selectedSportId?: number): UseMatchReturn => {
         setHasMoreData(false);
       }
 
+      // Filtrer les matchs passés avant de les ajouter
+      const filteredMatches = newMatches.filter(match => !isMatchPast(match.matchDateDebut));
+      
       // Fusion ou remplacement de la liste des matchs
-      setMatches(prev => (append ? [...prev, ...newMatches] : newMatches));
+      setMatches(prev => (append ? [...prev, ...filteredMatches] : filteredMatches));
       setCurrentPage(page);
     } catch (err: any) {
       // Analyser le type d'erreur
@@ -232,13 +236,16 @@ export const useMatch = (selectedSportId?: number): UseMatchReturn => {
 
   /**
    * Regroupe les matchs par date (clé = date du match).
+   * Filtre automatiquement les matchs passés.
    */
-  const groupedMatchsByDate = matches.reduce((acc, match) => {
-    const date = extractDate(match.matchDateDebut);
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(match);
-    return acc;
-  }, {} as Record<string, Match[]>);
+  const groupedMatchsByDate = matches
+    .filter(match => !isMatchPast(match.matchDateDebut)) // Filtrer les matchs passés
+    .reduce((acc, match) => {
+      const date = extractDate(match.matchDateDebut);
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(match);
+      return acc;
+    }, {} as Record<string, Match[]>);
 
   // S'assurer que "Aujourd'hui" et "Demain" apparaissent toujours
   if (!groupedMatchsByDate[today]) groupedMatchsByDate[today] = [];

@@ -14,6 +14,9 @@ import { useAppSelector, useAuthLogout } from '../../store/hooks/hooks';
 import CustomOutlineButton from '../../components/CustomOutlineButton';
 import { useDeleteAccount } from '../../hooks/useDeleteAccount';
 import { useBeginCapo } from '../../hooks/useBeginCapo';
+import { useBeginGerant } from '../../hooks/useBeginGerant';
+import { useCancelRoleRequest } from '../../hooks/useCancelRoleRequest';
+import { useRoleRequests } from '../../hooks/useRoleRequests';
 import DeleteAccountModal from '../../components/DeleteAccountModal';
 import CustomAlert from '../../components/CustomAlert';
 import { ScreenNavigationProps } from '../../navigation/types';
@@ -26,8 +29,16 @@ const ProfileOptionsScreen: React.FC = () => {
     const { logout } = useAuthLogout();
     const { showDeleteConfirmation, hideModal, showModal, deleteAccount, isLoading, error } = useDeleteAccount();
     const { beginCapo, isLoading: isBeginCapoLoading, error: beginCapoError, success: beginCapoSuccess, reset: resetBeginCapo } = useBeginCapo();
+    const { beginGerant, isLoading: isBeginGerantLoading, error: beginGerantError, success: beginGerantSuccess, reset: resetBeginGerant } = useBeginGerant();
+    const { cancelRoleRequest, isLoading: isCancelLoading, error: cancelError, success: cancelSuccess, reset: resetCancel } = useCancelRoleRequest();
+    const { hasPendingCapoRequest, hasPendingGerantRequest } = useRoleRequests();
+
+    // Vérification de sécurité pour éviter les erreurs
+    const capoRequestPending = hasPendingCapoRequest || false;
+    const gerantRequestPending = hasPendingGerantRequest || false;
     const [showLogoutAlert, setShowLogoutAlert] = useState(false);
     const [showBeginCapoAlert, setShowBeginCapoAlert] = useState(false);
+    const [showBeginGerantAlert, setShowBeginGerantAlert] = useState(false);
 
     const handleEditInfo = () => {
         navigation.navigate('EditProfile' as never);
@@ -66,11 +77,34 @@ const ProfileOptionsScreen: React.FC = () => {
     };
 
     const handleConfirmBeginCapo = async () => {
-        const result = await beginCapo();
+        const result = await beginCapo(user?.utilisateurId!);
         console.log("🚀 ~ handleConfirmBeginCapo ~ result:", result)
         if (result.success) {
             setShowBeginCapoAlert(false);
-            // Optionnel : rafraîchir les données utilisateur ou naviguer
+            // L'état est maintenant géré par Redux
+        }
+    };
+
+    const handleCancelCapoRequest = async () => {
+        const result = await cancelRoleRequest(user?.utilisateurId!);
+        // L'état est maintenant géré par Redux
+    };
+
+    const handleCancelGerantRequest = async () => {
+        const result = await cancelRoleRequest(user?.utilisateurId!);
+        // L'état est maintenant géré par Redux
+    };
+
+    const handleBeginGerant = () => {
+        setShowBeginGerantAlert(true);
+    };
+
+    const handleConfirmBeginGerant = async () => {
+        const result = await beginGerant(user?.utilisateurId!);
+        console.log("🚀 ~ handleConfirmBeginGerant ~ result:", result)
+        if (result.success) {
+            setShowBeginGerantAlert(false);
+            // L'état est maintenant géré par Redux
         }
     };
 
@@ -123,16 +157,60 @@ const ProfileOptionsScreen: React.FC = () => {
                 </TouchableOpacity>
 
                 {
-                    user?.utilisateurRole === 'lambda' && (
-                        <View style={styles.capoButtonContainer}>
-                            <CustomOutlineButton
-                                onPress={handleBeginCapo}
-                                title={isBeginCapoLoading ? "Demande en cours..." : "Devenir capo"}
-                                iconName="person-add-outline"
-                                iconType="ionicons"
-                                style={styles.capoButton}
-                                disabled={isBeginCapoLoading}
-                            />
+                    user?.effectiveRole === 'lambda' && (
+                        <View style={styles.roleButtonsContainer}>
+                            {capoRequestPending ? (
+                                <View style={styles.pendingRequestContainer}>
+                                    <View style={styles.pendingRequestTextContainer}>
+                                        <Ionicons name="time-outline" size={20} color={COLORS.primary} />
+                                        <Text style={styles.pendingRequestText}>Demande de capo en attente</Text>
+                                    </View>
+                                    <TouchableOpacity
+                                        style={[styles.cancelButton, isCancelLoading && styles.cancelButtonDisabled]}
+                                        onPress={handleCancelCapoRequest}
+                                        disabled={isCancelLoading}
+                                    >
+                                        <Text style={styles.cancelButtonText}>
+                                            {isCancelLoading ? "Annulation..." : "Annuler"}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ) : !gerantRequestPending ? (
+                                <CustomOutlineButton
+                                    onPress={handleBeginCapo}
+                                    title={isBeginCapoLoading ? "Demande en cours..." : "Devenir capo"}
+                                    iconName="person-add-outline"
+                                    iconType="ionicons"
+                                    style={styles.roleButton}
+                                    disabled={isBeginCapoLoading}
+                                />
+                            ) : null}
+                            {gerantRequestPending ? (
+                                <View style={styles.pendingRequestContainer}>
+                                    <View style={styles.pendingRequestTextContainer}>
+                                        <Ionicons name="time-outline" size={20} color={COLORS.primary} />
+                                        <Text style={styles.pendingRequestText}>Demande de gérant en attente</Text>
+                                    </View>
+                                    <TouchableOpacity
+                                        style={[styles.cancelButton, isCancelLoading && styles.cancelButtonDisabled]}
+                                        onPress={handleCancelGerantRequest}
+                                        disabled={isCancelLoading}
+                                    >
+                                        <Text style={styles.cancelButtonText}>
+                                            {isCancelLoading ? "Annulation..." : "Annuler"}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ) : !capoRequestPending ? (
+                                <CustomOutlineButton
+                                    onPress={handleBeginGerant}
+                                    title={isBeginGerantLoading ? "Demande en cours..." : "Devenir gérant"}
+                                    iconName="business-outline"
+                                    iconType="ionicons"
+                                    style={styles.roleButton}
+                                    disabled={isBeginGerantLoading}
+                                />
+                            ) : null}
                         </View>
                     )
                 }
@@ -201,6 +279,31 @@ const ProfileOptionsScreen: React.FC = () => {
                 />
             )}
 
+            {/* Alert pour devenir gérant */}
+            <CustomAlert
+                visible={showBeginGerantAlert}
+                title="Devenir Gérant"
+                message="Êtes-vous sûr de vouloir demander à devenir Gérant ? Cette demande sera envoyée aux administrateurs pour validation."
+                type="info"
+                confirmText="Confirmer"
+                cancelText="Annuler"
+                showCancel={true}
+                onConfirm={handleConfirmBeginGerant}
+                onCancel={() => setShowBeginGerantAlert(false)}
+            />
+
+            {/* Alert d'erreur pour devenir gérant */}
+            {beginGerantError && (
+                <CustomAlert
+                    visible={!!beginGerantError}
+                    title="Erreur"
+                    message={beginGerantError}
+                    type="error"
+                    confirmText="OK"
+                    onConfirm={() => resetBeginGerant()}
+                />
+            )}
+
             {/* Alert de succès pour devenir capo */}
             {beginCapoSuccess && (
                 <CustomAlert
@@ -212,6 +315,35 @@ const ProfileOptionsScreen: React.FC = () => {
                     onConfirm={() => {
                         resetBeginCapo();
                         // Optionnel : rafraîchir les données utilisateur
+                    }}
+                />
+            )}
+
+            {/* Alert de succès pour devenir gérant */}
+            {beginGerantSuccess && (
+                <CustomAlert
+                    visible={beginGerantSuccess}
+                    title="Succès"
+                    message="Votre demande de devenir Gérant a été envoyée avec succès ! Vous recevrez une notification une fois votre demande traitée."
+                    type="success"
+                    confirmText="OK"
+                    onConfirm={() => {
+                        resetBeginGerant();
+                        // Optionnel : rafraîchir les données utilisateur
+                    }}
+                />
+            )}
+
+            {/* Alert de succès pour l'annulation */}
+            {cancelSuccess && (
+                <CustomAlert
+                    visible={cancelSuccess}
+                    title="Succès"
+                    message="Votre demande de rôle a été annulée avec succès !"
+                    type="success"
+                    confirmText="OK"
+                    onConfirm={() => {
+                        resetCancel();
                     }}
                 />
             )}
@@ -309,13 +441,52 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-    capoButton: {
+    roleButton: {
+        marginTop: 8,
+        marginBottom: 8,
+    },
+    pendingRequestContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: COLORS.primary + '15',
+        borderRadius: 8,
+        padding: 12,
+        marginTop: 8,
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: COLORS.primary + '30',
+    },
+    pendingRequestTextContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    pendingRequestText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: COLORS.primary,
+        marginLeft: 8,
+    },
+    cancelButton: {
+        backgroundColor: COLORS.danger,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+    },
+    cancelButtonText: {
+        color: COLORS.white,
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    cancelButtonDisabled: {
+        backgroundColor: COLORS.gray[400],
+        opacity: 0.6,
+    },
+    roleButtonsContainer: {
+        alignItems: 'center',
         marginTop: 12,
         marginBottom: 16,
-
-    },
-    capoButtonContainer: {
-        alignItems: 'center',
     },
     deleteAccountButton: {
         marginTop: 8,

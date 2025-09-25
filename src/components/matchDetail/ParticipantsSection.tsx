@@ -24,6 +24,7 @@ const ParticipantsSection: React.FC<ParticipantsSectionProps> = ({
         const emptySlots = Array(Math.max(0, maxPlayers - participants.length)).fill(null);
         return [...participants, ...emptySlots];
     }, [participants, maxPlayers]);
+    console.log("🚀 ~ participantsData ~ participantsData:", participantsData)
 
     if (loading) {
         return (

@@ -52,6 +52,7 @@ const MatchDetailsScreen: React.FC<MatchDetailsScreenProps> = ({ route, navigati
         handleJoinMatch,
         handleRetryParticipants,
     } = useMatchDetails({ match, navigation });
+        console.log("🚀 ~ participantsppppppppppppp:", participants)
 
     // Création du badge de comptage des participants
     const participantsCountBadge = useMemo(() => (
