@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
     Text,
@@ -19,10 +19,12 @@ import { useCancelRoleRequest } from '../../hooks/useCancelRoleRequest';
 import { useRoleRequests } from '../../hooks/useRoleRequests';
 import DeleteAccountModal from '../../components/DeleteAccountModal';
 import CustomAlert from '../../components/CustomAlert';
+import { RoleChangeModal } from '../../components/RoleChangeModal';
 import { ScreenNavigationProps } from '../../navigation/types';
 import { selectUser } from '../../store/slices/userSlice';
 
 const ProfileOptionsScreen: React.FC = () => {
+    const isMountedRef = useRef(true);
 
     const user = useAppSelector(selectUser);
     const navigation = useNavigation<ScreenNavigationProps>();
@@ -39,17 +41,37 @@ const ProfileOptionsScreen: React.FC = () => {
     const [showLogoutAlert, setShowLogoutAlert] = useState(false);
     const [showBeginCapoAlert, setShowBeginCapoAlert] = useState(false);
     const [showBeginGerantAlert, setShowBeginGerantAlert] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    // Nettoyage au démontage du composant
+    useEffect(() => {
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
     const handleEditInfo = () => {
-        navigation.navigate('EditProfile' as never);
+        try {
+            navigation.navigate('EditProfile');
+        } catch (error) {
+            console.error('❌ Erreur navigation EditProfile:', error);
+        }
     };
 
     const handleEditPassword = () => {
-        navigation.navigate('EditPassword' as never);
+        try {
+            navigation.navigate('EditPassword');
+        } catch (error) {
+            console.error('❌ Erreur navigation EditPassword:', error);
+        }
     };
 
     const handleGoBack = () => {
-        navigation.goBack();
+        try {
+            navigation.goBack();
+        } catch (error) {
+            console.error('❌ Erreur navigation goBack:', error);
+        }
     };
 
     const handleLogout = () => {
@@ -57,11 +79,17 @@ const ProfileOptionsScreen: React.FC = () => {
     };
 
     const handleConfirmLogout = async () => {
-        await logout();
-        navigation.reset({
-            index: 0,
-            routes: [{ name: 'Welcome' }],
-        });
+        try {
+            await logout();
+            if (isMountedRef.current) {
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Welcome' }],
+                });
+            }
+        } catch (error) {
+            console.error('❌ Erreur lors de la déconnexion:', error);
+        }
     };
 
     const handleDeleteAccount = () => {
@@ -77,22 +105,64 @@ const ProfileOptionsScreen: React.FC = () => {
     };
 
     const handleConfirmBeginCapo = async () => {
-        const result = await beginCapo(user?.utilisateurId!);
-        console.log("🚀 ~ handleConfirmBeginCapo ~ result:", result)
-        if (result.success) {
-            setShowBeginCapoAlert(false);
-            // L'état est maintenant géré par Redux
+        if (isProcessing) return; // Éviter les appels multiples
+
+        try {
+            if (!user?.utilisateurId) {
+                console.error('❌ Utilisateur ID manquant');
+                return;
+            }
+
+            setIsProcessing(true);
+            const result = await beginCapo(user.utilisateurId);
+            console.log("🚀 ~ handleConfirmBeginCapo ~ result:", result)
+
+            // Vérifier que le composant est toujours monté avant de mettre à jour l'état
+            if (isMountedRef.current && result.success) {
+                setShowBeginCapoAlert(false);
+                console.log('✅ Demande Capo envoyée avec succès !');
+                // Reset automatique pour éviter les problèmes iOS
+                setTimeout(() => {
+                    if (isMountedRef.current) {
+                        resetBeginCapo();
+                    }
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('❌ Erreur lors de la demande Capo:', error);
+        } finally {
+            if (isMountedRef.current) {
+                setIsProcessing(false);
+            }
         }
     };
 
     const handleCancelCapoRequest = async () => {
-        const result = await cancelRoleRequest(user?.utilisateurId!);
-        // L'état est maintenant géré par Redux
+        try {
+            if (!user?.utilisateurId) {
+                console.error('❌ Utilisateur ID manquant');
+                return;
+            }
+
+            const result = await cancelRoleRequest(user.utilisateurId);
+            // L'état est maintenant géré par Redux
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'annulation de la demande Capo:', error);
+        }
     };
 
     const handleCancelGerantRequest = async () => {
-        const result = await cancelRoleRequest(user?.utilisateurId!);
-        // L'état est maintenant géré par Redux
+        try {
+            if (!user?.utilisateurId) {
+                console.error('❌ Utilisateur ID manquant');
+                return;
+            }
+
+            const result = await cancelRoleRequest(user.utilisateurId);
+            // L'état est maintenant géré par Redux
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'annulation de la demande Gérant:', error);
+        }
     };
 
     const handleBeginGerant = () => {
@@ -100,11 +170,35 @@ const ProfileOptionsScreen: React.FC = () => {
     };
 
     const handleConfirmBeginGerant = async () => {
-        const result = await beginGerant(user?.utilisateurId!);
-        console.log("🚀 ~ handleConfirmBeginGerant ~ result:", result)
-        if (result.success) {
-            setShowBeginGerantAlert(false);
-            // L'état est maintenant géré par Redux
+        if (isProcessing) return; // Éviter les appels multiples
+
+        try {
+            if (!user?.utilisateurId) {
+                console.error('❌ Utilisateur ID manquant');
+                return;
+            }
+
+            setIsProcessing(true);
+            const result = await beginGerant(user.utilisateurId);
+            console.log("🚀 ~ handleConfirmBeginGerant ~ result:", result)
+
+            // Vérifier que le composant est toujours monté avant de mettre à jour l'état
+            if (isMountedRef.current && result.success) {
+                setShowBeginGerantAlert(false);
+                console.log('✅ Demande Gérant envoyée avec succès !');
+                // Reset automatique pour éviter les problèmes iOS
+                setTimeout(() => {
+                    if (isMountedRef.current) {
+                        resetBeginGerant();
+                    }
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('❌ Erreur lors de la demande Gérant:', error);
+        } finally {
+            if (isMountedRef.current) {
+                setIsProcessing(false);
+            }
         }
     };
 
@@ -157,7 +251,7 @@ const ProfileOptionsScreen: React.FC = () => {
                 </TouchableOpacity>
 
                 {
-                    user?.effectiveRole === 'lambda' && (
+                    user?.utilisateurRole === 'lambda' && (
                         <View style={styles.roleButtonsContainer}>
                             {capoRequestPending ? (
                                 <View style={styles.pendingRequestContainer}>
@@ -304,8 +398,8 @@ const ProfileOptionsScreen: React.FC = () => {
                 />
             )}
 
-            {/* Alert de succès pour devenir capo */}
-            {beginCapoSuccess && (
+            {/* Alert de succès pour devenir capo - DÉSACTIVÉ TEMPORAIREMENT POUR iOS */}
+            {false && beginCapoSuccess && (
                 <CustomAlert
                     visible={beginCapoSuccess}
                     title="Succès"
@@ -319,8 +413,8 @@ const ProfileOptionsScreen: React.FC = () => {
                 />
             )}
 
-            {/* Alert de succès pour devenir gérant */}
-            {beginGerantSuccess && (
+            {/* Alert de succès pour devenir gérant - DÉSACTIVÉ TEMPORAIREMENT POUR iOS */}
+            {false && beginGerantSuccess && (
                 <CustomAlert
                     visible={beginGerantSuccess}
                     title="Succès"
@@ -347,6 +441,9 @@ const ProfileOptionsScreen: React.FC = () => {
                     }}
                 />
             )}
+
+            {/* Modal de changement de rôle */}
+            <RoleChangeModal />
         </SafeAreaView>
     );
 };

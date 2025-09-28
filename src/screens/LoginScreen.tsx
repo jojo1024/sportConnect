@@ -25,7 +25,7 @@ export default function LoginScreen() {
     const isTablet = width > 768;
 
     return (
-        <SafeAreaView style={[styles.container, Platform.OS === 'ios' && styles.iosContainer]}>
+        <SafeAreaView style={styles.container}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}
@@ -145,9 +145,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: COLORS.backgroundLight,
     },
-    iosContainer: {
-        backgroundColor: COLORS.primary,
-    },
+
     keyboardView: {
         flex: 1,
     },

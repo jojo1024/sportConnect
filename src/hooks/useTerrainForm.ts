@@ -454,6 +454,11 @@ export const useTerrainForm = (): UseTerrainFormReturn => {
                 // Reset form
                 setFormData(initialTerrainFormData);
                 setSelectedSports([]);
+                
+                // Attendre un peu pour que l'utilisateur voie le message de succès
+                setTimeout(() => {
+                    navigation.navigate('MainTabs' as never);
+                }, 2000);
             } else {
                 // Mode modification
                 if (!terrainData) {
@@ -479,6 +484,11 @@ export const useTerrainForm = (): UseTerrainFormReturn => {
                 if (onTerrainUpdated && terrainData) {
                     onTerrainUpdated(response);
                 }
+                
+                // Attendre un peu pour que l'utilisateur voie le message de succès
+                setTimeout(() => {
+                    navigation.navigate('MainTabs' as never);
+                }, 2000);
             }
 
         } catch (error: any) {
@@ -500,8 +510,8 @@ export const useTerrainForm = (): UseTerrainFormReturn => {
     }, []);
 
     const handleBack = useCallback(() => {
-        navigation.goBack();
-    }, []);
+        navigation.navigate('MainTabs' as never);
+    }, [navigation]);
 
     const handleRetry = useCallback(() => {
         clearErrorMessage();

@@ -8,7 +8,6 @@ export interface User {
     utilisateurDateNaiss: string;
     utilisateurSexe: 'Homme' | 'Femme';
     utilisateurRole: 'lambda' | 'capo' | 'gerant';
-    effectiveRole?: 'lambda' | 'capo' | 'gerant'; // Rôle effectif calculé depuis role_requests
     utilisateurAvatar?: string;
 }
 
@@ -36,6 +35,7 @@ export interface LoginData {
 export interface ChangePasswordData {
     ancienMotDePasse: string;
     nouveauMotDePasse: string;
+    utilisateurId?: number;
 }
 
 export interface DeleteAccountData {
@@ -138,10 +138,12 @@ export const authService = {
     },
 
     // Changement de mot de passe
-    changePassword: async (data: ChangePasswordData): Promise<{ success: boolean; message?: string }> => {
+    changePassword: async (utilisateurId: number, data: ChangePasswordData): Promise<{ success: boolean; message?: string }> => {
         try {
             console.log('🚀 ~ Tentative de changement de mot de passe...');
-            const response = await api.post<ApiResponse<{ success: boolean; message?: string }>>('/auth/change-password', data);
+            const response = await api.post<ApiResponse<{ success: boolean; message?: string }>>(`/auth/change-password/${utilisateurId}`, {
+                ...data,
+            });
             
             console.log('🚀 ~ Réponse du changement de mot de passe:', response.data);
               

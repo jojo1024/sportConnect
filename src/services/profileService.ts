@@ -103,11 +103,14 @@ export const profileService = {
     },
 
     // Mettre à jour le profil de l'utilisateur
-    updateProfile: async (profileData: UpdateProfileData): Promise<User> => {
+    updateProfile: async (profileData: UpdateProfileData, utilisateurId: number): Promise<User> => {
         console.log("🚀 ~ updateProfile: ~ profileData:", profileData)
-        const response = await api.put<ProfileResponse>('/users/profile', profileData);
+        const response = await api.put<ProfileResponse>('/users/profile', {
+            ...profileData,
+            utilisateurId
+        });
         return response.data.data;
-    },
+    },                  
 
     // Récupérer les données complètes du profil (statistiques et activités)
     getProfileData: async (): Promise<ProfileDataResponse> => {
@@ -128,10 +131,10 @@ export const profileService = {
     },
 
     // Changer le mot de passe de l'utilisateur
-    changePassword: async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
-        const response = await api.put('/users/password', {
-            currentPassword,
-            newPassword,
+    changePassword: async (currentPassword: string, newPassword: string, utilisateurId: number): Promise<{ success: boolean; message: string }> => {
+        const response = await api.post(`/auth/change-password/${utilisateurId}`, {
+            ancienMotDePasse: currentPassword,
+            nouveauMotDePasse: newPassword,
         });
         return response.data;
     },

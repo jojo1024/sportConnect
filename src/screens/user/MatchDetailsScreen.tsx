@@ -28,14 +28,10 @@ import {
 } from '../../components/matchDetail';
 
 // Types
-interface MatchDetailsScreenProps {
-    route: {
-        params: {
-            match: Match;
-        };
-    };
-    navigation: any;
-}
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/types';
+
+type MatchDetailsScreenProps = NativeStackScreenProps<RootStackParamList, 'MatchDetails'>;
 
 // Composant principal
 const MatchDetailsScreen: React.FC<MatchDetailsScreenProps> = ({ route, navigation }) => {
@@ -52,7 +48,7 @@ const MatchDetailsScreen: React.FC<MatchDetailsScreenProps> = ({ route, navigati
         handleJoinMatch,
         handleRetryParticipants,
     } = useMatchDetails({ match, navigation });
-        console.log("🚀 ~ participantsppppppppppppp:", participants)
+    console.log("🚀 ~ participantsppppppppppppp:", participants)
 
     // Création du badge de comptage des participants
     const participantsCountBadge = useMemo(() => (

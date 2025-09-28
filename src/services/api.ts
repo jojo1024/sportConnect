@@ -3,6 +3,13 @@ import { store } from '../store';
 import { updateTokens, clearUser } from '../store/slices/userSlice';
 import { TOKEN_CONFIG, tokenUtils } from '../utils/tokenConfig';
 
+// Configuration de l'API
+const API_URL = 'https://ibori.wookami.com/v1';
+// const API_URL =  'http://192.168.100.4:50015/v1' // Pour l'émulateur Android
+// export const BASE_URL_IMAGES = 'http://192.168.100.8:50015/images'
+export const BASE_URL_IMAGES = 'https://ibori.wookami.com/images'
+export const BASE_URL_AVATARS = 'https://ibori.wookami.com/avatars'
+
 // Types pour l'API
 interface User {
     utilisateurId: number;
@@ -114,12 +121,6 @@ const analyzeError = (error: any): ApiError => {
     };
 };
 
-// Configuration de l'API
-const API_URL = 'https://ibori.wookami.com/v1';
-// const API_URL =  'http://172.20.10.4:50015/v1' // Pour l'émulateur Android
-// export const BASE_URL_IMAGES = 'http://192.168.100.8:50015/images'
-export const BASE_URL_IMAGES = 'https://ibori.wookami.com/images'
-export const BASE_URL_AVATARS = 'https://ibori.wookami.com/avatars'
 
 // Création de l'instance axios
 const api = axios.create({

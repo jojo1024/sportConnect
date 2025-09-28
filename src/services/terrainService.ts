@@ -74,8 +74,9 @@ export const terrainService = {
     },
 
     // Récupérer les terrains d'un manager spécifique
-    getManagerTerrains: async (): Promise<Terrain[]> => {
-        const response = await api.get<TerrainResponse>('/terrains/my-terrains');
+    getManagerTerrains: async (utilisateurId: number): Promise<Terrain[]> => {
+        console.log("🚀 ~ getManagerTerrains: ~ utilisateurId:", utilisateurId)
+        const response = await api.get<TerrainResponse>(`/terrains/my-terrains/${utilisateurId}`);
         return response.data.data;
     },
 

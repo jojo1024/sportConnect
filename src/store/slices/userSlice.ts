@@ -21,7 +21,6 @@ export interface User {
     utilisateurDateNaiss: string;
     utilisateurSexe: 'Homme' | 'Femme';
     utilisateurRole: UserRole;
-    effectiveRole?: UserRole; // Rôle effectif calculé depuis role_requests
     utilisateurAvatar?: string;
 }
 
@@ -324,18 +323,5 @@ export const selectHasPendingCapoRequest = (state: RootState) =>
 export const selectHasPendingGerantRequest = (state: RootState) =>
     state.user.pendingRoleRequests?.some(req => req.requestedRole === 'gerant') || false;
 
-// Sélecteur pour le rôle effectif (priorité : effectiveRole > utilisateurRole > lambda)
-export const selectEffectiveRole = (state: RootState): UserRole => {
-    const user = state.user.user;
-    if (!user) return 'lambda';
-    
-    // Si effectiveRole est défini, l'utiliser
-    if (user.effectiveRole) {
-        return user.effectiveRole;
-    }
-    
-    // Sinon, utiliser utilisateurRole
-    return user.utilisateurRole || 'lambda';
-};
 
 export default userSlice.reducer; 

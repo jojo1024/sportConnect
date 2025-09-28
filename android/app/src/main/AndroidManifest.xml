@@ -33,6 +33,7 @@
         <data android:scheme="exp+sportconnect"/>
         <data android:scheme="Ibori"/>
         <data android:scheme="exp+ibori"/>
+        <data android:scheme="com.joelitho.ibori"/>
       </intent-filter>
     </activity>
   </application>

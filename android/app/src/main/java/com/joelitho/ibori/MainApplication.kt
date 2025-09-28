@@ -1,4 +1,4 @@
-package com.joelitho.sportConnect
+package com.joelitho.ibori
 
 import android.app.Application
 import android.content.res.Configuration

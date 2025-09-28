@@ -9,6 +9,7 @@ import type { RouteProp } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 import { Alert } from 'react-native';
 import { ErrorType } from '../services/api';
+import { useRoleCheck } from './useRoleCheck';
 
 // Interface de retour du hook
 interface UseTerrainReturn {
@@ -64,6 +65,9 @@ export const useTerrain = (): UseTerrainReturn => {
   const user = useAppSelector(selectUser);
   console.log("🚀 ~ useTerrain ~ user:", user)
 
+  // Intégration du hook de vérification de rôle
+  const { checkRoleOnAction } = useRoleCheck();
+
   const ITEMS_PER_PAGE = 10;
 
   /**
@@ -79,7 +83,7 @@ export const useTerrain = (): UseTerrainReturn => {
       
       // Si l'utilisateur est connecté et est un manager, récupérer ses terrains
       if (user?.utilisateurId && user?.utilisateurRole === 'gerant') {
-        newTerrains = await terrainService.getManagerTerrains();
+        newTerrains = await terrainService.getManagerTerrains(user?.utilisateurId );
       } 
       
       console.log('🚀 ~ loadAllTerrains ~ newTerrains:', newTerrains.length);
@@ -182,6 +186,20 @@ export const useTerrain = (): UseTerrainReturn => {
   }, [loadAllTerrains, user?.utilisateurId]);
 
   /**
+   * Rafraîchir les données quand l'écran revient au focus (après ajout/modification)
+   */
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (user?.utilisateurId) {
+        console.log('🎯 Écran Terrains en focus - rafraîchissement des données');
+        loadAllTerrains();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, user?.utilisateurId, loadAllTerrains]);
+
+  /**
    * Appelé lorsque l'utilisateur atteint la fin de la liste.
    */
   const handleEndReached = () => {
@@ -201,18 +219,22 @@ export const useTerrain = (): UseTerrainReturn => {
     navigation.navigate('TerrainDetails', { terrain });
 }, [navigation]);
 
-const handleAddTerrain = useCallback(() => {
+  const handleAddTerrain = useCallback(async () => {
+    // Vérifier le rôle avant d'ajouter un terrain
+    await checkRoleOnAction();
     navigation.navigate('TerrainForm', {
         mode: 'create'
     });
-}, [navigation]);
+}, [navigation, checkRoleOnAction]);
 
     // Fonction pour mettre à jour les données du terrain
     const handleTerrainUpdated = (updatedTerrain: Terrain) => {
       setTerrain(updatedTerrain);
   };
 
-  const handleEdit = () => {
+  const handleEdit = useCallback(async () => {
+      // Vérifier le rôle avant d'éditer un terrain
+      await checkRoleOnAction();
       if (terrain) {
           navigation.navigate('TerrainForm', {
               mode: 'edit',
@@ -220,7 +242,7 @@ const handleAddTerrain = useCallback(() => {
               onTerrainUpdated: handleTerrainUpdated
           });
       }
-  };
+  }, [terrain, navigation, checkRoleOnAction, handleTerrainUpdated]);
 
   const handleCopyContact = async () => {
       if (terrain?.terrainContact) {

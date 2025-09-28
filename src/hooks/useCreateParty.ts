@@ -188,9 +188,21 @@ export const useCreateParty = () => {
             setTerrainsLoading(true);
             setTerrainsError(null);
             const terrainsData = await terrainService.getAllTerrains("confirme");
-            setCachedTerrains(terrainsData);
-            setLastTerrainsFetched(Date.now());
+            console.log("🚀 ~ loadTerrainsWithCache ~ terrainsData:", terrainsData?.length || 0);
+            
+            // Gérer le cas où la table est vide - ce n'est pas une erreur
+            if (terrainsData && terrainsData.length === 0) {
+                console.log("⚠️ Aucun terrain trouvé dans la base de données");
+                setCachedTerrains([]); // Tableau vide, pas d'erreur
+                setTerrainsError(null); // Pas d'erreur
+                setLastTerrainsFetched(Date.now());
+            } else {
+                setCachedTerrains(terrainsData || []);
+                setTerrainsError(null);
+                setLastTerrainsFetched(Date.now());
+            }
         } catch (error: any) {
+            console.error("❌ Erreur lors du chargement des terrains:", error);
             const errorResult = handleApiError(error);
             setTerrainsError(errorResult.message);
         } finally {
@@ -205,10 +217,21 @@ export const useCreateParty = () => {
         setTerrainsError(null);
         try {
             const terrainsData = await terrainService.getAllTerrains("confirme");
-            console.log("🚀 ~ refreshTerrains ~ terrainsDatallll:", terrainsData.slice(0,2))
-            setCachedTerrains(terrainsData);
-            setLastTerrainsFetched(Date.now());
+            console.log("🚀 ~ refreshTerrains ~ terrainsData:", terrainsData?.length || 0);
+            
+            // Gérer le cas où la table est vide - ce n'est pas une erreur
+            if (terrainsData && terrainsData.length === 0) {
+                console.log("⚠️ Aucun terrain trouvé lors du rafraîchissement");
+                setCachedTerrains([]); // Tableau vide, pas d'erreur
+                setTerrainsError(null); // Pas d'erreur
+                setLastTerrainsFetched(Date.now());
+            } else {
+                setCachedTerrains(terrainsData || []);
+                setTerrainsError(null);
+                setLastTerrainsFetched(Date.now());
+            }
         } catch (error: any) {
+            console.error("❌ Erreur lors du rafraîchissement des terrains:", error);
             const errorResult = handleApiError(error);
             setTerrainsError(errorResult.message);
         } finally {
@@ -269,7 +292,7 @@ export const useCreateParty = () => {
     // Charger les sports au montage si nécessaire
     useEffect(() => {
         loadSportsWithCache();
-    }, [loadSportsWithCache]);
+    }, []);
 
     // Filtrer les sports en fonction du terrain sélectionné
     const getAvailableSportsForSelectedTerrain = useCallback(() => {
@@ -325,7 +348,7 @@ export const useCreateParty = () => {
     // Charger les terrains au montage du composant
     useEffect(() => {
         loadTerrainsWithCache();
-    }, [loadTerrainsWithCache]);
+    }, []);
 
     // Charger les sports actifs au montage du composant
     useEffect(() => {

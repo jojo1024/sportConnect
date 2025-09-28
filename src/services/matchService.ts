@@ -299,7 +299,7 @@ export const matchService = {
     },
 
     // Récupérer les réservations d'un gérant
-    getGerantReservations: async (status?: string, terrainId?: number | null, page: number = 1, limit: number = 10): Promise<ReservationsResponse> => {
+    getGerantReservations: async (utilisateurId: number, status?: string, terrainId?: number | null, page: number = 1, limit: number = 10): Promise<ReservationsResponse> => {
         try {
             const params = new URLSearchParams();
             if (status) params.append('status', status);
@@ -307,7 +307,7 @@ export const matchService = {
             params.append('page', page.toString());
             params.append('limit', limit.toString());
             
-            const response = await api.get<{ success: boolean; message: string; data: ReservationsResponse }>(`/matchs/gerant-reservations?${params.toString()}`);
+            const response = await api.get<{ success: boolean; message: string; data: ReservationsResponse }>(`/matchs/gerant-reservations/${utilisateurId}?${params.toString()}`);
             return response.data.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des réservations:', error);
@@ -316,8 +316,8 @@ export const matchService = {
     },
 
     // Récupérer les réservations d'un gérant avec filtrage par date
-    getGerantReservationsByDate: async (status?: string,  page: number = 1, limit: number = 10, dateDebut?: string, dateFin?: string, terrainId?: number | null): Promise<ReservationsResponse> => {
-        try {
+    getGerantReservationsByDate: async (utilisateurId: number, status?: string,  page: number = 1, limit: number = 10, dateDebut?: string, dateFin?: string, terrainId?: number | null): Promise<ReservationsResponse> => {
+        try {   
             const params = new URLSearchParams();
             if (status) params.append('status', status);
             if (terrainId) params.append('terrainId', terrainId.toString());
@@ -326,7 +326,7 @@ export const matchService = {
             if (dateDebut) params.append('dateDebut', dateDebut);
             if (dateFin) params.append('dateFin', dateFin);
             
-            const response = await api.get<{ success: boolean; message: string; data: ReservationsResponse }>(`/matchs/gerant-reservations-by-date?${params.toString()}`);
+            const response = await api.get<{ success: boolean; message: string; data: ReservationsResponse }>(`/matchs/gerant-reservations-by-date/${utilisateurId}?${params.toString()}`);
             return response.data.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des réservations par date:', error);
@@ -335,13 +335,13 @@ export const matchService = {
     },
 
     // Récupérer les données d'activité hebdomadaire d'un gérant
-    getGerantWeeklyChart: async (dateDebut: string, dateFin: string, terrainId?: number | null): Promise<{dailyRevenue: number[]}> => {
+    getGerantWeeklyChart: async (utilisateurId: number, dateDebut: string, dateFin: string, terrainId?: number | null): Promise<{dailyRevenue: number[]}> => {
         try {
             const params = new URLSearchParams();
             params.append('dateDebut', dateDebut);
             params.append('dateFin', dateFin);
             if (terrainId) params.append('terrainId', terrainId.toString());
-            const response = await api.get<WeeklyChartResponse>(`/matchs/gerant-weekly-chart?${params.toString()}`);
+            const response = await api.get<WeeklyChartResponse>(`/matchs/gerant-weekly-chart/${utilisateurId}?${params.toString()}`);
             return response.data.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des données d\'activité hebdomadaire:', error);
@@ -350,9 +350,9 @@ export const matchService = {
     },
 
     // Récupérer les statistiques d'un utilisateur
-    getUserStatistics: async (): Promise<UserStatistics> => {
+    getUserStatistics: async (utilisateurId: number): Promise<UserStatistics> => {
         try {
-            const response = await api.get<{ success: boolean; message: string; data: UserStatistics }>('/matchs/user-statistics');
+            const response = await api.get<{ success: boolean; message: string; data: UserStatistics }>(`/matchs/user-statistics/${utilisateurId}`);
             return response.data.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des statistiques:', error);

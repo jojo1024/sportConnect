@@ -24,14 +24,15 @@ export const useRoleRequests = () => {
 
     // Charger les demandes de rôle au montage du composant
     useEffect(() => {
-        if (user?.utilisateurId && roleRequests.length === 0) {
+        if (user?.utilisateurId) {
             loadRoleRequests();
         }
-    }, [user?.utilisateurId, roleRequests.length]);
+    }, [user?.utilisateurId]);
 
     const loadRoleRequests = async () => {
         if (!user?.utilisateurId) return;
 
+        console.log("🚀 ~ loadRoleRequests ~ user?.utilisateurId:", user?.utilisateurId)
         try {
             const requests = await roleRequestService.getRoleRequestsByUserId(user.utilisateurId);
             dispatch(setRoleRequests(requests));

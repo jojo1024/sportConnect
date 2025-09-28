@@ -8,15 +8,10 @@ import CompactErrorCard from '../../components/CompactErrorCard';
 import InfoSectionCard, { InfoItemRow } from '../../components/DetailCard';
 import { useMatchSummary } from '../../hooks/useMatchSummary';
 import { Header, TermsSection, PaymentButton } from '../../components/matchSummary';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/types';
 
-interface MatchSummaryScreenProps {
-    route: {
-        params: {
-            match: Match;
-        };
-    };
-    navigation: any;
-}
+type MatchSummaryScreenProps = NativeStackScreenProps<RootStackParamList, 'MatchSummary'>;
 
 const MatchSummaryScreen: React.FC<MatchSummaryScreenProps> = ({ route, navigation }) => {
     const { match } = route.params;
@@ -82,7 +77,7 @@ const MatchSummaryScreen: React.FC<MatchSummaryScreenProps> = ({ route, navigati
                 {/* Espace en bas pour le bouton */}
                 <View style={{ height: 100 }} />
             </ScrollView>
-            
+
 
             {/* Bouton de paiement */}
             <PaymentButton

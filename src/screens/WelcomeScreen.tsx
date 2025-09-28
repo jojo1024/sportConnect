@@ -9,7 +9,7 @@ const WelcomeScreen = () => {
     const { handleRegister, handleLogin } = useWelcome();
 
     return (
-        <SafeAreaView style={[styles.container, Platform.OS === 'ios' && styles.iosContainer]}>
+        <SafeAreaView style={styles.container}>
             <Text style={styles.logo}>{projectName}</Text>
             <Image
                 source={{ uri: "https://activeforlife.com/img/large-webp/2018/07/soccer-ball-2121x1414.jpg" }}
@@ -42,9 +42,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         paddingTop: 20,
     },
-    iosContainer: {
-        backgroundColor: COLORS.primary,
-    },
+
     logo: {
         fontSize: 32,
         fontWeight: 'bold',
@@ -61,24 +59,24 @@ const styles = StyleSheet.create({
     subtitle: {
         marginHorizontal: 20,
         fontSize: 17,
-        color: Platform.OS === 'ios' ? COLORS.white : COLORS.text,
+        color: COLORS.text,
         textAlign: 'center',
         marginBottom: 32,
     },
     button: {
-        backgroundColor: Platform.OS === 'ios' ? COLORS.white : COLORS.primary,
+        backgroundColor:  COLORS.primary,
         paddingVertical: 14,
         paddingHorizontal: 40,
         borderRadius: 25,
         marginBottom: 12,
     },
     buttonText: {
-        color: Platform.OS === 'ios' ? COLORS.primary : COLORS.white,
+        color:  COLORS.white,
         fontSize: 16,
         fontWeight: 'bold',
     },
     link: {
-        color: Platform.OS === 'ios' ? COLORS.white : COLORS.text,
+        color: COLORS.text,
         fontSize: 15,
         textAlign: 'center',
         textDecorationLine: 'underline',

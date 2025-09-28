@@ -1,6 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { StatusBar, Platform } from "react-native";
+import { StatusBar, Platform, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { COLORS } from "../theme/colors";
 import LoginScreen from "../screens/LoginScreen";
@@ -15,7 +15,7 @@ import EditProfileScreen from "../screens/user/EditProfileScreen";
 import ProfileOptionsScreen from "../screens/user/ProfileOptionsScreen";
 import EditPasswordScreen from "../screens/user/EditPasswordScreen";
 import { useAppSelector, useAuthInitialization } from "../store/hooks/hooks";
-import { selectIsAuthenticated, selectUser, selectEffectiveRole } from "../store/slices/userSlice";
+import { selectIsAuthenticated, selectUser } from "../store/slices/userSlice";
 import { BottomTabs } from "./BottomTabs";
 import { RootStackParamList } from "./types";
 import { ReservationsScreen, StatisticsScreen } from "../screens/manager";
@@ -24,18 +24,19 @@ const RootNavigator = () => {
     const Stack = createNativeStackNavigator<RootStackParamList>();
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const user = useAppSelector(selectUser);
-    const effectiveRole = useAppSelector(selectEffectiveRole);
+    const userRole = useAppSelector(selectUser)?.utilisateurRole || 'lambda';
 
     // Initialiser l'authentification
     useAuthInitialization();
 
     return (
-        <SafeAreaProvider>
+        <SafeAreaProvider style={styles.container}>
             <NavigationContainer>
                 <StatusBar
                     backgroundColor={Platform.OS === 'android' ? COLORS.primary : undefined}
                     barStyle="light-content"
                 />
+                {Platform.OS === 'ios' && <View style={styles.iosStatusBarBackground} />}
                 <Stack.Navigator
                     initialRouteName={isAuthenticated ? "MainTabs" : "Welcome"}
                     screenOptions={{ headerShown: false }}
@@ -65,7 +66,7 @@ const RootNavigator = () => {
                         // Écrans principaux
                         <>
                             <Stack.Screen name="MainTabs">
-                                {() => <BottomTabs userRole={effectiveRole} />}
+                                {() => <BottomTabs userRole={userRole} />}
                             </Stack.Screen>
                             <Stack.Screen name="Terrains" component={TerrainsScreen} />
                             <Stack.Screen name="TerrainForm" component={TerrainFormScreen} />
@@ -86,3 +87,19 @@ const RootNavigator = () => {
 };
 
 export default RootNavigator;
+
+const styles = StyleSheet.create({
+    iosStatusBarBackground: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: Platform.OS === 'ios' ? 44 : 0, // Hauteur de la status bar iOS
+        backgroundColor: COLORS.primary,
+        zIndex: 1000,
+    },
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+});

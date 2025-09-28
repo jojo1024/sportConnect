@@ -2,6 +2,7 @@ import React from 'react';
 import {
     FlatList,
     StyleSheet,
+    Text,
     TextInput,
     View,
     TouchableOpacity,
@@ -78,23 +79,36 @@ export const TerrainsBottomSheet: React.FC<TerrainsBottomSheetProps> = ({
                     </TouchableOpacity>
                 )}
             </View>
-            <FlatList
-                data={filteredFields}
-                keyExtractor={(item) => item?.terrainId?.toString()}
-                renderItem={({ item }) => (
-                    <FieldCard
-                        terrain={item}
-                        isSelected={selectedFieldId === item?.terrainId?.toString()}
-                        onSelect={onFieldSelect}
-                    />
-                )}
-                initialNumToRender={10}
-                maxToRenderPerBatch={10}
-                windowSize={21}
-                removeClippedSubviews={true}
-                keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{ paddingBottom: 40 }}
-            />
+            {filteredFields.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                    <Ionicons name="location-outline" size={48} color="#ccc" />
+                    <Text style={styles.emptyTitle}>Aucun terrain disponible</Text>
+                    <Text style={styles.emptyMessage}>
+                        {searchQuery ?
+                            'Aucun terrain ne correspond à votre recherche.' :
+                            'Aucun terrain n\'est actuellement disponible. Veuillez contacter l\'administrateur.'
+                        }
+                    </Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={filteredFields}
+                    keyExtractor={(item) => item?.terrainId?.toString()}
+                    renderItem={({ item }) => (
+                        <FieldCard
+                            terrain={item}
+                            isSelected={selectedFieldId === item?.terrainId?.toString()}
+                            onSelect={onFieldSelect}
+                        />
+                    )}
+                    initialNumToRender={10}
+                    maxToRenderPerBatch={10}
+                    windowSize={21}
+                    removeClippedSubviews={true}
+                    keyboardShouldPersistTaps="handled"
+                    contentContainerStyle={{ paddingBottom: 40 }}
+                />
+            )}
         </View>
     </RBSheet>
 );
@@ -128,5 +142,25 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: 1,
         borderColor: COLORS.gray[200],
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#666',
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    emptyMessage: {
+        fontSize: 14,
+        color: '#999',
+        textAlign: 'center',
+        lineHeight: 20,
+        paddingHorizontal: 20,
     }
 });

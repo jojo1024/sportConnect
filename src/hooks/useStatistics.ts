@@ -4,6 +4,8 @@ import { matchService, Match, PaginationInfo } from '../services/matchService';
 import { useToast } from './useToast';
 import { calculateRevenue, formatCurrency, formatShortCurrency, getWeekDates } from '../utils/functions';
 import { getPopularTime, PERIODS } from '../utils/constant';
+import { useAppSelector } from '../store/hooks/hooks';
+import { selectUser } from '../store/slices/userSlice';
 
 export interface ReservationFilters {
     searchQuery?: string;
@@ -54,7 +56,7 @@ export interface StatisticsData {
 export const useStatistics = (toastFunctions?: { showError: (message: string, duration?: number) => void; showSuccess: (message: string, duration?: number) => void }) => {
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
     const { showError: defaultShowError, showSuccess: defaultShowSuccess } = useToast();
-    
+    const user = useAppSelector(selectUser);
     // Utilise les fonctions de toast passées en paramètre ou les fonctions par défaut
     const showError = toastFunctions?.showError || defaultShowError;
     const showSuccess = toastFunctions?.showSuccess || defaultShowSuccess;
@@ -184,7 +186,7 @@ export const useStatistics = (toastFunctions?: { showError: (message: string, du
             // Utiliser le terrainId passé en paramètre ou la valeur actuelle
             const currentTerrainId = terrainId !== undefined ? terrainId : selectedTerrainId;
 
-            const response = await matchService.getGerantReservationsByDate(status, page, 50, dateDebut, dateFin, currentTerrainId);
+            const response = await matchService.getGerantReservationsByDate(user?.utilisateurId!,status, page, 50, dateDebut, dateFin, currentTerrainId);
             
             console.log(`✅ Réservations ${status} chargées:`, response.reservations.length);
             
@@ -229,7 +231,7 @@ export const useStatistics = (toastFunctions?: { showError: (message: string, du
             // Utiliser le terrainId passé en paramètre ou la valeur actuelle
             const currentTerrainId = terrainId !== undefined ? terrainId : selectedTerrainId;
 
-            const response = await matchService.getGerantWeeklyChart(dateDebut, dateFin, currentTerrainId);
+            const response = await matchService.getGerantWeeklyChart(user?.utilisateurId!,dateDebut, dateFin, currentTerrainId);
             console.log('✅ Données hebdomadaires reçues:', response.dailyRevenue);
 
             setWeeklyChartData(response.dailyRevenue);

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { matchService, Match, PaginationInfo } from '../services/matchService';
 import { useCustomAlert } from './useCustomAlert';
 import { RESERVATION_STATUSES } from '../utils/constant';
+import { useAppSelector } from '../store/hooks/hooks';
+import { selectUser } from '../store/slices/userSlice';
 
 export interface ReservationFilters {
     searchQuery?: string;
@@ -34,7 +36,7 @@ export interface ReservationsByStatus {
  * @returns {Object} Objet contenant l'état et les méthodes de gestion des réservations
  */
 export const useReservationsInfinite = () => {
-
+    const user = useAppSelector(selectUser);
     const [index, setIndex] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTerrainId, setSelectedTerrainId] = useState<number | null>(null);
@@ -82,7 +84,7 @@ export const useReservationsInfinite = () => {
             const currentTerrainId = terrainId !== undefined ? terrainId : selectedTerrainId;
             console.log("🚀 ~ loadReservationsForStatus ~ currentTerrainIdxxyy:", currentTerrainId, "terrainId param:", terrainId)
 
-            const response = await matchService.getGerantReservations(status, currentTerrainId || undefined, page, 20);
+            const response = await matchService.getGerantReservations(user?.utilisateurId!,status, currentTerrainId || undefined, page, 20);
             
             setReservationsByStatus(prev => ({
                 ...prev,

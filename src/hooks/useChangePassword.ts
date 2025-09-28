@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { TextInput } from 'react-native';
 import { changePassword } from '../services/authService';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../store/slices/userSlice';
 
 interface ChangePasswordFormData {
     ancienMotDePasse: string;
@@ -10,6 +12,7 @@ interface ChangePasswordFormData {
 }
 
 export const useChangePassword = () => {
+    const user = useSelector(selectUser);
     const navigation = useNavigation();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>('');
@@ -103,7 +106,7 @@ export const useChangePassword = () => {
 
         try {
             console.log('🚀 ~ Tentative de changement de mot de passe depuis le hook...');
-            const response = await changePassword({
+            const response = await changePassword(user?.utilisateurId!, {
                 ancienMotDePasse: formData.ancienMotDePasse,
                 nouveauMotDePasse: formData.nouveauMotDePasse,
             });

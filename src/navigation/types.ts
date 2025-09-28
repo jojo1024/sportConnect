@@ -22,7 +22,7 @@ export type RootStackParamList = {
         match: Match;
     };
     MatchSummary: {
-        match: any;
+        match: Match;
     };
     EditProfile: undefined;
     ProfileOptions: undefined;

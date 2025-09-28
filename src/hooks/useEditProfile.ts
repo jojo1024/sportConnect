@@ -198,7 +198,7 @@ export const useEditProfile = (): UseEditProfileReturn => {
 
             // Appel API pour mettre à jour le profil
             console.log('💾 Calling profileService.updateProfile...');
-            const updatedUser = await profileService.updateProfile(updateData);
+            const updatedUser = await profileService.updateProfile(updateData, user?.utilisateurId!);
             console.log('💾 Profile service response:', updatedUser);
             
             console.log('💾 Profile update successful, updating Redux store...');

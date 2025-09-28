@@ -16,6 +16,16 @@ export const useBeginCapo = () => {
     const [success, setSuccess] = useState(false);
 
     const beginCapo = async (utilisateurId: number): Promise<BeginCapoResponse> => {
+        // Vérification de sécurité pour iOS
+        if (!utilisateurId || utilisateurId <= 0) {
+            const errorMsg = 'ID utilisateur invalide';
+            setError(errorMsg);
+            return {
+                success: false,
+                message: errorMsg
+            };
+        }
+
         setIsLoading(true);
         setError(null);
         setSuccess(false);
@@ -24,8 +34,8 @@ export const useBeginCapo = () => {
             const response = await api.post(`/users/begin-capo/${utilisateurId}`, {nouveauRole: 'capo'});
             console.log("🚀 ~ beginCapo ~ response:", response)
             
-            if (response.data.status === 'success') {
-                setSuccess(true);
+            if (response.data && response.data.status === 'success') {
+                // DÉSACTIVÉ TEMPORAIREMENT POUR iOS - setSuccess(true);
                 
                 // Ajouter la demande au store Redux
                 const roleRequest = {
@@ -43,7 +53,12 @@ export const useBeginCapo = () => {
                     data: response.data.data
                 };
             } else {
-                throw new Error(response.data.message || 'Erreur lors de la demande');
+                const errorMsg = response.data?.message || 'Erreur lors de la demande';
+                setError(errorMsg);
+                return {
+                    success: false,
+                    message: errorMsg
+                };
             }
         } catch (err: any) {
             console.log("🚀 ~ beginCapo ~ err:", err)

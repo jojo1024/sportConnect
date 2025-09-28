@@ -1,4 +1,4 @@
-package com.joelitho.sportConnect
+package com.joelitho.ibori
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

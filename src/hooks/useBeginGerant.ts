@@ -16,6 +16,16 @@ export const useBeginGerant = () => {
     const [success, setSuccess] = useState(false);
 
     const beginGerant = async (utilisateurId: number): Promise<BeginGerantResponse> => {
+        // Vérification de sécurité pour iOS
+        if (!utilisateurId || utilisateurId <= 0) {
+            const errorMsg = 'ID utilisateur invalide';
+            setError(errorMsg);
+            return {
+                success: false,
+                message: errorMsg
+            };
+        }
+
         setIsLoading(true);
         setError(null);
         setSuccess(false);
@@ -26,8 +36,8 @@ export const useBeginGerant = () => {
             });
             console.log("🚀 ~ beginGerant ~ response:", response)
             
-            if (response.data.status === 'success') {
-                setSuccess(true);
+            if (response.data && response.data.status === 'success') {
+                // DÉSACTIVÉ TEMPORAIREMENT POUR iOS - setSuccess(true);
                 
                 // Ajouter la demande au store Redux
                 const roleRequest = {
@@ -45,7 +55,12 @@ export const useBeginGerant = () => {
                     data: response.data.data
                 };
             } else {
-                throw new Error(response.data.message || 'Erreur lors de la demande');
+                const errorMsg = response.data?.message || 'Erreur lors de la demande';
+                setError(errorMsg);
+                return {
+                    success: false,
+                    message: errorMsg
+                };
             }
         } catch (err: any) {
             const errorMessage = err.response?.data?.message || err.message || 'Erreur lors de la demande de devenir gérant';
