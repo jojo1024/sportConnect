@@ -1,6 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { StatusBar, Platform, View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { StatusBar, Platform, View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { COLORS } from "../theme/colors";
 import LoginScreen from "../screens/LoginScreen";
@@ -30,8 +30,9 @@ const RootNavigator = () => {
     useAuthInitialization();
 
     return (
-        <SafeAreaProvider style={styles.container}>
+        <SafeAreaProvider  >
             <NavigationContainer>
+                <SafeAreaView style={styles.container}>
                 <StatusBar
                     backgroundColor={Platform.OS === 'android' ? COLORS.primary : undefined}
                     barStyle="light-content"
@@ -81,6 +82,7 @@ const RootNavigator = () => {
                         </>
                     )}
                 </Stack.Navigator>
+                </SafeAreaView>
             </NavigationContainer>
         </SafeAreaProvider>
     );

@@ -157,7 +157,7 @@ export const BottomTabs: React.FC<BottomTabsProps> = ({ userRole }) => {
                 tabBarActiveTintColor: COLORS.primary,
                 tabBarInactiveTintColor: 'gray',
                 tabBarStyle: {
-                    height: 75,
+                    height: 60,
                     position: 'absolute',
                     bottom: 0,
                     borderTopWidth: 0,

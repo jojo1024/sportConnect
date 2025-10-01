@@ -22,7 +22,9 @@
     "clear-ios": "npx expo build:ios -c",
     "submit-ios": "eas submit -p ios --latest",
     "build-ios": "eas build --platform ios",
-    "build:ios": "eas build -p ios --profile preview"
+    "build:ios": "eas build -p ios --profile preview",
+    "build:dev": "eas build -p ios --profile development"
+
   },
   "dependencies": {
     "@expo/vector-icons": "~14.0.4",
