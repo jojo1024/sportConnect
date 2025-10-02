@@ -5,7 +5,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import RootNavigator from './navigation/RootNavigator';
 import { store, persistor } from './store';
 
-// Composant de loading pour PersistGate
+// Composant de loading pour PersistGate xx
 const LoadingScreen = () => (
   <View style={styles.loadingContainer}>
     <ActivityIndicator size="large" color="#FF6600" />
