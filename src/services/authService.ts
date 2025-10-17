@@ -97,6 +97,19 @@ export const authService = {
         }
     },
 
+    updateFCMToken: async (utilisateurId: number, fcmToken: string): Promise<void> => {
+        console.log("🚀 ~ updateFCMToken: ~ utilisateurId:", utilisateurId, fcmToken)
+        try {
+            const response = await api.put<ApiResponse<void>>('/users/update-fcm-token', { utilisateurId, fcmToken });
+        return response.data.data;
+        } catch (error: any) {
+            if (error.response?.data?.message) {
+                throw new Error(error.response.data.message);
+            }
+            throw new Error('Erreur de mise à jour du FCM token. Veuillez réessayer.');
+        }
+    },
+
     // Déconnexion
     // logout: async (utilisateurId: number): Promise<void> => {
     //     try {

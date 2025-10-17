@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "288659340241",
+    "project_id": "ibori-f6532",
+    "storage_bucket": "ibori-f6532.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:288659340241:android:e81c72e96b1ef0b8d43ef0",
+        "android_client_info": {
+          "package_name": "com.joelitho.ibori"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvfGRPjg9Ub5XgbQqjNTjffvyMCei_cAQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

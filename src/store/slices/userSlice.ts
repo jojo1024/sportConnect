@@ -22,6 +22,7 @@ export interface User {
     utilisateurSexe: 'Homme' | 'Femme';
     utilisateurRole: UserRole;
     utilisateurAvatar?: string;
+    fcmToken?: string;
 }
 
 export interface UserStatistics {
@@ -130,6 +131,7 @@ const userSlice = createSlice({
             user: User;
             accessToken: string;
             refreshToken: string;
+            fcmToken?: string;
         }>) => {
             state.user = action.payload.user;
             state.accessToken = action.payload.accessToken;
@@ -137,6 +139,7 @@ const userSlice = createSlice({
             state.isAuthenticated = true;
             state.isLoading = false;
             state.error = null;
+            state.user.fcmToken = action.payload.fcmToken;
         },
         
         // Action pour mettre à jour les tokens (refresh)

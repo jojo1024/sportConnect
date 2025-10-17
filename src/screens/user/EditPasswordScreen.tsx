@@ -138,14 +138,14 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: 'row',
-        alignItems: 'center',
+        // alignItems: 'center',
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingBottom: 10,
         borderBottomWidth: 1,
         borderBottomColor: COLORS.gray[200],
     },
     backButton: {
-        padding: 8,
+        // padding: 8,
         marginRight: 8,
     },
     headerTitle: {

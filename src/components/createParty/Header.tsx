@@ -39,8 +39,9 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
+        // alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom:10,
         backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#e9ecef',

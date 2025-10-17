@@ -69,9 +69,9 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
-        backgroundColor: '#fff',
+        // alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 12,        backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#e9ecef',
         elevation: 2,

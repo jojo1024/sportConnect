@@ -102,8 +102,9 @@ const styles = StyleSheet.create<Styles>({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
+        // alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom:10,
         backgroundColor: COLORS.white,
         borderBottomWidth: 1,
         borderBottomColor: COLORS.borderColor,

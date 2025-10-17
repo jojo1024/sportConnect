@@ -184,8 +184,6 @@ const styles = StyleSheet.create({
     },
     backButton: {
         flexDirection: 'row',
-        alignItems: 'center',
-        padding: 8,
         alignSelf: 'flex-start',
     },
     backButtonText: {

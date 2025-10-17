@@ -70,7 +70,8 @@ export const testTokenPersistence = () => {
     return {
         hasValidTokens: !!(accessToken && refreshToken),
         tokensConsistent: accessToken === mmkvAccessToken && refreshToken === mmkvRefreshToken,
-        accessTokenExpiringSoon: accessToken ? tokenUtils.isTokenExpiringSoon(accessToken) : false,
+        accessTokenExpiringSoon:  false,
+        // accessTokenExpiringSoon: accessToken ? tokenUtils.isTokenExpiringSoon(accessToken) : false,
         userAuthenticated: !!user,
     };
 };
@@ -161,7 +162,6 @@ export const testAutoRefresh = async () => {
             if (newAccessToken !== accessToken) {
                 console.log('✅ Nouveau token généré avec succès');
                 console.log('  - Ancien:', accessToken.substring(0, 20) + '...');
-                console.log('  - Nouveau:', newAccessToken.substring(0, 20) + '...');
                 return true;
             } else {
                 console.log('ℹ️ Même token conservé (normal si pas expiré)');

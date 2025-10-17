@@ -5,9 +5,9 @@
     "version": "1.0.2",
     "scheme": "Ibori",
     "orientation": "portrait",
-    "icon": "./assets/images/ibori.jpeg",
+    "icon": "./assets/images/ibori_logo.jpg",
     "userInterfaceStyle": "light",
-    "primaryColor": "#FFA500",
+    "primaryColor": "#38B6F9",
     "plugins": [
       [
         "expo-dev-client",
@@ -24,14 +24,12 @@
       ]
     ],
     "splash": {
-      "image": "./assets/images/ibori.jpeg",
-      "resizeMode": "contain",
+      "image": "./assets/images/ibori_logo.jpg",
+      "resizeMode": "cover",
       "backgroundColor": "#FFFFFF"
     },
     "android": {
       "package": "com.joelitho.ibori",
-      "foregroundImage": "./assets/images/ibori.jpeg",
-      "backgroundColor": "#FFFFFF",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",

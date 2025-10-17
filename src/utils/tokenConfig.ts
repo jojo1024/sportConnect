@@ -41,7 +41,7 @@ export const tokenUtils = {
     // Vérifier si un token est proche de l'expiration (5 minutes avant)
     isTokenExpiringSoon: (token: string): boolean => {
         try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
+            const payload = JSON.parse(atob(token?.split('.')[1]));
             const expirationTime = payload.exp * 1000; // Convertir en millisecondes
             const currentTime = Date.now();
             const fiveMinutes = 5 * 60 * 1000; // 5 minutes en millisecondes

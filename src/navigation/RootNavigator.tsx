@@ -34,7 +34,7 @@ const RootNavigator = () => {
             <NavigationContainer>
                 <SafeAreaView style={styles.container}>
                 <StatusBar
-                    backgroundColor={Platform.OS === 'android' ? COLORS.primary : undefined}
+                    backgroundColor={Platform.OS === 'android' ? COLORS.white : undefined}
                     barStyle="light-content"
                 />
                 {Platform.OS === 'ios' && <View style={styles.iosStatusBarBackground} />}
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         height: Platform.OS === 'ios' ? 44 : 0, // Hauteur de la status bar iOS
-        backgroundColor: COLORS.primary,
+        backgroundColor: COLORS.white,
         zIndex: 1000,
     },
     container: {
