@@ -11,6 +11,7 @@ import {
     setAuthData,
     updateTokens
 } from '../slices/userSlice';
+import { clearSelectedProfileMode } from '../slices/appSlice';
 import { ScreenNavigationProps } from '../../navigation/types';
 import { useNavigation } from '@react-navigation/native';
 // import mmkvStorage from './mmkvStorage';
@@ -99,19 +100,22 @@ export const useAuthLogout = () => {
             
             // Nettoyer le store
             dispatch(logout());
+            // Réinitialiser le profil sélectionné
+            dispatch(clearSelectedProfileMode());
             
-            // Rediriger vers l'écran de bienvenue
+            // Rediriger vers l'écran de sélection de profil
             navigation.reset({
                 index: 0,
-                routes: [{ name: 'Welcome' }],
+                routes: [{ name: 'ProfileSelection' }],
             });
         } catch (error) {
             console.log('🚀 ~ Erreur lors de la déconnexion:', error);
             // Même en cas d'erreur, nettoyer le store local
             dispatch(logout());
+            dispatch(clearSelectedProfileMode());
             navigation.reset({
                 index: 0,
-                routes: [{ name: 'Welcome' }],
+                routes: [{ name: 'ProfileSelection' }],
             });
         }
     };

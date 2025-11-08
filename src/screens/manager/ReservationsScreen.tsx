@@ -11,13 +11,28 @@ import { useReservationsTabs } from '../../hooks/useReservationsTabs';
 import { useTerrainCache } from '../../hooks/useTerrainCache';
 import { COLORS } from '../../theme/colors';
 import { TAB_CONFIG } from '../../utils/constant';
+import { useAppSelector } from '../../store/hooks/hooks';
+import { selectIsAuthenticated } from '../../store/slices/userSlice';
+import AuthRequiredScreen from '../../components/AuthRequiredScreen';
 
 const initialLayout = { width: Dimensions.get('window').width };
 
 const ReservationsScreen: React.FC = () => {
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
     const route = useRoute();
     const navigation = useNavigation();
+
+    // Si non authentifié, afficher l'écran de connexion requise
+    if (!isAuthenticated) {
+        return (
+            <AuthRequiredScreen
+                title="Connexion requise"
+                message="Vous devez vous connecter pour accéder aux réservations."
+                iconName="calendar-outline"
+            />
+        );
+    }
 
     // Récupérer le terrainId depuis les paramètres de route
     const initialTerrainId = (route.params as any)?.terrainId as number | undefined;

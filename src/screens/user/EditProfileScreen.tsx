@@ -204,8 +204,9 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
+        // alignItems: 'center',
+        paddingTop: 10,
         paddingHorizontal: 20,
         paddingBottom: 10,
         backgroundColor: COLORS.white,

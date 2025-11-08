@@ -8,8 +8,23 @@ import CustomOutlineButton from '../../components/CustomOutlineButton';
 import { useTerrain } from '../../hooks/useTerrain';
 import { Terrain } from '../../services/terrainService';
 import { COLORS } from '../../theme/colors';
+import { useAppSelector } from '../../store/hooks/hooks';
+import { selectIsAuthenticated } from '../../store/slices/userSlice';
+import AuthRequiredScreen from '../../components/AuthRequiredScreen';
 
 const TerrainsScreen: React.FC = () => {
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
+
+    // Si non authentifié, afficher l'écran de connexion requise
+    if (!isAuthenticated) {
+        return (
+            <AuthRequiredScreen
+                title="Connexion requise"
+                message="Vous devez vous connecter pour accéder à la gestion des terrains."
+                iconName="location-outline"
+            />
+        );
+    }
 
     const {
         terrains,

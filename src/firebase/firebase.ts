@@ -1,12 +1,10 @@
 // import { updateAuth } from "../store/authSlice";
 import notifee, { AndroidBadgeIconType, AndroidImportance, AndroidStyle, AndroidVisibility } from '@notifee/react-native';
 import messaging from '@react-native-firebase/messaging';
-import { PermissionsAndroid } from 'react-native';
-import { Platform } from 'react-native';
-import { useAppSelector } from '../store/hooks/hooks';
-import { selectUser, updateUser } from '../store/slices/userSlice';
+import { PermissionsAndroid, Platform } from 'react-native';
 import { authService } from '../services';
 import { store } from '../store';
+import { updateUser } from '../store/slices/userSlice';
 
 /**
  * Recupère un token pour le device et l'enregistre sur globalApi

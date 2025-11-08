@@ -7,6 +7,7 @@ export type RootStackParamList = {
     Welcome: undefined;
     Login: undefined;
     Register: undefined;
+    ProfileSelection: undefined;
     MainTabs: undefined;
     Terrains: undefined;
     AddTerrain: undefined;

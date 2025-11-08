@@ -6,16 +6,29 @@ import ProfileHeader from '../../components/profile/ProfileHeader';
 import ProfileStats from '../../components/profile/ProfileStats';
 import ProfileActivities from '../../components/profile/ProfileActivities';
 import { useAppSelector, useAuthLogout } from '../../store/hooks/hooks';
-import { selectUser } from '../../store/slices/userSlice';
+import { selectUser, selectIsAuthenticated } from '../../store/slices/userSlice';
 import { COLORS } from '../../theme/colors';
 import { useProfileData } from '../../hooks/useProfileData';
+import AuthRequiredScreen from '../../components/AuthRequiredScreen';
 
 const ProfileScreen: React.FC = () => {
     const navigation = useNavigation();
     const { logout } = useAuthLogout();
     const utilisateur = useAppSelector(selectUser);
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const { statistics, recentActivities, loading, error, refreshData, hasData } = useProfileData();
     console.log("🚀 ~ hasData:", hasData)
+
+    // Si non authentifié, afficher l'écran de connexion requise
+    if (!isAuthenticated) {
+        return (
+            <AuthRequiredScreen
+                title="Connexion requise"
+                message="Vous devez vous connecter pour accéder à votre profil."
+                iconName="person-outline"
+            />
+        );
+    }
 
     const handleEditProfile = () => {
         navigation.navigate('ProfileOptions' as never);

@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, Text } from 'react-native';
+import RBSheet from 'react-native-raw-bottom-sheet';
 
 // Types et interfaces
 import { Match } from '../../services/matchService';
@@ -10,12 +11,15 @@ import { calculateMatchDuration, formatDateLong, formatTime } from '../../utils/
 
 // Hook personnalisé
 import { useMatchDetails } from '../../hooks/useMatchDetails';
+import { useAppSelector } from '../../store/hooks/hooks';
+import { selectIsAuthenticated } from '../../store/slices/userSlice';
 
 // Composants
 import ImageGallery from '../../components/ImageGallery';
 import HeaderWithBackButton from '../../components/HeaderWithBackButton';
 import InfoSectionCard, { InfoItemRow } from '../../components/DetailCard';
 import MainInfoCard from '../../components/MainInfoCard';
+import AuthBottomSheet from '../../components/AuthBottomSheet';
 
 // Composants MatchDetail
 import {
@@ -36,6 +40,8 @@ type MatchDetailsScreenProps = NativeStackScreenProps<RootStackParamList, 'Match
 // Composant principal
 const MatchDetailsScreen: React.FC<MatchDetailsScreenProps> = ({ route, navigation }) => {
     const { match } = route.params;
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
+    const authBottomSheetRef = useRef<RBSheet>(null);
 
     // Utilisation du hook personnalisé
     const {
@@ -49,6 +55,23 @@ const MatchDetailsScreen: React.FC<MatchDetailsScreenProps> = ({ route, navigati
         handleRetryParticipants,
     } = useMatchDetails({ match, navigation });
     console.log("🚀 ~ participantsppppppppppppp:", participants)
+
+    // Gérer le clic sur le bouton Rejoindre
+    const handleJoinPress = () => {
+        if (!isAuthenticated) {
+            // Ouvrir le bottom sheet d'authentification
+            authBottomSheetRef.current?.open();
+        } else {
+            // Si authentifié, procéder normalement
+            handleJoinMatch();
+        }
+    };
+
+    // Callback après authentification réussie
+    const handleAuthSuccess = () => {
+        // Après authentification, on peut rejoindre le match
+        handleJoinMatch();
+    };
 
     // Création du badge de comptage des participants
     const participantsCountBadge = useMemo(() => (
@@ -122,7 +145,13 @@ const MatchDetailsScreen: React.FC<MatchDetailsScreenProps> = ({ route, navigati
                 <JoinButton
                     isMatchFull={isMatchFull}
                     isJoining={isJoining}
-                    onPress={handleJoinMatch}
+                    onPress={handleJoinPress}
+                />
+
+                {/* Bottom Sheet d'authentification */}
+                <AuthBottomSheet
+                    bottomSheetRef={authBottomSheetRef}
+                    onAuthSuccess={handleAuthSuccess}
                 />
             </View>
         </SafeAreaView>

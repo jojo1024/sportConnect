@@ -2,10 +2,13 @@
   "expo": {
     "name": "Ibori",
     "slug": "Ibori",
-    "version": "1.0.2",
+    "version": "1.0.4",
     "scheme": "Ibori",
     "orientation": "portrait",
     "icon": "./assets/images/ibori_logo.jpg",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "userInterfaceStyle": "light",
     "primaryColor": "#38B6F9",
     "plugins": [
@@ -30,6 +33,7 @@
     },
     "android": {
       "package": "com.joelitho.ibori",
+      "privacyPolicy": "https://www.ibori.ci/privacy-policy",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",

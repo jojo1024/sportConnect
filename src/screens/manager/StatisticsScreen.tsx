@@ -17,12 +17,27 @@ import {
 } from '../../components/statistics';
 import TerrainFilterModal from '../../components/reservation/TerrainFilterModal';
 import { useTerrainCache } from '../../hooks/useTerrainCache';
+import { useAppSelector } from '../../store/hooks/hooks';
+import { selectIsAuthenticated } from '../../store/slices/userSlice';
+import AuthRequiredScreen from '../../components/AuthRequiredScreen';
 
 const StatisticsScreen: React.FC = () => {
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const { toastConfig, visible: toastVisible, hideToast, showError, showSuccess } = useToast();
     const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
     const route = useRoute();
     const navigation = useNavigation();
+
+    // Si non authentifié, afficher l'écran de connexion requise
+    if (!isAuthenticated) {
+        return (
+            <AuthRequiredScreen
+                title="Connexion requise"
+                message="Vous devez vous connecter pour accéder aux statistiques."
+                iconName="stats-chart-outline"
+            />
+        );
+    }
 
     // Récupérer le terrainId depuis les paramètres de route
     const initialTerrainId = (route.params as any)?.terrainId as number | undefined;

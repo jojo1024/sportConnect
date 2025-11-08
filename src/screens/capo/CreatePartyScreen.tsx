@@ -27,9 +27,36 @@ import { formatDate, formatTime } from '../../utils/functions';
 import { TerrainSelector } from '../../components/createParty/TerrainSelector';
 import { SportSelector } from '../../components/createParty/SportSelector';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppSelector } from '../../store/hooks/hooks';
+import { selectIsAuthenticated, selectUser } from '../../store/slices/userSlice';
+import AuthRequiredScreen from '../../components/AuthRequiredScreen';
 
 // Main component
 const CreatePartyScreen: React.FC = () => {
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
+    const user = useAppSelector(selectUser);
+
+    // Si non authentifié, afficher l'écran de connexion requise
+    if (!isAuthenticated) {
+        return (
+            <AuthRequiredScreen
+                title="Connexion requise"
+                message="Vous devez vous connecter pour créer une partie."
+                iconName="add-circle-outline"
+            />
+        );
+    }
+
+    // Si authentifié mais pas capo, afficher un message spécifique
+    if (user?.utilisateurRole !== 'capo') {
+        return (
+            <AuthRequiredScreen
+                title="Rôle requis"
+                message="Vous devez être organisateur (Capo) pour créer une partie. Contactez le support pour demander ce rôle."
+                iconName="trophy-outline"
+            />
+        );
+    }
     const {
         // Refs
         terrainBottomSheetRef,

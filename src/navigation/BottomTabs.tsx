@@ -153,6 +153,7 @@ export const BottomTabs: React.FC<BottomTabsProps> = ({ userRole }) => {
 
     return (
         <Tab.Navigator
+            initialRouteName="TchinTchins"
             screenOptions={{
                 tabBarActiveTintColor: COLORS.primary,
                 tabBarInactiveTintColor: 'gray',

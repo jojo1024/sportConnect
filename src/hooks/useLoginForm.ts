@@ -33,8 +33,9 @@ interface LoginFormHandlers {
 
 /**
  * Hook personnalisé pour gérer le formulaire de connexion utilisateur.
+ * @param skipNavigation - Si true, ne fait pas de navigation automatique après connexion (utile pour les modals/bottom sheets)
  */
-export const useLoginForm = (): [LoginFormState, LoginFormHandlers] => {
+export const useLoginForm = (skipNavigation: boolean = false): [LoginFormState, LoginFormHandlers] => {
   const dispatch = useDispatch();
   const navigation = useNavigation<ScreenNavigationProps>();
   const passwordInputRef = useRef<any>(null);
@@ -87,11 +88,13 @@ export const useLoginForm = (): [LoginFormState, LoginFormHandlers] => {
         refreshToken: response.refreshToken,
       });
 
-      // Redirection après connexion
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'MainTabs' }],
-      });
+      // Redirection après connexion (seulement si skipNavigation est false)
+      if (!skipNavigation) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }],
+        });
+      }
     } catch (error: any) {
       console.log('🚀 ~ handleLogin ~ error:', error);
 

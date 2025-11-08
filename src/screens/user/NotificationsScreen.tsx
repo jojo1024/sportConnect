@@ -7,8 +7,12 @@ import { COLORS } from '../../theme/colors';
 import { formatNotificationDate } from '../../utils/functions';
 import { Styles } from '../../utils/interface';
 import LoadingFooter from '../../components/LoadingFooter';
+import { useAppSelector } from '../../store/hooks/hooks';
+import { selectIsAuthenticated } from '../../store/slices/userSlice';
+import AuthRequiredScreen from '../../components/AuthRequiredScreen';
 
 const NotificationsScreen: React.FC = () => {
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const {
         notifications,
         isLoading,
@@ -19,6 +23,17 @@ const NotificationsScreen: React.FC = () => {
         handleNotificationPress,
         handleMarkAllAsRead
     } = useNotification();
+
+    // Si non authentifié, afficher l'écran de connexion requise
+    if (!isAuthenticated) {
+        return (
+            <AuthRequiredScreen
+                title="Connexion requise"
+                message="Vous devez vous connecter pour accéder à vos notifications."
+                iconName="notifications-outline"
+            />
+        );
+    }
 
 
 
@@ -104,7 +119,8 @@ const styles = StyleSheet.create<Styles>({
         justifyContent: 'space-between',
         // alignItems: 'center',
         paddingHorizontal: 20,
-        paddingBottom:10,
+        paddingTop: 10,
+        paddingBottom: 10,
         backgroundColor: COLORS.white,
         borderBottomWidth: 1,
         borderBottomColor: COLORS.borderColor,

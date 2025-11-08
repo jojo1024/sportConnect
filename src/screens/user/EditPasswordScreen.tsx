@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         // alignItems: 'center',
         paddingHorizontal: 16,
+        paddingTop: 10,
         paddingBottom: 10,
         borderBottomWidth: 1,
         borderBottomColor: COLORS.gray[200],

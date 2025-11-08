@@ -4,14 +4,26 @@ import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ScreenNavigationProps } from '../../navigation/types';
 import { useAppSelector } from '../../store/hooks/hooks';
-import { selectUser } from '../../store/slices/userSlice';
+import { selectUser, selectIsAuthenticated } from '../../store/slices/userSlice';
 import { COLORS } from '../../theme/colors';
 import { getUserAvatar } from '../../utils/functions';
+import AuthRequiredScreen from '../../components/AuthRequiredScreen';
 
 const SettingsScreen: React.FC = () => {
     const utilisateur = useAppSelector(selectUser);
-
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const navigation = useNavigation<ScreenNavigationProps>();
+
+    // Si non authentifié, afficher l'écran de connexion requise
+    if (!isAuthenticated) {
+        return (
+            <AuthRequiredScreen
+                title="Connexion requise"
+                message="Vous devez vous connecter pour accéder aux paramètres."
+                iconName="settings-outline"
+            />
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -75,6 +87,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 32,
         marginBottom: 16,
+        paddingTop: 10,
     },
     avatarContainer: {
         borderRadius: 50,
